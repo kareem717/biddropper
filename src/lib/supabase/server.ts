@@ -1,13 +1,16 @@
-import { type CookieOptions, createServerClient } from "@supabase/ssr";
+import {
+	createServerClient as _createServerClient,
+	CookieOptions,
+} from "@supabase/ssr";
 import { env } from "../env.mjs";
 import { cookies } from "next/headers";
 
-export const createClient = () => {
+export const createServerClient = () => {
 	const cookieStore = cookies();
 
-	return createServerClient(
-		process.env.NEXT_PUBLIC_SUPABASE_URL!,
-		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+	return _createServerClient(
+		env.NEXT_PUBLIC_SUPABASE_URL,
+		env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 		{
 			cookies: {
 				get(name: string) {

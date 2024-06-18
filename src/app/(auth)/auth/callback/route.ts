@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { type CookieOptions, createServerClient } from "@supabase/ssr";
-import { createClient } from "@/lib/supabase";
+import { type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
 	const { searchParams, origin } = new URL(request.url);
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 	const next = searchParams.get("next") ?? "/";
 
 	if (code) {
-		const supabase = createClient();
+		const supabase = createServerClient();
 		const { error } = await supabase.auth.exchangeCodeForSession(code);
 		if (!error) {
 			return NextResponse.redirect(`${origin}${next}`);

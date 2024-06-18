@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { loggerLink, unstable_httpBatchStreamLink } from "@trpc/client";
 import React, { useState } from "react";
 
-import { trpc } from "./client";
-import { getUrl } from "./utils";
+import { trpc } from "@/lib/trpc/client";
+import { getUrl } from "@/lib/trpc/utils";
 
 import SuperJSON from "superjson";
 
@@ -36,7 +36,7 @@ export default function TrpcProvider({
           },
         }),
       ],
-    }),
+    })
   );
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>

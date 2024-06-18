@@ -1,14 +1,18 @@
-import { db } from "@/lib/db/index"
- // import { getUserAuth } from "@/lib/auth/utils";
+import { db } from "@/lib/db/index";
+import { createServerClient } from "@/lib/supabase/server";
 
 export async function createTRPCContext(opts: { headers: Headers }) {
- // const { session } = await getUserAuth();
+	const supabase = createServerClient();
 
-  return {
-    db,
-    //  session: session,
-    ...opts,
-  }
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	return {
+		db,
+		user,
+		...opts,
+	};
 }
 
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>;

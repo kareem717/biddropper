@@ -1,34 +1,20 @@
-import { createClient } from "@/lib/supabase";
-import { Provider } from "@supabase/supabase-js";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
 
-const LoginPage = () => {
-	const login = async () => {
-		"use server";
+import LoginForm from "@/components/auth/LoginForm";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useRouter } from "next/navigation";
 
-		const supabase = createClient();
-		const origin = headers().get("origin");
+export default function LoginPage() {
+	const router = useRouter();
+	const { user, account } = useAuth();
 
-		const { data, error } = await supabase.auth.signInWithOAuth({
-			provider: "google",
-			options: {
-				redirectTo: `${origin}/auth/callback`,
-			},
-		});
+	if (user && account) {
+		router.push("/dashboard");
+	}
 
-		if (error) {
-			console.error(error);
-		} else {
-			return redirect(data.url);
-		}
-	};
+	if (user && !account) {
+		router.push("/create-account");
+	}
 
-	return (
-		<form action={login}>
-			<button type="submit">Login</button>
-		</form>
-	);
-};
-
-export default LoginPage;
+	return <LoginForm />;
+}

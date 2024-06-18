@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { createClient } from "@/lib/supabase";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,13 +15,6 @@ export default async function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const supabase = createClient();
-
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-
-	console.log(user);
 
 	return (
 		<html lang="en">

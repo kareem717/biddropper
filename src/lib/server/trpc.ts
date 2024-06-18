@@ -8,17 +8,17 @@ import { ZodError } from "zod";
  * Should be done only once per backend!
  */
 const t = initTRPC.context<Context>().create({
-  transformer: superjson,
-  errorFormatter({ shape, error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
-      },
-    };
-  },
+	transformer: superjson,
+	errorFormatter({ shape, error }) {
+		return {
+			...shape,
+			data: {
+				...shape.data,
+				zodError:
+					error.cause instanceof ZodError ? error.cause.flatten() : null,
+			},
+		};
+	},
 });
 /**
  * Export reusable router and procedure helpers
@@ -26,3 +26,14 @@ const t = initTRPC.context<Context>().create({
  */
 export const router = t.router;
 export const publicProcedure = t.procedure;
+
+export const authProcedure = t.procedure.use(async ({ ctx, next }) => {
+	if (!ctx.user) {
+		throw new TRPCError({
+			code: "UNAUTHORIZED",
+			message: "Unauthorized",
+		});
+	}
+
+	return next({ ctx: { ...ctx, user: ctx.user } });
+});
