@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { usersInAuth, accounts, account_subscriptions, addresses, jobs, companies, media, contracts, projects, bids, reviews, media_relationships, contract_jobs, user_jobs, company_jobs, contract_bids, job_bids, company_industries, industries, job_industries } from "./schema";
+import { usersInAuth, accounts, account_subscriptions, addresses, jobs, companies, media, contracts, projects, bids, reviews, contract_jobs, user_jobs, company_jobs, contract_bids, job_bids, company_industries, industries, job_industries, job_media, project_media, review_media } from "./schema";
 
 export const accountsRelations = relations(accounts, ({one, many}) => ({
 	usersInAuth: one(usersInAuth, {
@@ -28,12 +28,12 @@ export const jobsRelations = relations(jobs, ({one, many}) => ({
 		fields: [jobs.address_id],
 		references: [addresses.id]
 	}),
-	media_relationships: many(media_relationships),
 	contract_jobs: many(contract_jobs),
 	user_jobs: many(user_jobs),
 	company_jobs: many(company_jobs),
 	job_bids: many(job_bids),
 	job_industries: many(job_industries),
+	job_medias: many(job_media),
 }));
 
 export const addressesRelations = relations(addresses, ({many}) => ({
@@ -64,7 +64,9 @@ export const companiesRelations = relations(companies, ({one, many}) => ({
 
 export const mediaRelations = relations(media, ({many}) => ({
 	companies: many(companies),
-	media_relationships: many(media_relationships),
+	job_medias: many(job_media),
+	project_medias: many(project_media),
+	review_medias: many(review_media),
 }));
 
 export const contractsRelations = relations(contracts, ({one, many}) => ({
@@ -81,7 +83,7 @@ export const projectsRelations = relations(projects, ({one, many}) => ({
 		fields: [projects.company_id],
 		references: [companies.id]
 	}),
-	media_relationships: many(media_relationships),
+	project_medias: many(project_media),
 }));
 
 export const bidsRelations = relations(bids, ({one, many}) => ({
@@ -102,26 +104,7 @@ export const reviewsRelations = relations(reviews, ({one, many}) => ({
 		fields: [reviews.company_id],
 		references: [companies.id]
 	}),
-	media_relationships: many(media_relationships),
-}));
-
-export const media_relationshipsRelations = relations(media_relationships, ({one}) => ({
-	job: one(jobs, {
-		fields: [media_relationships.job_id],
-		references: [jobs.id]
-	}),
-	media: one(media, {
-		fields: [media_relationships.media_id],
-		references: [media.id]
-	}),
-	project: one(projects, {
-		fields: [media_relationships.project_id],
-		references: [projects.id]
-	}),
-	review: one(reviews, {
-		fields: [media_relationships.review_id],
-		references: [reviews.id]
-	}),
+	review_medias: many(review_media),
 }));
 
 export const contract_jobsRelations = relations(contract_jobs, ({one}) => ({
@@ -203,5 +186,38 @@ export const job_industriesRelations = relations(job_industries, ({one}) => ({
 	job: one(jobs, {
 		fields: [job_industries.job_id],
 		references: [jobs.id]
+	}),
+}));
+
+export const job_mediaRelations = relations(job_media, ({one}) => ({
+	job: one(jobs, {
+		fields: [job_media.job_id],
+		references: [jobs.id]
+	}),
+	media: one(media, {
+		fields: [job_media.media_id],
+		references: [media.id]
+	}),
+}));
+
+export const project_mediaRelations = relations(project_media, ({one}) => ({
+	media: one(media, {
+		fields: [project_media.media_id],
+		references: [media.id]
+	}),
+	project: one(projects, {
+		fields: [project_media.project_id],
+		references: [projects.id]
+	}),
+}));
+
+export const review_mediaRelations = relations(review_media, ({one}) => ({
+	media: one(media, {
+		fields: [review_media.media_id],
+		references: [media.id]
+	}),
+	review: one(reviews, {
+		fields: [review_media.review_id],
+		references: [reviews.id]
 	}),
 }));

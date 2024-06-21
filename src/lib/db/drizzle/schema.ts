@@ -1,6 +1,6 @@
 import {
 	pgTable,
-	foreignKey,
+	pgSchema,
 	pgEnum,
 	uuid,
 	text,
@@ -13,7 +13,6 @@ import {
 	serial,
 	bigint,
 	primaryKey,
-	pgSchema,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -92,6 +91,7 @@ const authSchema = pgSchema("auth");
 const users = authSchema.table("users", {
 	id: uuid("id").primaryKey(),
 });
+
 export const accounts = pgTable("accounts", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	user_id: uuid("user_id")
@@ -294,30 +294,6 @@ export const reviews = pgTable("reviews", {
 	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
-export const media_relationships = pgTable("media_relationships", {
-	media_id: uuid("media_id")
-		.primaryKey()
-		.notNull()
-		.references(() => media.id, { onDelete: "restrict", onUpdate: "cascade" }),
-	job_id: uuid("job_id").references(() => jobs.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-	project_id: uuid("project_id").references(() => projects.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-	review_id: uuid("review_id").references(() => reviews.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
 export const addresses = pgTable("addresses", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	x_coordinate: numeric("x_coordinate").notNull(),
@@ -502,6 +478,96 @@ export const job_industries = pgTable(
 			job_industries_pkey: primaryKey({
 				columns: [table.job_id, table.industry_id],
 				name: "job_industries_pkey",
+			}),
+		};
+	}
+);
+
+export const job_media = pgTable(
+	"job_media",
+	{
+		media_id: uuid("media_id")
+			.notNull()
+			.references(() => media.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		job_id: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
+		created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			job_media_pkey: primaryKey({
+				columns: [table.media_id, table.job_id],
+				name: "job_media_pkey",
+			}),
+		};
+	}
+);
+
+export const project_media = pgTable(
+	"project_media",
+	{
+		media_id: uuid("media_id")
+			.notNull()
+			.references(() => media.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		project_id: uuid("project_id")
+			.notNull()
+			.references(() => projects.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			project_media_pkey: primaryKey({
+				columns: [table.media_id, table.project_id],
+				name: "project_media_pkey",
+			}),
+		};
+	}
+);
+
+export const review_media = pgTable(
+	"review_media",
+	{
+		media_id: uuid("media_id")
+			.notNull()
+			.references(() => media.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		review_id: uuid("review_id")
+			.notNull()
+			.references(() => reviews.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			review_media_pkey: primaryKey({
+				columns: [table.media_id, table.review_id],
+				name: "review_media_pkey",
 			}),
 		};
 	}
