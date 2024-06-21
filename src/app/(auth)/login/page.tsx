@@ -1,6 +1,6 @@
 "use client";
 
-import LoginForm from "@/components/auth/LoginForm";
+import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
 
@@ -16,5 +16,9 @@ export default function LoginPage() {
 		router.push("/create-account");
 	}
 
-	return <LoginForm />;
+	return (
+		<div className="mx-auto w-full max-w-[350px]">
+			<LoginForm />
+		</div>
+	);
 }

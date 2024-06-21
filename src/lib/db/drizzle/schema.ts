@@ -6,15 +6,14 @@ import {
 	text,
 	timestamp,
 	varchar,
-	char,
-	numeric,
 	boolean,
+	numeric,
 	date,
+	jsonb,
 	serial,
 	bigint,
 	primaryKey,
 	pgSchema,
-	time,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -93,7 +92,6 @@ const authSchema = pgSchema("auth");
 const users = authSchema.table("users", {
 	id: uuid("id").primaryKey(),
 });
-
 export const accounts = pgTable("accounts", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	user_id: uuid("user_id")
@@ -131,30 +129,6 @@ export const account_subscriptions = pgTable("account_subscriptions", {
 		length: 255,
 	}).notNull(),
 	stripe_price_id: varchar("stripe_price_id", { length: 255 }).notNull(),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
-export const addresses = pgTable("addresses", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	label: varchar("label"),
-	number: varchar("number"),
-	country: char("country", { length: 3 }),
-	municipality: varchar("municipality"),
-	neighborhood: varchar("neighborhood"),
-	postal_code: varchar("postal_code"),
-	region: varchar("region"),
-	street: varchar("street"),
-	sub_municipality: varchar("sub_municipality"),
-	sub_region: varchar("sub_region"),
-	time_zone: time("time_zone"),
-	unit_number: varchar("unit_number"),
-	unit_type: varchar("unit_type"),
-	x_geometry: numeric("x_geometry"),
-	y_geometry: numeric("y_geometry"),
 	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
 		.default(sql`clock_timestamp()`)
 		.notNull(),
@@ -342,6 +316,26 @@ export const media_relationships = pgTable("media_relationships", {
 		.notNull(),
 	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
+
+export const addresses = pgTable("addresses", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	x_coordinate: numeric("x_coordinate").notNull(),
+	y_coordinate: numeric("y_coordinate").notNull(),
+	line_1: varchar("line_1", { length: 70 }),
+	line_2: varchar("line_2", { length: 70 }),
+	city: varchar("city", { length: 50 }),
+	region: varchar("region", { length: 50 }),
+	postal_code: varchar("postal_code", { length: 10 }).notNull(),
+	country: varchar("country", { length: 60 }).notNull(),
+	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	raw_json: jsonb("raw_json"),
+	district: text("district"),
+	region_code: text("region_code"),
 });
 
 export const goose_db_version = pgTable("goose_db_version", {

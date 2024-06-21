@@ -3,7 +3,7 @@ import { env } from "@/lib/env.mjs";
 
 export default {
 	schema: "./src/lib/db/schema",
-	out: "./src/lib/db/migrations",
+	out: "./src/lib/db/drizzle",
 	dialect: "postgresql",
 	dbCredentials: {
 		url: env.DATABASE_URL,

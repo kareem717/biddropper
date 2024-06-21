@@ -1,6 +1,6 @@
 "use client"
 import { ReactNode } from 'react';
-import { accounts } from '@/lib/db/migrations/schema';
+import { accounts } from '@/lib/db/drizzle/schema';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { InferSelectModel } from 'drizzle-orm';
 import { createContext, useContext } from 'react';

@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { accountInsertSchema } from "@/lib/validation/db";
+import { accountInsertSchema } from "@/lib/validations/db";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -15,17 +15,17 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner"
 import { trpc } from "@/lib/trpc/client";
 import { useRouter } from "next/navigation";
 import { Icons } from "../Icons";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { Textarea } from "../ui/textarea";
 
 export const CreateAccountForm = () => {
 	const { user } = useAuth();
 	const router = useRouter();
-	const { mutate: createAccount, isLoading: isCreatingAccount } = trpc.account.createUserAccount.useMutation({
+	const { mutateAsync: createAccount, isLoading: isCreatingAccount } = trpc.account.createAccount.useMutation({
 		onError: () => {
 			toast.error("Something went wrong!", {
 				description: "Please try again later."
@@ -41,25 +41,27 @@ export const CreateAccountForm = () => {
 		resolver: zodResolver(accountInsertSchema),
 		defaultValues: {
 			user_id: user?.id,
+			description: "",
+			username: "",
 		},
 	});
 
-	function onSubmit(values: z.infer<typeof accountInsertSchema>) {
-		createAccount(values);
+	async function onSubmit(values: z.infer<typeof accountInsertSchema>) {
+		await createAccount(values);
 	}
 
 	return (
 
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 				<FormField
 					control={form.control}
 					name="username"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>user_name</FormLabel>
+							<FormLabel>Username</FormLabel>
 							<FormControl>
-								<Input placeholder="johnDaContractor" {...field} />
+								<Input placeholder="jimmy77" {...field} />
 							</FormControl>
 							<FormDescription>
 								This is your public display name.
@@ -75,8 +77,11 @@ export const CreateAccountForm = () => {
 						<FormItem>
 							<FormLabel>Description</FormLabel>
 							<FormControl>
-								<Textarea {...field} value={field.value || ""} />
+								<Textarea placeholder="I'm a contractor" {...field} value={field.value || ''} />
 							</FormControl>
+							<FormDescription>
+								This is your public display name.
+							</FormDescription>
 							<FormMessage />
 						</FormItem>
 					)}

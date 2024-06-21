@@ -2,6 +2,8 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { Context } from "@/lib/trpc/context";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { accounts } from "../db/drizzle/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Initialization of tRPC backend
@@ -27,7 +29,7 @@ const t = initTRPC.context<Context>().create({
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
-export const authProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const userProcedure = t.procedure.use(async ({ ctx, next }) => {
 	if (!ctx.user) {
 		throw new TRPCError({
 			code: "UNAUTHORIZED",
@@ -36,4 +38,19 @@ export const authProcedure = t.procedure.use(async ({ ctx, next }) => {
 	}
 
 	return next({ ctx: { ...ctx, user: ctx.user } });
+});
+
+export const accountProcedure = userProcedure.use(async ({ ctx, next }) => {
+	const [account] = await ctx.db
+		.select()
+		.from(accounts)
+		.where(eq(accounts.user_id, ctx.user.id));
+
+	if (!account) {
+		throw new TRPCError({
+			code: "NOT_FOUND",
+			message: "Account not found",
+		});
+	}
+	return next({ ctx: { ...ctx, account: account } });
 });

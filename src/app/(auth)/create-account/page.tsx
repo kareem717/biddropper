@@ -22,7 +22,9 @@ export default function CreateAccountPage() {
 				<h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
 				<p className="text-sm text-muted-foreground">Finish setting up your account to get started</p>
 			</div>
-			<CreateAccountForm />
+			<div className="mx-auto w-full max-w-[350px]">
+				<CreateAccountForm />
+			</div>
 		</div>
 	);
 
