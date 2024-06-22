@@ -25,6 +25,11 @@ import { Textarea } from "../ui/textarea";
 export const CreateAccountForm = () => {
 	const { user } = useAuth();
 	const router = useRouter();
+
+	if (!user) {
+		throw new Error("User not found");
+	}
+
 	const { mutateAsync: createAccount, isLoading: isCreatingAccount } = trpc.account.createAccount.useMutation({
 		onError: () => {
 			toast.error("Something went wrong!", {
@@ -40,7 +45,7 @@ export const CreateAccountForm = () => {
 	const form = useForm<z.infer<typeof accountInsertSchema>>({
 		resolver: zodResolver(accountInsertSchema),
 		defaultValues: {
-			user_id: user?.id,
+			user_id: user.id,
 			description: "",
 			username: "",
 		},

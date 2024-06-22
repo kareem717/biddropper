@@ -7,19 +7,19 @@ import AddressInput from "./features/AddressInput";
 import useAddressInput from "@/lib/hooks/useAddressInput";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import useAutoFillMap from "@/lib/hooks/useAutoFillMap";
+import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
 
 interface AutoFillMapProps extends ComponentPropsWithoutRef<"div"> {
-  addressProps?: ComponentPropsWithoutRef<typeof AddressInput>;
   mapContainerProps?: ComponentPropsWithoutRef<typeof MapContainer>;
   defaultPosition?: { lat: number; lng: number };
+  addressInputProps?: ComponentPropsWithoutRef<typeof AddressInput>;
 }
 
-const AutoFillMap: FC<AutoFillMapProps> = ({
-  addressProps,
+export const AutoFillMap: FC<AutoFillMapProps> = ({
   mapContainerProps,
   defaultPosition = { lat: 43.6532, lng: -79.3832 },
   className,
+  addressInputProps,
   ...props
 }) => {
   const { address } = useAddressInput();
@@ -35,8 +35,8 @@ const AutoFillMap: FC<AutoFillMapProps> = ({
   );
 
   const centerPosition = {
-    lat: Number(address?.latitude) || defaultPosition.lat,
-    lng: Number(address?.longitude) || defaultPosition.lng,
+    lat: Number(address?.y_coordinate) || defaultPosition.lat,
+    lng: Number(address?.x_coordinate) || defaultPosition.lng,
   };
 
   const MapPanner = () => {
@@ -55,11 +55,14 @@ const AutoFillMap: FC<AutoFillMapProps> = ({
     >
       <AddressInput
         className="absolute right-1 top-1 z-20 h-10 w-3/4 sm:right-2 sm:top-2 sm:h-12 sm:w-2/5"
-        {...addressProps}
+        {...addressInputProps}
         onRetrieve={(address) => {
           setMapAddress(address);
-          addressProps?.onRetrieve?.(address);
+          addressInputProps?.onRetrieve?.(address);
         }}
+        autoComplete="off"
+        placeholder="Enter address"
+        {...addressInputProps}
       />
       <MapContainer
         center={centerPosition}
@@ -89,5 +92,3 @@ const AutoFillMap: FC<AutoFillMapProps> = ({
     </div>
   );
 };
-
-export default AutoFillMap;

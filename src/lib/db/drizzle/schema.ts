@@ -1,18 +1,19 @@
 import {
 	pgTable,
-	pgSchema,
+	foreignKey,
 	pgEnum,
 	uuid,
-	text,
-	timestamp,
 	varchar,
+	text,
 	boolean,
+	timestamp,
 	numeric,
-	date,
 	jsonb,
 	serial,
 	bigint,
+	date,
 	primaryKey,
+	pgSchema,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -88,148 +89,8 @@ export const equality_op = pgEnum("equality_op", [
 
 const authSchema = pgSchema("auth");
 
-const users = authSchema.table("users", {
+export const users = authSchema.table("users", {
 	id: uuid("id").primaryKey(),
-});
-
-export const accounts = pgTable("accounts", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	user_id: uuid("user_id")
-		.notNull()
-		.references(() => users.id, { onDelete: "restrict", onUpdate: "cascade" }),
-	username: text("username").notNull(),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	description: text("description"),
-});
-
-export const industries = pgTable("industries", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	name: varchar("name", { length: 255 }).notNull(),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
-export const account_subscriptions = pgTable("account_subscriptions", {
-	account_id: uuid("account_id")
-		.primaryKey()
-		.notNull()
-		.references(() => accounts.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	stripe_customer_id: varchar("stripe_customer_id", { length: 255 }).notNull(),
-	stripe_subscription_id: varchar("stripe_subscription_id", {
-		length: 255,
-	}).notNull(),
-	stripe_price_id: varchar("stripe_price_id", { length: 255 }).notNull(),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
-export const jobs = pgTable("jobs", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	is_active: boolean("is_active").default(true).notNull(),
-	is_commercial_property: boolean("is_commercial_property")
-		.default(false)
-		.notNull(),
-	description: varchar("description", { length: 3000 }).notNull(),
-	start_date: timestamp("start_date", {
-		withTimezone: true,
-		mode: "string",
-	}).notNull(),
-	end_date: timestamp("end_date", { withTimezone: true, mode: "string" }),
-	start_date_flag: start_date_flag("start_date_flag").default("none").notNull(),
-	property_type: enum_jobs_property_type("property_type").notNull(),
-	address_id: uuid("address_id")
-		.notNull()
-		.references(() => addresses.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	title: varchar("title", { length: 100 }).notNull(),
-	tags: varchar("tags").array(),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
-export const companies = pgTable("companies", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	name: varchar("name", { length: 50 }).notNull(),
-	owner_id: uuid("owner_id")
-		.notNull()
-		.references(() => accounts.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	address_id: uuid("address_id")
-		.notNull()
-		.references(() => addresses.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	service_area: numeric("service_area", { precision: 7, scale: 3 }),
-	email_address: varchar("email_address", { length: 320 }).notNull(),
-	phone_number: varchar("phone_number", { length: 20 }).notNull(),
-	website_url: text("website_url"),
-	is_verified: boolean("is_verified").default(false).notNull(),
-	date_founded: date("date_founded").notNull(),
-	is_active: boolean("is_active").default(true).notNull(),
-	tags: varchar("tags").array(),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	image_id: uuid("image_id").references(() => media.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-});
-
-export const contracts = pgTable("contracts", {
-	id: uuid("id").primaryKey().notNull(),
-	is_active: boolean("is_active").default(true).notNull(),
-	title: varchar("title", { length: 100 }).notNull(),
-	description: varchar("description", { length: 3000 }).notNull(),
-	price: numeric("price", { precision: 10, scale: 2 }).notNull(),
-	price_currency: varchar("price_currency", { length: 3 }).notNull(),
-	expiry_date: timestamp("expiry_date", { withTimezone: true, mode: "string" }),
-	company_id: uuid("company_id")
-		.notNull()
-		.references(() => companies.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	tags: varchar("tags").default("{}").array().notNull(),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
-export const media = pgTable("media", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	url: text("url").notNull(),
-	type: text("type").notNull(),
-	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
 export const projects = pgTable("projects", {
@@ -243,6 +104,17 @@ export const projects = pgTable("projects", {
 			onUpdate: "cascade",
 		}),
 	is_active: boolean("is_active").default(true).notNull(),
+	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
+
+export const media = pgTable("media", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	url: text("url").notNull(),
+	type: text("type").notNull(),
 	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
 		.default(sql`clock_timestamp()`)
 		.notNull(),
@@ -322,70 +194,150 @@ export const goose_db_version = pgTable("goose_db_version", {
 	tstamp: timestamp("tstamp", { mode: "string" }).defaultNow(),
 });
 
-export const contract_jobs = pgTable(
-	"contract_jobs",
-	{
-		job_id: uuid("job_id")
-			.notNull()
-			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
-		contract_id: uuid("contract_id")
-			.notNull()
-			.references(() => contracts.id, {
-				onDelete: "restrict",
-				onUpdate: "cascade",
-			}),
-	},
-	(table) => {
-		return {
-			contract_jobs_pkey: primaryKey({
-				columns: [table.job_id, table.contract_id],
-				name: "contract_jobs_pkey",
-			}),
-		};
-	}
-);
+export const accounts = pgTable("accounts", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	user_id: uuid("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "restrict", onUpdate: "cascade" }),
+	username: text("username").notNull(),
+	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	description: text("description"),
+});
 
-export const user_jobs = pgTable(
-	"user_jobs",
-	{
-		job_id: uuid("job_id")
-			.notNull()
-			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
-		user_id: uuid("user_id")
-			.notNull()
-			.references(() => accounts.id, {
-				onDelete: "restrict",
-				onUpdate: "cascade",
-			}),
-	},
-	(table) => {
-		return {
-			user_jobs_pkey: primaryKey({
-				columns: [table.job_id, table.user_id],
-				name: "user_jobs_pkey",
-			}),
-		};
-	}
-);
+export const account_subscriptions = pgTable("account_subscriptions", {
+	account_id: uuid("account_id")
+		.primaryKey()
+		.notNull()
+		.references(() => accounts.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	stripe_customer_id: varchar("stripe_customer_id", { length: 255 }).notNull(),
+	stripe_subscription_id: varchar("stripe_subscription_id", {
+		length: 255,
+	}).notNull(),
+	stripe_price_id: varchar("stripe_price_id", { length: 255 }).notNull(),
+	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
 
-export const company_jobs = pgTable(
-	"company_jobs",
+export const contracts = pgTable("contracts", {
+	id: uuid("id").primaryKey().notNull(),
+	is_active: boolean("is_active").default(true).notNull(),
+	title: varchar("title", { length: 100 }).notNull(),
+	description: varchar("description", { length: 3000 }).notNull(),
+	price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+	price_currency: varchar("price_currency", { length: 3 }).notNull(),
+	expiry_date: timestamp("expiry_date", { withTimezone: true, mode: "string" }),
+	company_id: uuid("company_id")
+		.notNull()
+		.references(() => companies.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	tags: varchar("tags").default("{}").array().notNull(),
+	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
+
+export const industries = pgTable("industries", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	name: varchar("name", { length: 255 }).notNull(),
+	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
+
+export const jobs = pgTable("jobs", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	is_active: boolean("is_active").default(true).notNull(),
+	is_commercial_property: boolean("is_commercial_property")
+		.default(false)
+		.notNull(),
+	description: varchar("description", { length: 3000 }).notNull(),
+	start_date: timestamp("start_date", {
+		withTimezone: true,
+		mode: "string",
+	}).notNull(),
+	end_date: timestamp("end_date", { withTimezone: true, mode: "string" }),
+	start_date_flag: start_date_flag("start_date_flag").default("none").notNull(),
+	property_type: enum_jobs_property_type("property_type").notNull(),
+	address_id: uuid("address_id")
+		.notNull()
+		.references(() => addresses.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	title: varchar("title", { length: 100 }).notNull(),
+	tags: varchar("tags").array(),
+	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
+
+export const companies = pgTable("companies", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	name: varchar("name", { length: 50 }).notNull(),
+	owner_id: uuid("owner_id")
+		.notNull()
+		.references(() => accounts.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	address_id: uuid("address_id")
+		.notNull()
+		.references(() => addresses.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	service_area: numeric("service_area", { precision: 7, scale: 3 }),
+	email_address: varchar("email_address", { length: 320 }).notNull(),
+	phone_number: varchar("phone_number", { length: 20 }).notNull(),
+	website_url: text("website_url"),
+	is_verified: boolean("is_verified").default(false).notNull(),
+	date_founded: date("date_founded").notNull(),
+	is_active: boolean("is_active").default(true).notNull(),
+	tags: varchar("tags").array(),
+	created_at: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updated_at: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deleted_at: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	image_id: uuid("image_id").references(() => media.id, {
+		onDelete: "restrict",
+		onUpdate: "cascade",
+	}),
+});
+
+export const job_bids = pgTable(
+	"job_bids",
 	{
 		job_id: uuid("job_id")
 			.notNull()
 			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
-		company_id: uuid("company_id")
+		bid_id: uuid("bid_id")
 			.notNull()
-			.references(() => companies.id, {
-				onDelete: "restrict",
-				onUpdate: "cascade",
-			}),
+			.references(() => bids.id, { onDelete: "restrict", onUpdate: "cascade" }),
 	},
 	(table) => {
 		return {
-			company_jobs_pkey: primaryKey({
-				columns: [table.job_id, table.company_id],
-				name: "company_jobs_pkey",
+			job_bids_pkey: primaryKey({
+				columns: [table.job_id, table.bid_id],
+				name: "job_bids_pkey",
 			}),
 		};
 	}
@@ -409,26 +361,6 @@ export const contract_bids = pgTable(
 			contract_bids_pkey: primaryKey({
 				columns: [table.contract_id, table.bid_id],
 				name: "contract_bids_pkey",
-			}),
-		};
-	}
-);
-
-export const job_bids = pgTable(
-	"job_bids",
-	{
-		job_id: uuid("job_id")
-			.notNull()
-			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
-		bid_id: uuid("bid_id")
-			.notNull()
-			.references(() => bids.id, { onDelete: "restrict", onUpdate: "cascade" }),
-	},
-	(table) => {
-		return {
-			job_bids_pkey: primaryKey({
-				columns: [table.job_id, table.bid_id],
-				name: "job_bids_pkey",
 			}),
 		};
 	}
@@ -478,6 +410,75 @@ export const job_industries = pgTable(
 			job_industries_pkey: primaryKey({
 				columns: [table.job_id, table.industry_id],
 				name: "job_industries_pkey",
+			}),
+		};
+	}
+);
+
+export const account_jobs = pgTable(
+	"account_jobs",
+	{
+		job_id: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
+		account_id: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+	},
+	(table) => {
+		return {
+			account_jobs_pkey: primaryKey({
+				columns: [table.job_id, table.account_id],
+				name: "account_jobs_pkey",
+			}),
+		};
+	}
+);
+
+export const contract_jobs = pgTable(
+	"contract_jobs",
+	{
+		job_id: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
+		contract_id: uuid("contract_id")
+			.notNull()
+			.references(() => contracts.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+	},
+	(table) => {
+		return {
+			contract_jobs_pkey: primaryKey({
+				columns: [table.job_id, table.contract_id],
+				name: "contract_jobs_pkey",
+			}),
+		};
+	}
+);
+
+export const company_jobs = pgTable(
+	"company_jobs",
+	{
+		job_id: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
+		company_id: uuid("company_id")
+			.notNull()
+			.references(() => companies.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+	},
+	(table) => {
+		return {
+			company_jobs_pkey: primaryKey({
+				columns: [table.job_id, table.company_id],
+				name: "company_jobs_pkey",
 			}),
 		};
 	}

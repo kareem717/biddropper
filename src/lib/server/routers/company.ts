@@ -5,11 +5,14 @@ import {
 } from "@/lib/db/drizzle/schema";
 import { router, accountProcedure } from "../trpc";
 import { NewCompanySchema } from "@/lib/validations/company";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { industries } from "@/lib/db/drizzle/schema";
 
 export const companyRouter = router({
+	getOwnedCompanies: accountProcedure.query(async ({ ctx }) => {
+		return ctx.ownedCompanies;
+	}),
 	getCompanyFull: accountProcedure
 		.input(
 			z.object({
@@ -33,7 +36,10 @@ export const companyRouter = router({
 				.where(eq(company_industries.company_id, id))
 				.innerJoin(
 					industries,
-					eq(company_industries.industry_id, industries.id)
+					and(
+						eq(company_industries.industry_id, industries.id),
+						isNull(industries.deleted_at)
+					)
 				);
 
 			return {

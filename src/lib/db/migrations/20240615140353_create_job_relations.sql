@@ -8,10 +8,10 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    user_jobs (
+    account_jobs (
         job_id UUID NOT NULL REFERENCES jobs ON UPDATE CASCADE ON DELETE RESTRICT,
-        user_id UUID NOT NULL REFERENCES accounts ON UPDATE CASCADE ON DELETE RESTRICT,
-        PRIMARY KEY (job_id, user_id)
+        account_id UUID NOT NULL REFERENCES accounts ON UPDATE CASCADE ON DELETE RESTRICT,
+        PRIMARY KEY (job_id, account_id)
     );
 
 CREATE TABLE
@@ -26,7 +26,7 @@ CREATE TABLE
 -- +goose StatementBegin
 DROP TABLE contract_jobs;
 
-DROP TABLE user_jobs;
+DROP TABLE account_jobs;
 
 DROP TABLE company_jobs;
 

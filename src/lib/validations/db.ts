@@ -4,6 +4,7 @@ import {
 	companies,
 	industries,
 	addresses,
+	media,
 } from "@/lib/db/drizzle/schema";
 import { z } from "zod";
 
@@ -50,3 +51,11 @@ export const addressInsertSchema = createInsertSchema(addresses).omit({
 	deleted_at: true,
 });
 export const addressSelectSchema = createSelectSchema(addresses);
+
+export const mediaInsertSchema = createInsertSchema(media).omit({
+	id: true,
+	created_at: true,
+	updated_at: true,
+	deleted_at: true,
+});
+export const mediaSelectSchema = createSelectSchema(media);
