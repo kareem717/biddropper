@@ -20,7 +20,7 @@ export const jobRouter = router({
 		)
 		.query(async ({ ctx, input }) => {
 			const { id } = input;
-			const job = await ctx.db
+			const [res] = await ctx.db
 				.select({
 					job: jobs,
 					address: addresses,
@@ -41,9 +41,22 @@ export const jobRouter = router({
 					)
 				);
 
+			const owner_company = await ctx.db
+				.select({ company_id: company_jobs.company_id }) // Specify the property to select
+				.from(company_jobs)
+				.where(eq(company_jobs.job_id, res.job.id));
+
+			const owner_account = await ctx.db
+				.select({ account_id: account_jobs.account_id }) // Specify the property to select
+				.from(account_jobs)
+				.where(eq(account_jobs.job_id, res.job.id));
+
 			return {
-				...job,
+				...res.job,
+				address: res.address,
 				industries: jobIndustries,
+				company_id: owner_company,
+				account_id: owner_account,
 			};
 		}),
 

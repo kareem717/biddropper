@@ -12,9 +12,11 @@
     "db:drop": "drizzle-kit drop",
     "db:pull": "drizzle-kit introspect",
     "db:studio": "drizzle-kit studio",
-    "db:check": "drizzle-kit check:pg"
+    "db:check": "drizzle-kit check",
+    "db:seed": "tsx ./src/lib/db/seed.ts"
   },
   "dependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@hookform/resolvers": "^3.6.0",
     "@mapbox/search-js-core": "latest",
     "@mapbox/search-js-react": "latest",
@@ -70,6 +72,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pg": "^8.11.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "dotenv": "^16.4.5",
