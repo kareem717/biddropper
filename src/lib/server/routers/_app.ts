@@ -4,6 +4,7 @@ import { accountRouter } from "./account";
 import { industryRouter } from "./industry";
 import { companyRouter } from "./company";
 import { jobRouter } from "./job";
+import { bidRouter } from "./bid";
 
 export const appRouter = router({
 	auth: authRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
 	industry: industryRouter,
 	company: companyRouter,
 	job: jobRouter,
+	bid: bidRouter,
 });
 
 export type AppRouter = typeof appRouter;

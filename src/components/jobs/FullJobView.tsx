@@ -8,6 +8,15 @@ import { ComponentPropsWithoutRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { SendBidForm } from "../bids/SendBidForm"
 
 export interface FullJobViewProps extends ComponentPropsWithoutRef<typeof Card> {
   jobId: string
@@ -44,7 +53,21 @@ export const FullJobView = ({ jobId, className, ...props }: FullJobViewProps) =>
       </div>
       <div className="mt-4">
         <Input placeholder={`Reply ${job.title}...`} />
-        <Button className="mt-2">Send</Button>
+        <Dialog>
+          <DialogTrigger>
+            <Button className="mt-2">Drop a bid</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Are you absolutely sure?</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently delete your account
+                and remove your data from our servers.
+              </DialogDescription>
+            </DialogHeader>
+            <SendBidForm jobId={job.id} />
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   )

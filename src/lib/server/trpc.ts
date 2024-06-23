@@ -54,3 +54,16 @@ export const accountProcedure = userProcedure.use(async ({ ctx, next }) => {
 	}
 	return next({ ctx: { ...ctx, account: account } });
 });
+
+export const companyOwnerProcedure = accountProcedure.use(
+	async ({ ctx, next }) => {
+		if (!ctx.ownedCompanies) {
+			throw new TRPCError({
+				code: "FORBIDDEN",
+				message: "You are not the owner of any companies",
+			});
+		}
+
+		return next({ ctx: { ...ctx, ownedCompanies: ctx.ownedCompanies } });
+	}
+);
