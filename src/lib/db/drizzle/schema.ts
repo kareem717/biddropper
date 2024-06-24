@@ -124,7 +124,7 @@ export const media = pgTable("media", {
 
 export const bids = pgTable("bids", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+	price_usd: numeric("price_usd", { precision: 10, scale: 2 }).notNull(),
 	sender_company_id: uuid("sender_company_id")
 		.notNull()
 		.references(() => companies.id, {

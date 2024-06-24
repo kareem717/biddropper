@@ -1,6 +1,13 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { jobs, addresses, industries, job_industries } from "./drizzle/schema";
+import {
+	jobs,
+	addresses,
+	industries,
+	job_industries,
+	bids,
+	bid_status,
+} from "./drizzle/schema";
 import { faker } from "@faker-js/faker";
 import { randomUUID } from "crypto";
 import { env } from "../env.mjs";
@@ -14,6 +21,7 @@ const main = async () => {
 	const addressData: (typeof addresses.$inferInsert)[] = [];
 	const jobData: (typeof jobs.$inferInsert)[] = [];
 	const jobIndustryData: (typeof job_industries.$inferInsert)[] = [];
+	const bidData: (typeof bids.$inferInsert)[] = [];
 
 	await db.transaction(async (tx) => {
 		for (let i = 0; i < 150; i++) {
@@ -97,9 +105,28 @@ const main = async () => {
 		console.log("Seed start [job_industries]");
 		// insert in batches of 1k
 		for (let i = 0; i < jobIndustryData.length; i += 1000) {
-			await tx.insert(job_industries).values(jobIndustryData.slice(i, i + 1000));
+			await tx
+				.insert(job_industries)
+				.values(jobIndustryData.slice(i, i + 1000));
 		}
 		console.log("Seed done [job_industries]");
+
+		// add 1-50 bids per job
+		for (let j = 0; j < 50000; j++) {
+			bidData.push({
+				id: randomUUID(),
+				sender_company_id: "44141008-0a47-42d9-818c-d51240e050d4",
+				note: faker.lorem.sentence({ min: 10, max: 15 }),
+				price_usd: faker.number.int({ min: 1000, max: 24999999 }).toString(),
+				status: faker.helpers.arrayElement(bid_status.enumValues),
+			});
+		}
+		console.log("Seed start [bids]");
+		// insert in batches of 1k
+		for (let i = 0; i < bidData.length; i += 1000) {
+			await tx.insert(bids).values(bidData.slice(i, i + 1000));
+		}
+		console.log("Seed done [bids]");
 	});
 };
 
