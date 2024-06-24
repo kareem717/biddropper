@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import AddressInput from "./features/AddressInput";
 import useAddressInput from "@/lib/hooks/useAddressInput";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
 
 interface AutoFillMapProps extends ComponentPropsWithoutRef<"div"> {

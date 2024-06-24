@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { FC, ComponentPropsWithoutRef, useState } from "react";
 import { Icons } from "../Icons";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { trpc } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import { Industry, useIndustrySelect } from "@/lib/hooks/useIndustrySelect";

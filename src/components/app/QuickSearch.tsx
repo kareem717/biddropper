@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ComponentPropsWithoutRef, FC, useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 
 export interface QuickSearchProps extends ComponentPropsWithoutRef<typeof Button> {
 }

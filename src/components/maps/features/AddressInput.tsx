@@ -6,7 +6,7 @@ import { AddressAutofill } from "@mapbox/search-js-react";
 import { env } from "@/lib/env.mjs";
 import type { AddressAutofillRetrieveResponse } from "@mapbox/search-js-core";
 import useAddressInput, { Address } from "@/lib/hooks/useAddressInput";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { addressInsertSchema } from "@/lib/validations/db";
 
 interface AddressInputProps extends ComponentPropsWithoutRef<typeof Input> {

@@ -9,7 +9,7 @@ import { type Account, type User } from "@/components/providers/AuthProvider";
 import { cookies } from "next/headers";
 import TrpcProvider from "@/components/providers/TRPCProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 
 const inter = Inter({ subsets: ["latin"] });
 
