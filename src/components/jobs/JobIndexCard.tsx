@@ -9,15 +9,15 @@ import {
   CardFooter
 } from "@/components/ui/card"
 import { trpc } from "@/lib/trpc/client"
-import { cn } from "@/lib/utils"
+import { cn } from "@/utils"
 import { ComponentPropsWithoutRef } from "react"
 import { Badge } from "@/components/ui/badge"
 
-export interface JobListingCardProps extends ComponentPropsWithoutRef<typeof Card> {
+export interface JobIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {
   jobId: string
 }
 
-export const JobListingCard = ({ jobId, className, ...props }: JobListingCardProps) => {
+export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) => {
   const { data: job, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId })
   return (
     <Card className={cn("cursor-pointer", className)} {...props}>

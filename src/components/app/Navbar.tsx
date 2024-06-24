@@ -36,7 +36,7 @@ export const Navbar = ({ ...props }: NavbarProps) => {
                 <Icons.slash className="w-4 h-4" />
               </BreadcrumbSeparator>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+                <BreadcrumbPage>Dashboard</BreadcrumbPage>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block">
                 <Icons.slash className="w-4 h-4" />

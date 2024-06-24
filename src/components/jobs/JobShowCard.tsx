@@ -16,13 +16,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { SendBidForm } from "../bids/SendBidForm"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { DropBidForm } from "../bids/DropBidForm"
 
-export interface FullJobViewProps extends ComponentPropsWithoutRef<typeof Card> {
+export interface JobShowCardProps extends ComponentPropsWithoutRef<typeof Card> {
   jobId: string
 }
 
-export const FullJobView = ({ jobId, className, ...props }: FullJobViewProps) => {
+export const JobShowCard = ({ jobId, className, ...props }: JobShowCardProps) => {
   const { data: job, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId })
   if (isLoading) {
     return <p>Loading...</p>
@@ -37,6 +38,15 @@ export const FullJobView = ({ jobId, className, ...props }: FullJobViewProps) =>
 
   return (
     <>
+      <div className="flex items-center mb-4">
+        <Avatar>
+          <AvatarFallback>{job.account.username[0] || job.company.name[0]}</AvatarFallback>
+        </Avatar>
+        <div className="ml-2">
+          <p className="font-semibold">{job.account.username || job.company.name}</p>
+          {job.company.email_address && <p className="text-muted-foreground">{job.company.email_address}</p>}
+        </div>
+      </div>
       <div className="flex items-center mb-4">
         <div className="ml-2">
           <p className="font-semibold">{job.title}</p>
@@ -65,7 +75,7 @@ export const FullJobView = ({ jobId, className, ...props }: FullJobViewProps) =>
                 and remove your data from our servers.
               </DialogDescription>
             </DialogHeader>
-            <SendBidForm jobId={job.id} />
+            <DropBidForm jobId={job.id} />
           </DialogContent>
         </Dialog>
       </div>

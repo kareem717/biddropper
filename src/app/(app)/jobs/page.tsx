@@ -7,10 +7,11 @@
 
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
-import { JobListingCard } from "@/components/jobs/JobListingCard"
-import { FullJobView } from "@/components/jobs/FullJobView"
+import { JobIndexCard } from "@/components/jobs/JobIndexCard"
+import { JobShowCard } from "@/components/jobs/JobShowCard"
 import { ScrollArea } from "@/components/ui/scroll-area"
-export default function Component() {
+
+export default function JobsPage() {
   const [selectedContract, setSelectedContract] = useState(null)
   const [showDetails, setShowDetails] = useState(false)
   const jobs = [
@@ -179,13 +180,13 @@ export default function Component() {
         </div>
         <ScrollArea className="grid grid-cols-1 gap-4 h-[80vh] px-4">
           {jobs.map((job) => (
-            <JobListingCard key={job.id} jobId={job.id} onClick={() => handleContractClick(job)} className="my-2" />
+            <JobIndexCard key={job.id} jobId={job.id} onClick={() => handleContractClick(job)} className="my-2" />
           ))}
         </ScrollArea>
       </main>
       {showDetails && selectedContract && (
         <aside className="p-4 border-l col-span-2">
-          <FullJobView jobId={selectedContract} />
+          <JobShowCard jobId={selectedContract} />
         </aside>
       )}
     </div>
