@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import { InferSelectModel } from "drizzle-orm";
 import { industries } from "../db/drizzle/schema";
+import { Industry as DbIndustry } from "../db/types";
 
-export type Industry = InferSelectModel<typeof industries>;
+export type Industry = DbIndustry;
 
 interface useIndustrySelectProps {
 	selectedIndustries: Industry[];
