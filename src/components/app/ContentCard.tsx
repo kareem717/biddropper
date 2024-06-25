@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+
 import {
   Card
 } from "@/components/ui/card";
@@ -18,16 +18,14 @@ export const ContentCard: FC<ContentCardProps> = ({
   ...props
 }) => {
   return (
-    <Link href={href}>
-      <Card
-        className={cn(
-          "md:aspect-square hover:scale-105 transition-all ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </Card>
-    </Link>
+    <Card
+      className={cn(
+        "md:aspect-square hover:scale-105 transition-all ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </Card>
   );
 };
