@@ -1,4 +1,4 @@
-import { ComponentPropsWithoutRef, useMemo, useState, FC } from "react";
+import { ComponentPropsWithoutRef, useMemo, useState, FC, useEffect } from "react";
 import { env } from "@/lib/env.mjs";
 import {
   MapContainer,
@@ -13,34 +13,37 @@ import "leaflet/dist/leaflet.css";
 import AddressInput from "./features/AddressInput";
 import useAddressInput from "@/lib/hooks/useAddressInput";
 import { useTheme } from "next-themes";
-import { LabelSlider } from "../LabelSlider";
+import { LabelSlider } from "../app/LabelSlider";
 import { cn } from "@/utils";
 import useRadiusMap from "@/lib/hooks/useRadiusMap";
+import { NewAddress } from "@/lib/validations/db";
 
 interface RadiusAddressMapProps extends ComponentPropsWithoutRef<"div"> {
   addressInputProps?: ComponentPropsWithoutRef<typeof AddressInput>;
   labelSliderProps?: ComponentPropsWithoutRef<typeof LabelSlider>;
   mapContainerProps?: ComponentPropsWithoutRef<typeof MapContainer>;
-
-  defaultPosition?: { lat: number; lng: number };
+  defaultAddress?: NewAddress;
+  defaultRadius?: number;
   label?: string;
 }
+
+const defaultPosition = { lat: 43.6532, lng: -79.3832 };
 
 const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
   addressInputProps,
   labelSliderProps,
   mapContainerProps,
-  defaultPosition = { lat: 43.6532, lng: -79.3832 },
   label,
+  defaultAddress,
+  defaultRadius,
   className,
   ...props
 }) => {
-  const { address } = useAddressInput();
   const { theme } = useTheme();
-  const [radius, setRadius] = useState<number>(50);
+  const [radius, setRadius] = useState<number>(defaultRadius || 50);
   const { onRetrieve: onRetrieveAddress } = addressInputProps || {};
   const { onValueChange: onValueChangeLabelSlider } = labelSliderProps || {};
-  const { setAddress: setMapAddress, setRadius: setMapRadius } = useRadiusMap();
+  const { setAddress: setMapAddress, setRadius: setMapRadius, getAddress: getMapAddress, getRadius: getMapRadius } = useRadiusMap();
 
   const mapStyle = useMemo(
     () =>
@@ -50,6 +53,15 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
     [theme],
   );
 
+  useEffect(() => {
+    if (defaultAddress) {
+      defaultPosition.lat = Number(defaultAddress.y_coordinate);
+      defaultPosition.lng = Number(defaultAddress.x_coordinate);
+      setMapAddress(defaultAddress);
+    }
+  }, [defaultAddress, setMapAddress])
+
+  const address = getMapAddress();
   const centerPosition = {
     lat: Number(address?.y_coordinate) || defaultPosition.lat,
     lng: Number(address?.x_coordinate) || defaultPosition.lng,
@@ -84,16 +96,16 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
         <div className="absolute bottom-6 z-20 flex w-full items-center justify-center">
           <LabelSlider
             defaultValue={[radius]}
-            onValueChange={(val) => {
-              setRadius(val[0] || 0);
-              setMapRadius(val[0] || 0);
-              onValueChangeLabelSlider?.(val);
-            }}
             max={5001}
             step={1}
             className="w-4/5 sm:w-1/2"
             label={label || " km"}
             {...labelSliderProps}
+            onValueChange={(val) => {
+              setRadius(val[0] || 0);
+              setMapRadius(val[0] || 0);
+              onValueChangeLabelSlider?.(val);
+            }}
           />
         </div>
       )}

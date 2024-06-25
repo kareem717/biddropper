@@ -35,7 +35,7 @@ export const companyRouter = router({
 		)
 		.query(async ({ ctx, input }) => {
 			const { id } = input;
-			const company = await ctx.db
+			const [company] = await ctx.db
 				.select({
 					company: companies,
 					address: addresses,
@@ -57,8 +57,9 @@ export const companyRouter = router({
 				);
 
 			return {
-				...company,
-				industries: companyIndustries,
+				...company.company,
+				address: company.address,
+				industries: companyIndustries.map((industry) => industry.industries),
 			};
 		}),
 
@@ -124,25 +125,29 @@ export const companyRouter = router({
 				await tx
 					.insert(company_industries)
 					.values(
-						industries.map((id) => ({
+						industries.map((industry) => ({
 							company_id: company.id!,
-							industry_id: id,
+							industry_id: industry.id,
 						}))
 					)
 					.onConflictDoNothing();
 
-				await tx
-					.delete(company_industries)
-					.where(
-						and(
-							not(inArray(company_industries.industry_id, industries)),
-							eq(company_industries.company_id, company.id!)
-						)
-					);
+				await tx.delete(company_industries).where(
+					and(
+						not(
+							inArray(
+								company_industries.industry_id,
+								industries.map((industry) => industry.id)
+							)
+						),
+						eq(company_industries.company_id, company.id!)
+					)
+				);
 
-				await tx.insert(companies).values({
-					...company,
-				});
+				await tx
+					.update(companies)
+					.set(company)
+					.where(eq(companies.id, company.id!));
 			});
 		}),
 	deleteCompany: companyOwnerProcedure

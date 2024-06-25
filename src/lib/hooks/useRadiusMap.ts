@@ -1,17 +1,19 @@
 import { create } from "zustand";
-import { type Address } from "./useAddressInput";
+import { type NewAddress } from "../validations/db";
 
 interface useRadiusMapProps {
-  address: Address | undefined;
+  address: NewAddress | undefined;
   radius: number | undefined;
-  setAddress: (address: Address | undefined) => void;
+  setAddress: (address: NewAddress | undefined) => void;
   setRadius: (radius: number) => void;
+  getAddress: () => NewAddress | undefined;
+  getRadius: () => number | undefined;
 }
 
 const useRadiusMap = create<useRadiusMapProps>((set, get) => ({
   address: undefined,
   radius: undefined,
-  setAddress: (address: Address | undefined) => {
+  setAddress: (address: NewAddress | undefined) => {
     set((state) => ({
       ...state,
       address,
@@ -22,6 +24,12 @@ const useRadiusMap = create<useRadiusMapProps>((set, get) => ({
       ...state,
       radius,
     }));
+  },
+  getAddress: () => {
+    return get().address;
+  },
+  getRadius: () => {
+    return get().radius;
   },
 }));
 

@@ -103,7 +103,6 @@ export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) 
 
   const handleConfirmDialog = async () => {
     await form.trigger()
-    console.log(form.formState.isValid)
     if (form.formState.isValid) {
       setIsDialogOpen(true);
     }
