@@ -1,21 +1,23 @@
 import { create } from "zustand";
 import * as z from "zod";
-import { addressInsertSchema } from "../validations/db";
-
-export type Address = z.infer<typeof addressInsertSchema>;
+import { NewAddress } from "../validations/db";
 
 interface useAddressInputProps {
-  address: Address | undefined;
-  setAddress: (address: Address | undefined) => void;
+  address: NewAddress | undefined;
+  setAddress: (address: NewAddress | undefined) => void;
+  getAddress: () => NewAddress | undefined;
 }
 
 const useAddressInput = create<useAddressInputProps>((set, get) => ({
   address: undefined,
-  setAddress: (address: Address | undefined) => {
+  setAddress: (address: NewAddress | undefined) => {
     set((state) => ({
       ...state,
       address,
     }));
+  },
+  getAddress: () => {
+    return get().address;
   },
 }));
 

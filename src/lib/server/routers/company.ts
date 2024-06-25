@@ -5,7 +5,7 @@ import {
 } from "@/lib/db/drizzle/schema";
 import { router, accountProcedure, companyOwnerProcedure } from "../trpc";
 import { EditCompanySchema, NewCompanySchema } from "@/lib/validations/company";
-import { eq, and, isNull, inArray } from "drizzle-orm";
+import { eq, and, isNull, inArray, not } from "drizzle-orm";
 import { z } from "zod";
 import { industries } from "@/lib/db/drizzle/schema";
 
@@ -98,66 +98,52 @@ export const companyRouter = router({
 	editCompany: companyOwnerProcedure
 		.input(EditCompanySchema)
 		.mutation(async ({ ctx, input }) => {
-			const {
-				address,
-				add_industries: addIndustries,
-				remove_industries: removeIndustries,
-				...company
-			} = input;
-			const newId = await ctx.db.transaction(async (tx) => {
-				let newAddress;
-				if (address) {
-					[newAddress] = await tx
+			const { address, industries, ...company } = input;
+			await ctx.db.transaction(async (tx) => {
+				const [currAddress] = await tx
+					.select()
+					.from(addresses)
+					.where(eq(addresses.id, company.address_id));
+
+				// if the address values have been changed, update the address
+				const addressChanged = Object.entries(address).some(([key, value]) =>
+					Object.entries(currAddress).some(([k, v]) => k === key && v !== value)
+				);
+
+				if (addressChanged) {
+					// Since we're reusing address in other places, we don't wanna update the current address, rather create a new one
+					const [newAddress] = await tx
 						.insert(addresses)
 						.values(address)
 						.returning({ id: addresses.id });
+
+					company.address_id = newAddress.id;
 				}
 
-				if (addIndustries) {
-					await tx
-						.insert(company_industries)
-						.values(
-							addIndustries.map((id) => ({
-								company_id: company.id!,
-								industry_id: id,
-							}))
+				// update the industries, if they already exist, do nothing, otherwise insert them
+				await tx
+					.insert(company_industries)
+					.values(
+						industries.map((id) => ({
+							company_id: company.id!,
+							industry_id: id,
+						}))
+					)
+					.onConflictDoNothing();
+
+				await tx
+					.delete(company_industries)
+					.where(
+						and(
+							not(inArray(company_industries.industry_id, industries)),
+							eq(company_industries.company_id, company.id!)
 						)
-						.onConflictDoNothing();
-				}
+					);
 
-				if (removeIndustries) {
-					await tx
-						.delete(company_industries)
-						.where(
-							and(
-								inArray(company_industries.industry_id, removeIndustries),
-								eq(company_industries.company_id, company.id!)
-							)
-						);
-				}
-
-				let newCompany;
-				if (newAddress) {
-					[newCompany] = await tx
-						.insert(companies)
-						.values({
-							...company,
-							address_id: newAddress.id,
-						})
-						.returning({ id: companies.id });
-				} else {
-					[newCompany] = await tx
-						.insert(companies)
-						.values({
-							...company,
-						})
-						.returning({ id: companies.id });
-				}
-
-				return newCompany.id;
+				await tx.insert(companies).values({
+					...company,
+				});
 			});
-
-			return newId;
 		}),
 	deleteCompany: companyOwnerProcedure
 		.input(

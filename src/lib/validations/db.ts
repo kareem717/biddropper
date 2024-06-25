@@ -50,6 +50,8 @@ export const addressInsertSchema = createInsertSchema(addresses).omit({
 	updated_at: true,
 	deleted_at: true,
 });
+
+export type NewAddress = z.infer<typeof addressInsertSchema>;
 export const addressSelectSchema = createSelectSchema(addresses);
 
 export const mediaInsertSchema = createInsertSchema(media).omit({

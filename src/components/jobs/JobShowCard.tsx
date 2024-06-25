@@ -58,7 +58,7 @@ export const JobShowCard = ({ jobId, className, ...props }: JobShowCardProps) =>
       <p>{job.description}</p>
       <div className="flex space-x-2 mt-4">
         {job.industries.map((industry, index) => (
-          <Badge key={index}>{industry.industries.name}</Badge>
+          <Badge key={index}>{industry.name}</Badge>
         ))}
       </div>
       <div className="mt-4">

@@ -17,11 +17,12 @@ interface CustomRadioButtonsProps
 }
 
 export const CustomRadioButtons: React.FC<CustomRadioButtonsProps> = ({
+  defaultValue,
   buttons,
   itemProps,
   ...props
 }) => {
-  const [selectedValue, setSelectedValue] = useState<string | undefined>();
+  const [selectedValue, setSelectedValue] = useState<string | undefined>(defaultValue);
 
   const handleButtonClick = (value: string) => {
     setSelectedValue(value);
@@ -29,9 +30,9 @@ export const CustomRadioButtons: React.FC<CustomRadioButtonsProps> = ({
       props.onValueChange(value);
     }
   };
-
+  
   return (
-    <RadioGroupPrimitive.Root {...props} onValueChange={handleButtonClick}>
+    <RadioGroupPrimitive.Root {...props} onValueChange={handleButtonClick} defaultValue={defaultValue}>
       {buttons.map((button) => (
         <div
           className={cn(

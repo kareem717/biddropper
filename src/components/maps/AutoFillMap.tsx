@@ -1,4 +1,4 @@
-import { ComponentPropsWithoutRef, useMemo, FC } from "react";
+import { ComponentPropsWithoutRef, useMemo, FC, useEffect } from "react";
 import { env } from "@/lib/env.mjs";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -8,22 +8,26 @@ import useAddressInput from "@/lib/hooks/useAddressInput";
 import { useTheme } from "next-themes";
 import { cn } from "@/utils";
 import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
+import { NewAddress } from "@/lib/validations/db";
 
 interface AutoFillMapProps extends ComponentPropsWithoutRef<"div"> {
   mapContainerProps?: ComponentPropsWithoutRef<typeof MapContainer>;
-  defaultPosition?: { lat: number; lng: number };
+  defaultAddress?: NewAddress;
   addressInputProps?: ComponentPropsWithoutRef<typeof AddressInput>;
 }
 
+
+const defaultPosition = { lat: 43.6532, lng: -79.3832 };
+
 export const AutoFillMap: FC<AutoFillMapProps> = ({
   mapContainerProps,
-  defaultPosition = { lat: 43.6532, lng: -79.3832 },
+  defaultAddress,
   className,
   addressInputProps,
   ...props
 }) => {
-  const { address } = useAddressInput();
-  const { setAddress: setMapAddress } = useAutoFillMap();
+  const { getAddress } = useAddressInput();
+  const { getAddress: getMapAddress, setAddress: setMapAddress } = useAutoFillMap();
   const { theme } = useTheme();
 
   const mapStyle = useMemo(
@@ -34,6 +38,15 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
     [theme],
   );
 
+  useEffect(() => {
+    if (defaultAddress) {
+      defaultPosition.lat = Number(defaultAddress.y_coordinate);
+      defaultPosition.lng = Number(defaultAddress.x_coordinate);
+      setMapAddress(defaultAddress);
+    }
+  }, [defaultAddress, setMapAddress])
+
+  const address = getAddress();
   const centerPosition = {
     lat: Number(address?.y_coordinate) || defaultPosition.lat,
     lng: Number(address?.x_coordinate) || defaultPosition.lng,
@@ -77,7 +90,7 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
           attribution='Imagery &copy; <a href="https://www.mapbox.com/">Mapbox</a>'
           url={`https://api.mapbox.com/styles/v1/${mapStyle}/tiles/256/{z}/{x}/{y}@2x?access_token=${env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`}
         />
-        {address ? (
+        {address || defaultAddress ? (
           <Marker
             position={centerPosition}
             icon={

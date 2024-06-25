@@ -1,7 +1,7 @@
 import { createInsertSchema } from "drizzle-zod";
 import { jobs } from "@/lib/db/drizzle/schema";
 import { z } from "zod";
-import { addressInsertSchema } from "./db";
+import { addressInsertSchema, industrySelectSchema } from "./db";
 
 export const NewJobSchema = createInsertSchema(jobs, {
 	title: z.string().min(3).max(60),
@@ -30,32 +30,14 @@ export const NewJobSchema = createInsertSchema(jobs, {
 		address_id: true,
 	});
 
+export type EditJob = z.infer<typeof EditJobSchema>;
 export const EditJobSchema = createInsertSchema(jobs, {
 	title: z.string().min(3).max(60),
 	tags: z.array(z.string().min(3).max(40)).max(10).optional(),
 })
 	.extend({
-		address: addressInsertSchema.optional(),
-		add_industries: z
-			.string({
-				invalid_type_error: "Industries must be an array of strings",
-				required_error: "Industries are required",
-			})
-			.uuid({
-				message: "Industries must be valid UUIDs",
-			})
-			.array()
-			.optional(),
-		remove_industries: z
-			.string({
-				invalid_type_error: "Industries must be an array of strings",
-				required_error: "Industries are required",
-			})
-			.uuid({
-				message: "Industries must be valid UUIDs",
-			})
-			.array()
-			.optional(),
+		address: addressInsertSchema,
+		industries: industrySelectSchema.array(),
 	})
 	.omit({
 		created_at: true,

@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { industries, job_industries } from "@/lib/db/drizzle/schema";
 import { EditJobSchema, NewJobSchema } from "@/lib/validations/job";
-import { and, isNull, inArray } from "drizzle-orm";
+import { and, isNull, inArray, not } from "drizzle-orm";
 
 export const jobRouter = router({
 	getJobFull: accountProcedure
@@ -65,7 +65,7 @@ export const jobRouter = router({
 			return {
 				...res.job,
 				address: res.address,
-				industries: jobIndustries,
+				industries: jobIndustries.map((industry) => industry.industries),
 				company: owner_company,
 				account: owner_account,
 			};
@@ -134,66 +134,56 @@ export const jobRouter = router({
 	editJob: accountProcedure
 		.input(EditJobSchema)
 		.mutation(async ({ ctx, input }) => {
-			const {
-				address,
-				add_industries: addIndustries,
-				remove_industries: removeIndustries,
-				...job
-			} = input;
-			const newId = await ctx.db.transaction(async (tx) => {
-				let newAddress;
-				if (address) {
-					[newAddress] = await tx
+			const { address, industries: inputIndustries, ...job } = input;
+			console.log(address, inputIndustries, job);
+			try {
+			await ctx.db.transaction(async (tx) => {
+				const [currAddress] = await tx
+					.select()
+					.from(addresses)
+					.where(eq(addresses.id, job.address_id));
+
+				// if the address values have been changed, update the address
+				const addressChanged = Object.entries(address).some(([key, value]) =>
+					Object.entries(currAddress).some(([k, v]) => k === key && v !== value)
+				);
+
+				if (addressChanged) {
+					// Since we're reusing address in other places, we don't wanna update the current address, rather create a new one
+					const [newAddress] = await tx
 						.insert(addresses)
 						.values(address)
 						.returning({ id: addresses.id });
+
+					job.address_id = newAddress.id;
 				}
 
-				if (addIndustries) {
-					await tx
-						.insert(job_industries)
-						.values(
-							addIndustries.map((id) => ({
-								job_id: job.id!,
-								industry_id: id,
-							}))
+				// update the industries, if they already exist, do nothing, otherwise insert them
+				await tx
+					.insert(job_industries)
+					.values(
+						inputIndustries.map((industry) => ({
+							job_id: job.id!,
+							industry_id: industry.id,
+						}))
+					)
+					.onConflictDoNothing();
+
+				await tx
+					.delete(job_industries)
+					.where(
+						and(
+							not(inArray(job_industries.industry_id, inputIndustries.map((industry) => industry.id))),
+							eq(job_industries.job_id, job.id!)
 						)
-						.onConflictDoNothing();
-				}
+					);
 
-				if (removeIndustries) {
-					await tx
-						.delete(job_industries)
-						.where(
-							and(
-								inArray(job_industries.industry_id, removeIndustries),
-								eq(job_industries.job_id, job.id!)
-							)
-						);
-				}
-
-				let newJob;
-				if (newAddress) {
-					[newJob] = await tx
-						.insert(jobs)
-						.values({
-							...job,
-							address_id: newAddress.id,
-						})
-						.returning({ id: jobs.id });
-				} else {
-					[newJob] = await tx
-						.insert(jobs)
-						.values({
-							...job,
-						})
-						.returning({ id: jobs.id });
-				}
-
-				return newJob.id;
+				await tx.update(jobs).set(job).where(eq(jobs.id, job.id!));
 			});
-
-			return newId;
+			} catch (e) {
+				console.log(e);
+				throw e;
+			}
 		}),
 	deleteJob: accountProcedure
 		.input(
