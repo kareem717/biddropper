@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog"
 import { DropBidForm } from "../bids/DropBidForm"
 import { useAuth } from "@/components/providers/AuthProvider"
-import { bid_status } from "@/lib/db/drizzle/schema"
+import { bidStatus } from "@/lib/db/drizzle/schema"
 import { toTitleCase, timeSince } from "@/utils"
 import { Icons } from "../Icons"
 import Link from "next/link"
@@ -56,7 +56,7 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
     isError: isErrorOwnedCompanies,
     error: errorOwnedCompanies } = trpc.company.getOwnedCompanies.useQuery()
   const { data: company, isLoading: isLoadingCompany, isError: isErrorCompany, error: errorCompany } = trpc.company.getCompanyById.useQuery(
-    { id: bid?.bids.sender_company_id || "" },
+    { id: bid?.bids.senderCompanyId || "" },
 
   );
   const [isAcceptOpen, setIsAcceptOpen] = useState(false)
@@ -89,7 +89,7 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
   }
 
 
-  const accountOwnsListing = account?.id === bid.job.owner_account_id || ownedCompanies?.some(c => c.id === bid.job.owner_company_id)
+  const accountOwnsListing = account?.id === bid.job.ownerAccountId || ownedCompanies?.some(c => c.id === bid.job.ownerCompanyId)
   return (
     <div>
       <div className="flex items-center mb-4">
@@ -98,14 +98,14 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
         </Avatar>
         <div className="ml-2">
           <p className="font-semibold">{company?.name}</p>
-          <p className="text-muted-foreground">{company?.email_address}</p>
+          <p className="text-muted-foreground">{company?.emailAddress}</p>
         </div>
       </div>
       <Link href={`/jobs/${bid.job.id}`} className="text-xl font-bold mb-2">{toTitleCase(bid.job.title)}</Link>
       <div className="flex space-x-2 mt-4">
         <Badge >{toTitleCase(bid.bids.status)}</Badge>
-        <Badge >{`$${bid.bids.price_usd}`}</Badge>
-        <Badge >Sent {timeSince(new Date(bid.bids.created_at))}</Badge>
+        <Badge >{`$${bid.bids.priceUsd}`}</Badge>
+        <Badge >Sent {timeSince(new Date(bid.bids.createdAt))}</Badge>
       </div>
       <p>{bid.bids.note}</p>
       <div className="mt-4 w-full">
@@ -115,7 +115,7 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
             <Button className="mt-2 w-full" key={company.id}>Accept</Button>
           </div>
         }
-        {!accountOwnsListing && ownedCompanies?.some(c => c.id === bid.bids.sender_company_id) && bid.bids.status === bid_status.enumValues[0] &&
+        {!accountOwnsListing && ownedCompanies?.some(c => c.id === bid.bids.senderCompanyId) && bid.bids.status === bidStatus.enumValues[0] &&
           <Button className="mt-2 w-full" key={company.id}>Withdraw</Button>
         }
       </div >

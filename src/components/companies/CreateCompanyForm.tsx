@@ -65,14 +65,14 @@ export const CreateCompanyForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      owner_id: account.id,
-      date_founded: (new Date(new Date().setFullYear(new Date().getFullYear() - 10))).toISOString(),
-      phone_number: "",
-      website_url: "",
-      email_address: "",
+      ownerId: account.id,
+      dateFounded: (new Date(new Date().setFullYear(new Date().getFullYear() - 10))).toISOString(),
+      phoneNumber: "",
+      websiteUrl: "",
+      emailAddress: "",
       name: "",
       address: address,
-      service_area: radius?.toString() || null,
+      serviceArea: radius?.toString() || null,
     },
   })
 
@@ -124,7 +124,7 @@ export const CreateCompanyForm = () => {
         <div className="flex flex-col md:flex-row gap-8">
           <FormField
             control={form.control}
-            name="email_address"
+            name="emailAddress"
             render={({ field }) => (
               <FormItem className="w-full">
                 <FormLabel>Email</FormLabel>
@@ -140,7 +140,7 @@ export const CreateCompanyForm = () => {
           />
           <FormField
             control={form.control}
-            name="phone_number"
+            name="phoneNumber"
             render={({ field }) => (
               <FormItem className="w-full">
                 <FormLabel>Phone</FormLabel>
@@ -157,7 +157,7 @@ export const CreateCompanyForm = () => {
         </div>
         <FormField
           control={form.control}
-          name="website_url"
+          name="websiteUrl"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Website</FormLabel>
@@ -186,7 +186,7 @@ export const CreateCompanyForm = () => {
           </FormItem>
           <FormField
             control={form.control}
-            name="date_founded"
+            name="dateFounded"
             render={({ field }) => (
               <FormItem className="flex flex-col w-full">
                 <FormLabel>Date Founded</FormLabel>
@@ -243,7 +243,7 @@ export const CreateCompanyForm = () => {
               }
             }} labelSliderProps={{
               onValueChange: (value) => {
-                form.setValue("service_area", value[0].toString());
+                form.setValue("serviceArea", value[0].toString());
               }
             }} className="w-full" />
           </FormControl>

@@ -45,7 +45,7 @@ export const CreateAccountForm = () => {
 	const form = useForm<z.infer<typeof accountInsertSchema>>({
 		resolver: zodResolver(accountInsertSchema),
 		defaultValues: {
-			user_id: user.id,
+			userId: user.id,
 			description: "",
 			username: "",
 		},

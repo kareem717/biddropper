@@ -40,16 +40,16 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
 
   useEffect(() => {
     if (defaultAddress) {
-      defaultPosition.lat = Number(defaultAddress.y_coordinate);
-      defaultPosition.lng = Number(defaultAddress.x_coordinate);
+      defaultPosition.lat = Number(defaultAddress.yCoordinate);
+      defaultPosition.lng = Number(defaultAddress.xCoordinate);
       setMapAddress(defaultAddress);
     }
   }, [defaultAddress, setMapAddress])
 
   const address = getAddress();
   const centerPosition = {
-    lat: Number(address?.y_coordinate) || defaultPosition.lat,
-    lng: Number(address?.x_coordinate) || defaultPosition.lng,
+    lat: Number(address?.yCoordinate) || defaultPosition.lat,
+    lng: Number(address?.xCoordinate) || defaultPosition.lng,
   };
 
   const MapPanner = () => {

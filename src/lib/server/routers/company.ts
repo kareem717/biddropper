@@ -1,7 +1,7 @@
 import {
 	addresses,
 	companies,
-	company_industries,
+	companyIndustries,
 } from "@/lib/db/drizzle/schema";
 import { router, accountProcedure, companyOwnerProcedure } from "../trpc";
 import { EditCompanySchema, NewCompanySchema } from "@/lib/validations/company";
@@ -42,24 +42,24 @@ export const companyRouter = router({
 				})
 				.from(companies)
 				.where(eq(companies.id, id))
-				.innerJoin(addresses, eq(companies.address_id, addresses.id));
+				.innerJoin(addresses, eq(companies.addressId, addresses.id));
 
-			const companyIndustries = await ctx.db
+			const companyIndustriesRes = await ctx.db
 				.select({ industries })
-				.from(company_industries)
-				.where(eq(company_industries.company_id, id))
+				.from(companyIndustries)
+				.where(eq(companyIndustries.companyId, id))
 				.innerJoin(
 					industries,
 					and(
-						eq(company_industries.industry_id, industries.id),
-						isNull(industries.deleted_at)
+						eq(companyIndustries.industryId, industries.id),
+						isNull(industries.deletedAt)
 					)
 				);
 
 			return {
 				...company.company,
 				address: company.address,
-				industries: companyIndustries.map((industry) => industry.industries),
+				industries: companyIndustriesRes.map((industry) => industry.industries),
 			};
 		}),
 
@@ -77,17 +77,17 @@ export const companyRouter = router({
 					.insert(companies)
 					.values({
 						...company,
-						address_id: newAddress.id,
-						owner_id: ctx.account.id,
+						addressId: newAddress.id,
+						ownerId: ctx.account.id,
 					})
 					.returning({ id: companies.id });
 
 				const newCompanyIndustries = industries.map((industry) => ({
-					company_id: newCompany.id,
-					industry_id: industry,
+					companyId: newCompany.id,
+					industryId: industry,
 				}));
 				await tx
-					.insert(company_industries)
+					.insert(companyIndustries)
 					.values(newCompanyIndustries)
 					.onConflictDoNothing();
 
@@ -104,7 +104,7 @@ export const companyRouter = router({
 				const [currAddress] = await tx
 					.select()
 					.from(addresses)
-					.where(eq(addresses.id, company.address_id));
+					.where(eq(addresses.id, company.addressId));
 
 				// if the address values have been changed, update the address
 				const addressChanged = Object.entries(address).some(([key, value]) =>
@@ -118,29 +118,29 @@ export const companyRouter = router({
 						.values(address)
 						.returning({ id: addresses.id });
 
-					company.address_id = newAddress.id;
+					company.addressId = newAddress.id;
 				}
 
 				// update the industries, if they already exist, do nothing, otherwise insert them
 				await tx
-					.insert(company_industries)
+					.insert(companyIndustries)
 					.values(
 						industries.map((industry) => ({
-							company_id: company.id!,
-							industry_id: industry.id,
+							companyId: company.id!,
+							industryId: industry.id,
 						}))
 					)
 					.onConflictDoNothing();
 
-				await tx.delete(company_industries).where(
+				await tx.delete(companyIndustries).where(
 					and(
 						not(
 							inArray(
-								company_industries.industry_id,
+								companyIndustries.industryId,
 								industries.map((industry) => industry.id)
 							)
 						),
-						eq(company_industries.company_id, company.id!)
+						eq(companyIndustries.companyId, company.id!)
 					)
 				);
 
@@ -160,7 +160,7 @@ export const companyRouter = router({
 			const { id } = input;
 			await ctx.db
 				.update(companies)
-				.set({ deleted_at: new Date().toISOString() })
+				.set({ deletedAt: new Date().toISOString() })
 				.where(eq(companies.id, id));
 		}),
 });

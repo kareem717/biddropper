@@ -21,13 +21,13 @@ export const NewCompanySchema = createInsertSchema(companies, {
 	})
 	.omit({
 		id: true,
-		created_at: true,
-		updated_at: true,
-		deleted_at: true,
-		is_verified: true,
-		is_active: true,
-		image_id: true,
-		address_id: true,
+		createdAt: true,
+		updatedAt: true,
+		deletedAt: true,
+		isVerified: true,
+		isActive: true,
+		imageId: true,
+		addressId: true,
 	});
 
 export type EditCompany = z.infer<typeof EditCompanySchema>;
@@ -40,7 +40,7 @@ export const EditCompanySchema = createInsertSchema(companies, {
 		industries: industrySelectSchema.array(),
 	})
 	.omit({
-		created_at: true,
-		updated_at: true,
-		deleted_at: true,
+		createdAt: true,
+		updatedAt: true,
+		deletedAt: true,
 	});

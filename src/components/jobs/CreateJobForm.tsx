@@ -80,7 +80,7 @@ export const CreateJobForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      account_id: !ownedCompanies?.length ? account.id : undefined,
+      accountId: !ownedCompanies?.length ? account.id : undefined,
     },
   })
 
@@ -146,7 +146,7 @@ export const CreateJobForm = () => {
           ownedCompanies && ownedCompanies.length === 1 ? (
             <FormField
               control={form.control}
-              name="company_id"
+              name="companyId"
               render={({ field: { value } }) => (
                 <FormItem>
                   <FormControl>
@@ -155,10 +155,10 @@ export const CreateJobForm = () => {
                         id="terms1"
                         onCheckedChange={(val) => {
                           form.setValue(
-                            "company_id",
+                            "companyId",
                             val ? ownedCompanies[0]?.id : undefined,
                           );
-                          form.setValue("account_id", val ? undefined : account.id);
+                          form.setValue("accountId", val ? undefined : account.id);
                         }}
                       />
                       <div className="grid gap-1.5 leading-none">
@@ -182,7 +182,7 @@ export const CreateJobForm = () => {
           ) : ownedCompanies && ownedCompanies.length > 1 ? (
             <FormField
               control={form.control}
-              name="company_id"
+              name="companyId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Owner</FormLabel>
@@ -196,11 +196,11 @@ export const CreateJobForm = () => {
                     <Select
                       onValueChange={(value) => {
                         if (value === "") {
-                          form.setValue("account_id", account.id);
-                          form.setValue("company_id", undefined);
+                          form.setValue("accountId", account.id);
+                          form.setValue("companyId", undefined);
                         } else {
-                          form.setValue("account_id", undefined);
-                          form.setValue("company_id", value);
+                          form.setValue("accountId", undefined);
+                          form.setValue("companyId", value);
                         }
                       }}
                       defaultValue={field.value || undefined}
@@ -241,7 +241,7 @@ export const CreateJobForm = () => {
         )}
         <FormField
           control={form.control}
-          name="property_type"
+          name="propertyType"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Property Type</FormLabel>
@@ -254,7 +254,7 @@ export const CreateJobForm = () => {
                   {...field}
                   className="mx-auto my-6 flex h-full w-full max-w-md flex-row items-center justify-between gap-8"
                   onValueChange={(value) => {
-                    form.setValue("property_type", value as any);
+                    form.setValue("propertyType", value as any);
                   }}
                   buttons={[
                     {
@@ -281,7 +281,7 @@ export const CreateJobForm = () => {
         />
         <FormField
           control={form.control}
-          name="is_commercial_property"
+          name="isCommercialProperty"
           render={({ field }) => (
             <FormItem>
               <FormControl>
@@ -323,7 +323,7 @@ export const CreateJobForm = () => {
         </FormItem>
         <FormField
           control={form.control}
-          name="start_date_flag"
+          name="startDateFlag"
           render={({ field }) => (
             <FormItem>
               <FormLabel>When do you want this job to start?</FormLabel>
@@ -334,7 +334,7 @@ export const CreateJobForm = () => {
                     onValueChange={(val) => {
                       field.onChange(val);
                       if (val !== "none") {
-                        form.setValue("start_date", "");
+                        form.setValue("startDate", "");
                       }
                     }}
                   >
@@ -353,7 +353,7 @@ export const CreateJobForm = () => {
                             </Label>
                             <FormField
                               control={form.control}
-                              name="start_date"
+                              name="startDate"
                               render={({ field: subField }) => (
                                 <FormItem>
                                   <FormControl>

@@ -67,8 +67,8 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      sender_company_id: ownedCompanies?.[0]?.id,
-      job_id: jobId,
+      senderCompanyId: ownedCompanies?.[0]?.id,
+      jobId: jobId,
     },
   })
 
@@ -98,7 +98,7 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" {...props}>
         <FormField
           control={form.control}
-          name="price_usd"
+          name="priceUsd"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Price</FormLabel>
@@ -125,7 +125,7 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
         {(ownedCompanies?.length || 0) > 1 && (
           <FormField
             control={form.control}
-            name="sender_company_id"
+            name="senderCompanyId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Sender Company</FormLabel>

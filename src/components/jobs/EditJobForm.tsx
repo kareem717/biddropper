@@ -142,7 +142,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) 
         />
         <FormField
           control={form.control}
-          name="property_type"
+          name="propertyType"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Property Type</FormLabel>
@@ -155,9 +155,9 @@ export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) 
                   {...field}
                   className="mx-auto my-6 flex h-full w-full max-w-md flex-row items-center justify-between gap-8"
                   onValueChange={(value) => {
-                    form.setValue("property_type", value as any);
+                    form.setValue("propertyType", value as any);
                   }}
-                  defaultValue={job.property_type}
+                  defaultValue={job.propertyType}
                   buttons={[
                     {
                       icon: Icons.home as any,
@@ -183,7 +183,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) 
         />
         <FormField
           control={form.control}
-          name="is_commercial_property"
+          name="isCommercialProperty"
           render={({ field }) => (
             <FormItem>
               <FormControl>
@@ -225,7 +225,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) 
         </FormItem>
         <FormField
           control={form.control}
-          name="start_date_flag"
+          name="startDateFlag"
           render={({ field }) => (
             <FormItem>
               <FormLabel>When do you want this job to start?</FormLabel>
@@ -236,7 +236,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) 
                     onValueChange={(val) => {
                       field.onChange(val);
                       if (val !== "none") {
-                        form.setValue("start_date", "");
+                        form.setValue("startDate", "");
                       }
                     }}
                   >
@@ -255,7 +255,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) 
                             </Label>
                             <FormField
                               control={form.control}
-                              name="start_date"
+                              name="startDate"
                               render={({ field: subField }) => (
                                 <FormItem>
                                   <FormControl>

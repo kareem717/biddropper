@@ -9,7 +9,7 @@ export const industryRouter = router({
 			const res = await ctx.db
 				.select()
 				.from(industries)
-				.where(isNull(industries.deleted_at));
+				.where(isNull(industries.deletedAt));
 			return res;
 		} catch (error) {
 			throw new TRPCError({

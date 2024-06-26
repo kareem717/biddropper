@@ -1,7 +1,7 @@
 import {
-	account_jobs,
+	accountJobs,
 	addresses,
-	company_jobs,
+	companyJobs,
 	jobs,
 	companies,
 	accounts,
@@ -9,7 +9,7 @@ import {
 import { router, accountProcedure } from "../trpc";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { industries, job_industries } from "@/lib/db/drizzle/schema";
+import { industries, jobIndustries } from "@/lib/db/drizzle/schema";
 import { EditJobSchema, NewJobSchema } from "@/lib/validations/job";
 import { and, isNull, inArray, not } from "drizzle-orm";
 
@@ -29,17 +29,17 @@ export const jobRouter = router({
 				})
 				.from(jobs)
 				.where(eq(jobs.id, id))
-				.innerJoin(addresses, eq(jobs.address_id, addresses.id));
+				.innerJoin(addresses, eq(jobs.addressId, addresses.id));
 
-			const jobIndustries = await ctx.db
+			const jobIndustriesRes = await ctx.db
 				.select({ industries })
-				.from(job_industries)
-				.where(eq(job_industries.job_id, id))
+				.from(jobIndustries)
+				.where(eq(jobIndustries.jobId, id))
 				.innerJoin(
 					industries,
 					and(
-						eq(job_industries.industry_id, industries.id),
-						isNull(industries.deleted_at)
+						eq(jobIndustries.industryId, industries.id),
+						isNull(industries.deletedAt)
 					)
 				);
 
@@ -47,25 +47,25 @@ export const jobRouter = router({
 				.select({
 					id: companies.id,
 					name: companies.name,
-					email_address: companies.email_address,
+					emailAddress: companies.emailAddress,
 				}) // Specify the property to select
-				.from(company_jobs)
-				.where(eq(company_jobs.job_id, res.job.id))
-				.innerJoin(companies, eq(company_jobs.company_id, companies.id));
+				.from(companyJobs)
+				.where(eq(companyJobs.jobId, res.job.id))
+				.innerJoin(companies, eq(companyJobs.companyId, companies.id));
 
 			const [owner_account] = await ctx.db
 				.select({
 					id: accounts.id,
 					username: accounts.username,
 				}) // Specify the property to select
-				.from(account_jobs)
-				.where(eq(account_jobs.job_id, res.job.id))
-				.innerJoin(accounts, eq(account_jobs.account_id, accounts.id));
+				.from(accountJobs)
+				.where(eq(accountJobs.jobId, res.job.id))
+				.innerJoin(accounts, eq(accountJobs.accountId, accounts.id));
 
 			return {
 				...res.job,
 				address: res.address,
-				industries: jobIndustries.map((industry) => industry.industries),
+				industries: jobIndustriesRes.map((industry) => industry.industries),
 				company: owner_company,
 				account: owner_account,
 			};
@@ -76,12 +76,12 @@ export const jobRouter = router({
 			const {
 				address,
 				industries: industryIds,
-				company_id,
-				account_id,
+				companyId,
+				accountId,
 				...job
 			} = input;
 			const newId = await ctx.db.transaction(async (tx) => {
-				if (!company_id && !account_id) {
+				if (!companyId && !accountId) {
 					throw new Error("Company or account ID is required");
 				}
 
@@ -94,34 +94,34 @@ export const jobRouter = router({
 					.insert(jobs)
 					.values({
 						...job,
-						address_id: newAddress.id,
+						addressId: newAddress.id,
 					})
 					.returning({ id: jobs.id });
 
 				const newJobIndustries = industryIds.map((id) => ({
-					job_id: newJob.id,
-					industry_id: id,
+					jobId: newJob.id,
+					industryId: id,
 				}));
 
 				await tx
-					.insert(job_industries)
+					.insert(jobIndustries)
 					.values(newJobIndustries)
 					.onConflictDoNothing();
 
-				if (company_id) {
+				if (companyId) {
 					await tx
-						.insert(company_jobs)
+						.insert(companyJobs)
 						.values({
-							company_id,
-							job_id: newJob.id,
+							companyId,
+							jobId: newJob.id,
 						})
 						.onConflictDoNothing();
-				} else if (account_id) {
+				} else if (accountId) {
 					await tx
-						.insert(account_jobs)
+						.insert(accountJobs)
 						.values({
-							account_id,
-							job_id: newJob.id,
+							accountId,
+							jobId: newJob.id,
 						})
 						.onConflictDoNothing();
 				}
@@ -141,7 +141,7 @@ export const jobRouter = router({
 				const [currAddress] = await tx
 					.select()
 					.from(addresses)
-					.where(eq(addresses.id, job.address_id));
+					.where(eq(addresses.id, job.addressId));
 
 				// if the address values have been changed, update the address
 				const addressChanged = Object.entries(address).some(([key, value]) =>
@@ -155,26 +155,26 @@ export const jobRouter = router({
 						.values(address)
 						.returning({ id: addresses.id });
 
-					job.address_id = newAddress.id;
+					job.addressId = newAddress.id;
 				}
 
 				// update the industries, if they already exist, do nothing, otherwise insert them
 				await tx
-					.insert(job_industries)
+					.insert(jobIndustries)
 					.values(
 						inputIndustries.map((industry) => ({
-							job_id: job.id!,
-							industry_id: industry.id,
+							jobId: job.id!,
+							industryId: industry.id,
 						}))
 					)
 					.onConflictDoNothing();
 
 				await tx
-					.delete(job_industries)
+					.delete(jobIndustries)
 					.where(
 						and(
-							not(inArray(job_industries.industry_id, inputIndustries.map((industry) => industry.id))),
-							eq(job_industries.job_id, job.id!)
+							not(inArray(jobIndustries.industryId, inputIndustries.map((industry) => industry.id))),
+							eq(jobIndustries.jobId, job.id!)
 						)
 					);
 
@@ -195,7 +195,7 @@ export const jobRouter = router({
 			const { id } = input;
 			await ctx.db
 				.update(jobs)
-				.set({ deleted_at: new Date().toISOString() })
+				.set({ deletedAt: new Date().toISOString() })
 				.where(eq(jobs.id, id));
 		}),
 });

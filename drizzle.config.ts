@@ -9,4 +9,8 @@ export default {
 		url: env.DATABASE_URL,
 	},
 	schemaFilter: ["public"],
+	strict: true,
+	introspect: {
+		casing: "camel",
+  }
 } satisfies Config;

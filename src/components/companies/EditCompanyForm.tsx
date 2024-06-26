@@ -127,7 +127,7 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, 
         <div className="flex flex-col md:flex-row gap-8">
           <FormField
             control={form.control}
-            name="email_address"
+            name="emailAddress"
             render={({ field }) => (
               <FormItem className="w-full">
                 <FormLabel>Email</FormLabel>
@@ -143,7 +143,7 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, 
           />
           <FormField
             control={form.control}
-            name="phone_number"
+            name="phoneNumber"
             render={({ field }) => (
               <FormItem className="w-full">
                 <FormLabel>Phone</FormLabel>
@@ -160,7 +160,7 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, 
         </div>
         <FormField
           control={form.control}
-          name="website_url"
+          name="websiteUrl"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Website</FormLabel>
@@ -189,7 +189,7 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, 
           </FormItem>
           <FormField
             control={form.control}
-            name="date_founded"
+            name="dateFounded"
             render={({ field }) => (
               <FormItem className="flex flex-col w-full">
                 <FormLabel>Date Founded</FormLabel>
@@ -240,13 +240,13 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, 
             Select the address where your company headquarters are located, and the radius of your service area relative to that point.
           </FormDescription>
           <FormControl>
-            <RadiusAddressMap defaultAddress={company.address} defaultRadius={Number(company.service_area)} addressInputProps={{
+            <RadiusAddressMap defaultAddress={company.address} defaultRadius={Number(company.serviceArea)} addressInputProps={{
               onRetrieve: (address) => {
                 form.setValue("address", address);
               }
             }} labelSliderProps={{
               onValueChange: (value) => {
-                form.setValue("service_area", value[0].toString());
+                form.setValue("serviceArea", value[0].toString());
               }
             }} className="w-full" />
           </FormControl>

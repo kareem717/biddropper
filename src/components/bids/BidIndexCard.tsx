@@ -33,12 +33,12 @@ export const BidIndexCard = ({ bidId, className, ...props }: BidIndexCardProps) 
           <CardContent>
             <div className="flex space-x-2 mt-2">
               <Badge>{toTitleCase(bid.bids.status)}</Badge>
-              <Badge>{`$${bid.bids.price_usd}`}</Badge>
-              <Badge>{bid.sender_company_name}</Badge>
+              <Badge>{`$${bid.bids.priceUsd}`}</Badge>
+              <Badge>{bid.senderCompanyName}</Badge>
             </div>
           </CardContent>
-          <CardFooter className="text-muted-foreground">
-            {new Date(bid.bids.created_at).toLocaleDateString()}
+          <CardFooter className="text-mut ed-foreground">
+            {new Date(bid.bids.createdAt).toLocaleDateString()}
           </CardFooter>
         </>
       )}

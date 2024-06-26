@@ -18,16 +18,16 @@ export const NewJobSchema = createInsertSchema(jobs, {
 				message: "Industries must be valid UUIDs",
 			})
 			.array(),
-		company_id: z.string().uuid().optional(),
-		account_id: z.string().uuid().optional(),
+		companyId: z.string().uuid().optional(),
+		accountId: z.string().uuid().optional(),
 	})
 	.omit({
 		id: true,
-		created_at: true,
-		updated_at: true,
-		deleted_at: true,
-		is_active: true,
-		address_id: true,
+		createdAt: true,
+		updatedAt: true,
+		deletedAt: true,
+		isActive: true,
+		addressId: true,
 	});
 
 export type EditJob = z.infer<typeof EditJobSchema>;
@@ -40,7 +40,7 @@ export const EditJobSchema = createInsertSchema(jobs, {
 		industries: industrySelectSchema.array(),
 	})
 	.omit({
-		created_at: true,
-		updated_at: true,
-		deleted_at: true,
+		createdAt: true,
+		updatedAt: true,
+		deletedAt: true,
 	});

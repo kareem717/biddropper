@@ -1,8 +1,8 @@
 import {
-	account_jobs,
+	accountJobs,
 	bids,
-	company_jobs,
-	job_bids,
+	companyJobs,
+	jobBids,
 	jobs,
 	companies,
 } from "@/lib/db/drizzle/schema";
@@ -19,23 +19,23 @@ export const bidRouter = router({
 			.select()
 			.from(bids)
 			.where(
-				and(eq(bids.sender_company_id, ctx.account.id), isNull(bids.deleted_at))
+				and(eq(bids.senderCompanyId, ctx.account.id), isNull(bids.deletedAt))
 			)
-			.innerJoin(job_bids, eq(bids.id, job_bids.bid_id));
+			.innerJoin(jobBids, eq(bids.id, jobBids.bidId));
 		return res;
 	}),
 	getAccountReceivedBids: accountProcedure.query(async ({ ctx }) => {
 		const ownedJobIds = await ctx.db
 			.select({
-				job_id: jobs.id,
+				jobId: jobs.id,
 			})
 			.from(jobs)
-			.leftJoin(account_jobs, eq(jobs.id, account_jobs.job_id))
-			.leftJoin(company_jobs, eq(jobs.id, company_jobs.job_id))
+			.leftJoin(accountJobs, eq(jobs.id, accountJobs.jobId))
+			.leftJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
 			.where(
 				or(
-					eq(account_jobs.account_id, ctx.account.id),
-					eq(company_jobs.company_id, ctx.account.id)
+					eq(accountJobs.accountId, ctx.account.id),
+					eq(companyJobs.companyId, ctx.account.id)
 				)
 			);
 
@@ -48,15 +48,15 @@ export const bidRouter = router({
 			.from(bids)
 			.where(
 				and(
-					isNull(bids.deleted_at),
+					isNull(bids.deletedAt),
 					not(eq(bids.status, "withdrawn")),
 					inArray(
-						job_bids.job_id,
-						ownedJobIds.map((j) => j.job_id)
+						jobBids.jobId,
+						ownedJobIds.map((j) => j.jobId)
 					)
 				)
 			)
-			.innerJoin(job_bids, eq(bids.id, job_bids.bid_id));
+			.innerJoin(jobBids, eq(bids.id, jobBids.bidId));
 		return res;
 	}),
 	getJobBids: accountProcedure
@@ -70,8 +70,8 @@ export const bidRouter = router({
 			const res = await ctx.db
 				.select()
 				.from(bids)
-				.innerJoin(job_bids, eq(bids.id, job_bids.bid_id))
-				.where(eq(job_bids.job_id, jobId));
+				.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+				.where(eq(jobBids.jobId, jobId));
 
 			return res;
 		}),
@@ -86,27 +86,27 @@ export const bidRouter = router({
 					job: {
 						title: jobs.title,
 						id: jobs.id,
-						owner_account_id: account_jobs.account_id,
-						owner_company_id: company_jobs.company_id,
+						ownerAccountId: accountJobs.accountId,
+						ownerCompanyId: companyJobs.companyId,
 					},
-					sender_company_name: companies.name,
+					senderCompanyName: companies.name,
 				})
 				.from(bids)
 				.where(eq(bids.id, bidId))
-				.leftJoin(job_bids, eq(bids.id, job_bids.bid_id))
-				.innerJoin(jobs, eq(job_bids.job_id, jobs.id))
-				.leftJoin(account_jobs, eq(jobs.id, account_jobs.job_id))
-				.leftJoin(company_jobs, eq(jobs.id, company_jobs.job_id))
-				.innerJoin(companies, eq(bids.sender_company_id, companies.id));
+				.leftJoin(jobBids, eq(bids.id, jobBids.bidId))
+				.innerJoin(jobs, eq(jobBids.jobId, jobs.id))
+				.leftJoin(accountJobs, eq(jobs.id, accountJobs.jobId))
+				.leftJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
+				.innerJoin(companies, eq(bids.senderCompanyId, companies.id));
 			return res;
 		}),
 	createBid: companyOwnerProcedure
 		.input(NewBidSchema)
 		.mutation(async ({ ctx, input }) => {
-			const { job_id, ...bid } = input;
+			const { jobId, ...bid } = input;
 			const newId = await ctx.db.transaction(async (tx) => {
 				if (
-					!ctx.ownedCompanies.map((c) => c.id).includes(bid.sender_company_id)
+					!ctx.ownedCompanies.map((c) => c.id).includes(bid.senderCompanyId)
 				) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
@@ -117,18 +117,57 @@ export const bidRouter = router({
 					.insert(bids)
 					.values({
 						...bid,
-						price_usd: bid.price_usd.toString(), // Convert price to string
+						priceUsd: bid.priceUsd.toString(), // Convert price to string
 					})
 					.returning({ id: bids.id });
 
-				await tx.insert(job_bids).values({
-					job_id,
-					bid_id: newbid.id,
+				await tx.insert(jobBids).values({
+					jobId,
+					bidId: newbid.id,
 				});
 
 				return newbid.id;
 			});
 
 			return newId;
+		}),
+	acceptBid: companyOwnerProcedure
+		.input(z.object({ bidId: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			const { bidId } = input;
+
+			// //verify bid ownership
+			// const [bid ] = await ctx.db.select({
+			// 	bid: bid
+			// 	jobId: jobi
+			// })
+
+
+
+			const res = await ctx.db
+				.update(bids)
+				.set({ status: "accepted" })
+				.where(eq(bids.id, bidId));
+			return res;
+		}),
+	withdrawBid: companyOwnerProcedure
+		.input(z.object({ bidId: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			const { bidId } = input;
+			const res = await ctx.db
+				.update(bids)
+				.set({ status: "withdrawn" })
+				.where(eq(bids.id, bidId));
+			return res;
+		}),
+	rejectBid: companyOwnerProcedure
+		.input(z.object({ bidId: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			const { bidId } = input;
+			const res = await ctx.db
+				.update(bids)
+				.set({ status: "rejected" })
+				.where(eq(bids.id, bidId));
+			return res;
 		}),
 });

@@ -31,13 +31,13 @@ export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) 
           </CardHeader>
           <CardContent>
             <div className="flex space-x-2 mt-2">
-              <Badge>{job.property_type}</Badge>
-              <Badge>{job.is_commercial_property}</Badge>
-              <Badge>{job.start_date_flag}</Badge>
+              <Badge>{job.propertyType}</Badge>
+              <Badge>{job.isCommercialProperty}</Badge>
+              <Badge>{job.startDateFlag}</Badge>
             </div>
           </CardContent>
           <CardFooter className="text-muted-foreground">
-            {new Date(job.start_date).toLocaleDateString()}
+            {new Date(job.startDate).toLocaleDateString()}
           </CardFooter>
         </>
       )}

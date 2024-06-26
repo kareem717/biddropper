@@ -44,17 +44,17 @@ export const JobShowCard = ({ jobId, className, ...props }: JobShowCardProps) =>
         </Avatar>
         <div className="ml-2">
           <p className="font-semibold">{job.account.username || job.company.name}</p>
-          {job.company.email_address && <p className="text-muted-foreground">{job.company.email_address}</p>}
+          {job.company.emailAddress && <p className="text-muted-foreground">{job.company.emailAddress}</p>}
         </div>
       </div>
       <div className="flex items-center mb-4">
         <div className="ml-2">
           <p className="font-semibold">{job.title}</p>
-          <p className="text-muted-foreground">{job.start_date}</p>
+          <p className="text-muted-foreground">{job.startDate}</p>
         </div>
       </div>
       <h2 className="text-xl font-bold mb-2">{job.title}</h2>
-      <p className="text-muted-foreground mb-4">{job.start_date}</p>
+      <p className="text-muted-foreground mb-4">{job.startDate}</p>
       <p>{job.description}</p>
       <div className="flex space-x-2 mt-4">
         {job.industries.map((industry, index) => (
