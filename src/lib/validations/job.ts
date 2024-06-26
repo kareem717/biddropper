@@ -1,14 +1,15 @@
 import { createInsertSchema } from "drizzle-zod";
 import { jobs } from "@/lib/db/drizzle/schema";
 import { z } from "zod";
-import { addressInsertSchema, industrySelectSchema } from "./db";
+import { NewAddressSchema } from "./address";
+import { ShowIndustrySchema } from "./industry";
 
 export const NewJobSchema = createInsertSchema(jobs, {
 	title: z.string().min(3).max(60),
 	tags: z.array(z.string().min(3).max(40)).max(10).optional(),
 })
 	.extend({
-		address: addressInsertSchema,
+		address: NewAddressSchema,
 		industries: z
 			.string({
 				invalid_type_error: "Industries must be an array of strings",
@@ -37,8 +38,8 @@ export const EditJobSchema = createInsertSchema(jobs, {
 	tags: z.array(z.string().min(3).max(40)).max(10).optional(),
 })
 	.extend({
-		address: addressInsertSchema,
-		industries: industrySelectSchema.array(),
+		address: NewAddressSchema,
+		industries: ShowIndustrySchema.array(),
 	})
 	.omit({
 		createdAt: true,
