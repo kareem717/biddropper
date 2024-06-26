@@ -1,6 +1,6 @@
 import { db } from "@/lib/db/index";
 import { createClient } from "@/utils/supabase/server";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { accounts, companies } from "@/lib/db/drizzle/schema";
 
 export async function createTRPCContext(opts: { headers: Headers }) {
@@ -17,7 +17,7 @@ export async function createTRPCContext(opts: { headers: Headers }) {
 		[account] = await db
 			.select()
 			.from(accounts)
-			.where(eq(accounts.user_id, user.id));
+			.where(and(eq(accounts.userId, user.id), isNull(accounts.deletedAt)));
 	}
 
 	if (account) {
@@ -27,7 +27,9 @@ export async function createTRPCContext(opts: { headers: Headers }) {
 				name: companies.name,
 			})
 			.from(companies)
-			.where(eq(companies.owner_id, account.id));
+			.where(
+				and(eq(companies.ownerId, account.id), isNull(companies.deletedAt))
+			);
 	}
 
 	return {

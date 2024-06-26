@@ -44,7 +44,7 @@ export const accountProcedure = userProcedure.use(async ({ ctx, next }) => {
 	const [account] = await ctx.db
 		.select()
 		.from(accounts)
-		.where(eq(accounts.user_id, ctx.user.id));
+		.where(eq(accounts.userId, ctx.user.id));
 
 	if (!account) {
 		throw new TRPCError({
