@@ -192,7 +192,7 @@ export const notifications = pgTable("notifications", {
 		}),
 	description: text("description").notNull(),
 	title: varchar("title", { length: 100 }).notNull(),
-	isArchived: boolean("is_archived").default(false).notNull(),
+	isRead: boolean("is_read").default(false).notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
 		.default(sql`clock_timestamp()`)
 		.notNull(),

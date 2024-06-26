@@ -6,7 +6,7 @@ CREATE TABLE
         account_id UUID NOT NULL REFERENCES accounts ON UPDATE CASCADE ON DELETE RESTRICT,
         description TEXT NOT NULL,
         title VARCHAR(100) NOT NULL,
-        is_archived BOOLEAN DEFAULT FALSE NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE NOT NULL,
         created_at timestamptz NOT NULL DEFAULT CLOCK_TIMESTAMP(),
         updated_at timestamptz,
         deleted_at timestamptz
