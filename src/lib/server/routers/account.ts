@@ -1,6 +1,6 @@
 import { accounts } from "@/lib/db/drizzle/schema";
 import { accountInsertSchema } from "@/lib/validations/db";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { router, userProcedure } from "../trpc";
 
 export const accountRouter = router({
@@ -9,14 +9,14 @@ export const accountRouter = router({
 		.mutation(async ({ ctx, input }) => {
 			await ctx.db.insert(accounts).values({
 				username: input.username,
-				user_id: ctx.user.id,
+				userId: ctx.user.id,
 			});
 		}),
 	getAccount: userProcedure.query(async ({ ctx }) => {
 		const [account] = await ctx.db
 			.select()
 			.from(accounts)
-			.where(eq(accounts.user_id, ctx.user.id));
+			.where(and(eq(accounts.userId, ctx.user.id), isNull(accounts.deletedAt)));
 
 		return account;
 	}),
