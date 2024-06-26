@@ -10,9 +10,19 @@ import { z } from "zod";
 import { industries } from "@/lib/db/drizzle/schema";
 
 export const companyRouter = router({
-	getOwnedCompanies: accountProcedure.query(async ({ ctx }) => {
-		return ctx.ownedCompanies;
-	}),
+	getOwnedCompanies: accountProcedure
+		.input(
+			z.object({
+				includeDeleted: z.boolean().optional().default(false),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const { includeDeleted } = input;
+			const companies = includeDeleted
+				? ctx.ownedCompanies
+				: ctx.ownedCompanies?.filter((company) => company.deletedAt === null);
+			return companies;
+		}),
 	getCompanyById: accountProcedure
 		.input(
 			z.object({

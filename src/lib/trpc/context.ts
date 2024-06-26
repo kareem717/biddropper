@@ -25,11 +25,10 @@ export async function createTRPCContext(opts: { headers: Headers }) {
 			.select({
 				id: companies.id,
 				name: companies.name,
+				deletedAt: companies.deletedAt,
 			})
 			.from(companies)
-			.where(
-				and(eq(companies.ownerId, account.id), isNull(companies.deletedAt))
-			);
+			.where(eq(companies.ownerId, account.id));
 	}
 
 	return {
