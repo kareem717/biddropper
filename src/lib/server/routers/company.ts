@@ -99,7 +99,7 @@ export const companyRouter = router({
 	editCompany: companyOwnerProcedure
 		.input(EditCompanySchema)
 		.mutation(async ({ ctx, input }) => {
-			const { address, industries, ...company } = input;
+			const { address, industries, id: companyId, ...company } = input;
 			await ctx.db.transaction(async (tx) => {
 				const [currAddress] = await tx
 					.select()
@@ -126,7 +126,7 @@ export const companyRouter = router({
 					.insert(companyIndustries)
 					.values(
 						industries.map((industry) => ({
-							companyId: company.id!,
+							companyId: companyId!,
 							industryId: industry.id,
 						}))
 					)
@@ -140,14 +140,14 @@ export const companyRouter = router({
 								industries.map((industry) => industry.id)
 							)
 						),
-						eq(companyIndustries.companyId, company.id!)
+						eq(companyIndustries.companyId, companyId!)
 					)
 				);
 
 				await tx
 					.update(companies)
 					.set(company)
-					.where(eq(companies.id, company.id!));
+					.where(eq(companies.id, companyId!));
 			});
 		}),
 	deleteCompany: companyOwnerProcedure

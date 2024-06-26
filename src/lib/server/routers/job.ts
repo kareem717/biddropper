@@ -134,7 +134,7 @@ export const jobRouter = router({
 	editJob: accountProcedure
 		.input(EditJobSchema)
 		.mutation(async ({ ctx, input }) => {
-			const { address, industries: inputIndustries, ...job } = input;
+			const { address, industries: inputIndustries, id: jobId, ...job } = input;
 			console.log(address, inputIndustries, job);
 			try {
 			await ctx.db.transaction(async (tx) => {
@@ -163,7 +163,7 @@ export const jobRouter = router({
 					.insert(jobIndustries)
 					.values(
 						inputIndustries.map((industry) => ({
-							jobId: job.id!,
+							jobId: jobId!,
 							industryId: industry.id,
 						}))
 					)
@@ -174,11 +174,11 @@ export const jobRouter = router({
 					.where(
 						and(
 							not(inArray(jobIndustries.industryId, inputIndustries.map((industry) => industry.id))),
-							eq(jobIndustries.jobId, job.id!)
+							eq(jobIndustries.jobId, jobId!)
 						)
 					);
 
-				await tx.update(jobs).set(job).where(eq(jobs.id, job.id!));
+				await tx.update(jobs).set(job).where(eq(jobs.id, jobId!));
 			});
 			} catch (e) {
 				console.log(e);

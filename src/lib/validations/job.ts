@@ -32,6 +32,7 @@ export const NewJobSchema = createInsertSchema(jobs, {
 
 export type EditJob = z.infer<typeof EditJobSchema>;
 export const EditJobSchema = createInsertSchema(jobs, {
+	id: z.string().uuid(),
 	title: z.string().min(3).max(60),
 	tags: z.array(z.string().min(3).max(40)).max(10).optional(),
 })
@@ -43,4 +44,5 @@ export const EditJobSchema = createInsertSchema(jobs, {
 		createdAt: true,
 		updatedAt: true,
 		deletedAt: true,
+		isActive: true,
 	});
