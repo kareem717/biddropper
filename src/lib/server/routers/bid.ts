@@ -8,7 +8,7 @@ import {
 	bidStatus,
 } from "@/lib/db/drizzle/schema";
 import { router, companyOwnerProcedure } from "../trpc";
-import { NewBidSchema } from "@/lib/validations/bid";
+import { EditBidSchema, NewBidSchema } from "@/lib/validations/bid";
 import { TRPCError } from "@trpc/server";
 import { eq, and, isNull, or, not, inArray } from "drizzle-orm";
 import { accountProcedure } from "../trpc";
@@ -305,6 +305,56 @@ export const bidRouter = router({
 				.update(bids)
 				.set({ status: "rejected" })
 				.where(eq(bids.id, bidId));
+			return res;
+		}),
+	editBid: companyOwnerProcedure
+		.input(EditBidSchema)
+		.mutation(async ({ ctx, input }) => {
+			const { id: bidId, ...bid } = input;
+
+			// Fetch bid for verification
+			const [bidRes] = await ctx.db
+				.select({
+					bids,
+					company: {
+						id: companies.id,
+						ownerAccountId: companies.ownerId,
+					},
+				})
+				.from(bids)
+				.innerJoin(companies, eq(bids.senderCompanyId, companies.id))
+				.where(and(eq(bids.id, bidId!), isNull(bids.deletedAt)));
+
+			if (!bid) {
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "bid not found",
+				});
+			}
+
+			// Verify that the bid is from a company owned by the current account
+			if (ctx.ownedCompanies.map((c) => c.id).includes(bidRes.company.id || "")) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "you are not the owner of the company who sent the bid",
+				});
+			}
+
+			if (bidRes.bids.status !== bidStatus.enumValues[0]) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "bid is not pending",
+				});
+			}
+
+			const res = await ctx.db
+				.update(bids)
+				.set({
+					...bid,
+					priceUsd: bid.priceUsd.toString(),
+				})
+				.where(eq(bids.id, bidId!));
+				
 			return res;
 		}),
 });

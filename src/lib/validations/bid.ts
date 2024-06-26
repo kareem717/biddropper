@@ -15,3 +15,13 @@ export const NewBidSchema = createInsertSchema(bids, {
 		deletedAt: true,
 		isActive: true,
 	});
+
+export const EditBidSchema = createInsertSchema(bids, {
+	priceUsd: z.coerce.number().min(0).max(25000000),
+})
+	.omit({
+		createdAt: true,
+		updatedAt: true,
+		deletedAt: true,
+		isActive: true,
+	});
