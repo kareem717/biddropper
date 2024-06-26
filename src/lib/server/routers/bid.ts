@@ -11,8 +11,40 @@ import { router, companyOwnerProcedure } from "../trpc";
 import { EditBidSchema, NewBidSchema } from "@/lib/validations/bid";
 import { TRPCError } from "@trpc/server";
 import { eq, and, isNull, or, not, inArray } from "drizzle-orm";
+import { createNotification } from "@/lib/server/routers/shared";
+import { alias } from "drizzle-orm/pg-core";
 import { accountProcedure } from "../trpc";
 import { z } from "zod";
+import { Context } from "@/lib/trpc/context";
+
+const getBidDetails = async (ctx: Context, bidId: string) => {
+	// Define the alias for companies
+	const senderCompany = alias(companies, "senderCompany");
+	const ownerCompany = alias(companies, "ownerCompany");
+	const [bid] = await ctx.db
+		.select({
+			bids,
+			senderCompany: {
+				id: senderCompany.id,
+				ownerAccountId: senderCompany.ownerId,
+			},
+			job: {
+				title: jobs.title,
+				jobOwnerAccountId: accountJobs.accountId,
+				jobOwnerCompanyId: ownerCompany.id,
+				jobOwnerCompanyOwnerAccountId: ownerCompany.ownerId,
+			},
+		})
+		.from(bids)
+		.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+		.leftJoin(accountJobs, eq(jobBids.jobId, accountJobs.jobId))
+		.leftJoin(companyJobs, eq(jobBids.jobId, companyJobs.jobId))
+		.leftJoin(ownerCompany, eq(companyJobs.companyId, ownerCompany.id))
+		.innerJoin(senderCompany, eq(bids.senderCompanyId, senderCompany.id))
+		.where(and(eq(bids.id, bidId), isNull(bids.deletedAt)));
+
+	return bid;
+};
 
 export const bidRouter = router({
 	getAccountSentBids: companyOwnerProcedure.query(async ({ ctx }) => {
@@ -115,17 +147,22 @@ export const bidRouter = router({
 				// Fetch job for verification
 				const [job] = await tx
 					.select({
+						title: jobs.title,
 						ownerAccountId: accountJobs.accountId,
-						ownerCompanyId: companyJobs.companyId,
+						ownerCompany: {
+							id: companies.id,
+							ownerAccountId: companies.ownerId,
+						},
 					})
 					.from(jobs)
 					.leftJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
+					.leftJoin(companies, eq(companyJobs.companyId, companies.id))
 					.where(eq(jobs.id, jobId));
 
 				// Verify that the bid is NOT for a job owned by the current account or one of their companies
 				if (
 					job.ownerAccountId === ctx.account.id ||
-					job.ownerCompanyId === ctx.account.id
+					job.ownerCompany?.ownerAccountId === ctx.account.id
 				) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
@@ -135,7 +172,8 @@ export const bidRouter = router({
 
 				// Verify that the bid is for a company owned by the current account
 				if (
-					!ctx.ownedCompanies.map((c) => c.id).includes(bid.senderCompanyId)
+					job.ownerCompany?.id &&
+					!ctx.ownedCompanies.map((c) => c.id).includes(job.ownerCompany.id)
 				) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
@@ -156,6 +194,24 @@ export const bidRouter = router({
 					bidId: newbid.id,
 				});
 
+				let accountId = job.ownerCompany?.ownerAccountId || job.ownerAccountId;
+
+				if (!accountId) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: "account id not found",
+					});
+				}
+
+				createNotification(
+					{
+						accountId,
+						title: "New bid",
+						description: `You have received a new bid for ${job.title}`,
+					},
+					ctx
+				);
+
 				return newbid.id;
 			});
 
@@ -166,21 +222,7 @@ export const bidRouter = router({
 		.mutation(async ({ ctx, input }) => {
 			const { bidId } = input;
 
-			// Fetch bid for verification
-			const [bid] = await ctx.db
-				.select({
-					bids,
-					job: {
-						ownerAccountId: accountJobs.accountId,
-						ownerCompanyId: companyJobs.companyId,
-					},
-				})
-				.from(bids)
-				.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
-				.leftJoin(accountJobs, eq(jobBids.jobId, accountJobs.jobId))
-				.leftJoin(companyJobs, eq(jobBids.jobId, companyJobs.jobId))
-				.leftJoin(companies, eq(bids.senderCompanyId, companies.id))
-				.where(and(eq(bids.id, bidId), isNull(bids.deletedAt)));
+			const bid = await getBidDetails(ctx, bidId);
 
 			if (!bid) {
 				throw new TRPCError({
@@ -198,10 +240,10 @@ export const bidRouter = router({
 
 			// Verify that the bid is for a job owned by the current account or one of their companies
 			if (
-				bid.job.ownerAccountId !== ctx.account.id &&
+				bid.job.jobOwnerAccountId !== ctx.account.id &&
 				!ctx.ownedCompanies
 					.map((c) => c.id)
-					.includes(bid.job.ownerCompanyId || "")
+					.includes(bid.job.jobOwnerCompanyId || "")
 			) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
@@ -209,29 +251,37 @@ export const bidRouter = router({
 				});
 			}
 
-			const res = await ctx.db
-				.update(bids)
-				.set({ status: "accepted" })
-				.where(eq(bids.id, bidId));
-			return res;
+			await ctx.db.transaction(async (tx) => {
+				await ctx.db
+					.update(bids)
+					.set({ status: "withdrawn" })
+					.where(eq(bids.id, bidId));
+
+				const accountId = bid.senderCompany.ownerAccountId;
+
+				if (!accountId) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: "account id not found",
+					});
+				}
+
+				createNotification(
+					{
+						accountId,
+						title: "Bid accepted",
+						description: `You have been accepted for ${bid.job.title}!`,
+					},
+					ctx
+				);
+			});
 		}),
 	withdrawBid: companyOwnerProcedure
 		.input(z.object({ bidId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
 			const { bidId } = input;
 
-			// Fetch bid for verification
-			const [bid] = await ctx.db
-				.select({
-					bids,
-					company: {
-						id: companies.id,
-						ownerAccountId: companies.ownerId,
-					},
-				})
-				.from(bids)
-				.innerJoin(companies, eq(bids.senderCompanyId, companies.id))
-				.where(and(eq(bids.id, bidId), isNull(bids.deletedAt)));
+			const bid = await getBidDetails(ctx, bidId);
 
 			if (!bid) {
 				throw new TRPCError({
@@ -241,7 +291,9 @@ export const bidRouter = router({
 			}
 
 			// Verify that the bid is from a company owned by the current account
-			if (ctx.ownedCompanies.map((c) => c.id).includes(bid.company.id || "")) {
+			if (
+				ctx.ownedCompanies.map((c) => c.id).includes(bid.senderCompany.id || "")
+			) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
 					message: "you are not the owner of the company who sent the bid",
@@ -255,11 +307,31 @@ export const bidRouter = router({
 				});
 			}
 
-			const res = await ctx.db
-				.update(bids)
-				.set({ status: "withdrawn" })
-				.where(eq(bids.id, bidId));
-			return res;
+			await ctx.db.transaction(async (tx) => {
+				await ctx.db
+					.update(bids)
+					.set({ status: "withdrawn" })
+					.where(eq(bids.id, bidId));
+
+				const accountId =
+					bid.job.jobOwnerAccountId || bid.job.jobOwnerCompanyOwnerAccountId;
+
+				if (!accountId) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: "account id not found",
+					});
+				}
+
+				createNotification(
+					{
+						accountId,
+						title: "Bid withdrawn",
+						description: `A bid for the job ${bid.job.title} has been withdrawn`,
+					},
+					ctx
+				);
+			});
 		}),
 	rejectBid: companyOwnerProcedure
 		.input(z.object({ bidId: z.string() }))
@@ -333,7 +405,9 @@ export const bidRouter = router({
 			}
 
 			// Verify that the bid is from a company owned by the current account
-			if (ctx.ownedCompanies.map((c) => c.id).includes(bidRes.company.id || "")) {
+			if (
+				ctx.ownedCompanies.map((c) => c.id).includes(bidRes.company.id || "")
+			) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
 					message: "you are not the owner of the company who sent the bid",
@@ -354,7 +428,7 @@ export const bidRouter = router({
 					priceUsd: bid.priceUsd.toString(),
 				})
 				.where(eq(bids.id, bidId!));
-				
+
 			return res;
 		}),
 });

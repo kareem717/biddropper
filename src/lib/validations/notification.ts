@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { notifications } from "../db/drizzle/schema";
 
+export type NewNotification = z.infer<typeof NewNotificationSchema>;
 export const NewNotificationSchema = createInsertSchema(notifications).omit({
 	id: true,
 	createdAt: true,
