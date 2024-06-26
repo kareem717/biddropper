@@ -183,7 +183,7 @@ export const addresses = pgTable("addresses", {
 });
 
 export const notifications = pgTable("notifications", {
-	id: uuid("id").primaryKey().notNull(),
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	accountId: uuid("account_id")
 		.notNull()
 		.references(() => accounts.id, {

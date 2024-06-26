@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE
     notifications (
-        id UUID PRIMARY KEY,
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
         account_id UUID NOT NULL REFERENCES accounts ON UPDATE CASCADE ON DELETE RESTRICT,
         description TEXT NOT NULL,
         title VARCHAR(100) NOT NULL,
