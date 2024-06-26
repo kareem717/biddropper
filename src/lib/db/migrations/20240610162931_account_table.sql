@@ -5,7 +5,7 @@ CREATE TABLE
         id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
         user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE RESTRICT ON UPDATE CASCADE,
         username TEXT NOT NULL,
-        
+        description TEXT,
         created_at timestamptz NOT NULL DEFAULT CLOCK_TIMESTAMP(),
         updated_at timestamptz,
         deleted_at timestamptz

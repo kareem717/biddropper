@@ -1,14 +1,22 @@
 import { accounts } from "@/lib/db/drizzle/schema";
-import { accountInsertSchema } from "@/lib/validations/db";
 import { eq, and, isNull } from "drizzle-orm";
-import { router, userProcedure } from "../trpc";
+import { accountProcedure, router, userProcedure } from "../trpc";
+import { NewAccountSchema, EditAccountSchema } from "@/lib/validations/account";
+import { TRPCError } from "@trpc/server";
 
 export const accountRouter = router({
 	createAccount: userProcedure
-		.input(accountInsertSchema)
+		.input(NewAccountSchema)
 		.mutation(async ({ ctx, input }) => {
+			if (ctx.user.id != input.userId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "cannot create account for other user",
+				});
+			}
+
 			await ctx.db.insert(accounts).values({
-				username: input.username,
+				...input,
 				userId: ctx.user.id,
 			});
 		}),
@@ -20,4 +28,28 @@ export const accountRouter = router({
 
 		return account;
 	}),
+	editAccount: accountProcedure
+		.input(EditAccountSchema)
+		.mutation(async ({ ctx, input }) => {
+			const { id: accountId, ...account } = input;
+
+			if (ctx.user.id != account.userId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "cannot edit account for other user",
+				});
+			}
+
+			if (ctx.account.id != accountId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "cannot edit details for other account",
+				});
+			}
+
+			await ctx.db
+				.update(accounts)
+				.set(input)
+				.where(eq(accounts.id, accountId));
+		}),
 });
