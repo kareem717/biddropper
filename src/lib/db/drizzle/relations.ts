@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { companies, projects, bids, accounts, reviews, usersInAuth, accountSubscriptions, contracts, addresses, jobs, media, jobBids, contractBids, companyIndustries, industries, jobIndustries, accountJobs, contractJobs, companyJobs, jobMedia, projectMedia, reviewMedia } from "./schema";
+import { companies, projects, bids, accounts, reviews, notifications, usersInAuth, accountSubscriptions, contracts, addresses, jobs, media, jobBids, contractBids, companyIndustries, industries, jobIndustries, accountJobs, contractJobs, companyJobs, jobMedia, projectMedia, reviewMedia } from "./schema";
 
 export const projectsRelations = relations(projects, ({one, many}) => ({
 	company: one(companies, {
@@ -53,6 +53,7 @@ export const reviewsRelations = relations(reviews, ({one, many}) => ({
 
 export const accountsRelations = relations(accounts, ({one, many}) => ({
 	reviews: many(reviews),
+	notifications: many(notifications),
 	usersInAuth: one(usersInAuth, {
 		fields: [accounts.userId],
 		references: [usersInAuth.id]
@@ -60,6 +61,13 @@ export const accountsRelations = relations(accounts, ({one, many}) => ({
 	accountSubscriptions: many(accountSubscriptions),
 	companies: many(companies),
 	accountJobs: many(accountJobs),
+}));
+
+export const notificationsRelations = relations(notifications, ({one}) => ({
+	account: one(accounts, {
+		fields: [notifications.accountId],
+		references: [accounts.id]
+	}),
 }));
 
 export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
