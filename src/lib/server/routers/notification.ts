@@ -4,6 +4,7 @@ import { eq, and, isNull, desc } from "drizzle-orm";
 import { NewNotificationSchema } from "@/lib/validations/notification";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { count } from "drizzle-orm";
 
 export const notificationRouter = router({
 	createNotification: accountProcedure
@@ -48,4 +49,19 @@ export const notificationRouter = router({
 				)
 				.orderBy(desc(notifications.createdAt));
 		}),
+	getUnreadNotificationCount: accountProcedure.query(async ({ ctx }) => {
+		const [cnt] = await ctx.db
+			.select({ count: count() })
+			.from(notifications)
+			.where(
+				and(
+					eq(notifications.accountId, ctx.account.id),
+					eq(notifications.isRead, false),
+					isNull(notifications.deletedAt)
+				)
+			)
+			.groupBy(notifications.accountId);
+
+		return cnt;
+	}),
 });
