@@ -12,7 +12,7 @@ import { trpc } from "@/lib/trpc/client"
 import { cn } from "@/utils"
 import { ComponentPropsWithoutRef } from "react"
 import { Badge } from "@/components/ui/badge"
-import { toTitleCase } from "@/utils"
+import { toTitleCase, truncate } from "@/utils"
 
 export interface BidIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {
   bidId: string
@@ -32,9 +32,9 @@ export const BidIndexCard = ({ bidId, className, ...props }: BidIndexCardProps) 
           </CardHeader>
           <CardContent>
             <div className="flex space-x-2 mt-2">
-              <Badge>{toTitleCase(bid.bids.status)}</Badge>
               <Badge>{`$${bid.bids.priceUsd}`}</Badge>
-              <Badge>{bid.senderCompanyName}</Badge>
+              <Badge variant="secondary">{toTitleCase(bid.bids.status)}</Badge>
+              <Badge variant="secondary">From {truncate(bid.senderCompanyName, 10)}</Badge>
             </div>
           </CardContent>
           <CardFooter className="text-mut ed-foreground">

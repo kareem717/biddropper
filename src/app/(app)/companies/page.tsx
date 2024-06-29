@@ -8,7 +8,7 @@ import { CompanyIndexCard } from "@/components/companies/CompanyIndexCard";
 import { api } from "@/lib/trpc/api";
 
 export default async function ProjectsPage() {
-  const companies = await api.company.getOwnedCompanies.query();
+  const companies = await api.company.getOwnedCompanies.query({});
 
   return (
     <div className="flex flex-col gap-3">

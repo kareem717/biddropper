@@ -26,10 +26,23 @@ export const jobRouter = router({
 				.select({
 					job: jobs,
 					address: addresses,
+					ownerCompany: {
+						id: companies.id,
+						name: companies.name,
+						emailAddress: companies.emailAddress,
+					},
+					ownerAccount: {
+						id: accounts.id,
+						username: accounts.username,
+					},
 				})
 				.from(jobs)
 				.where(eq(jobs.id, id))
-				.innerJoin(addresses, eq(jobs.addressId, addresses.id));
+				.innerJoin(addresses, eq(jobs.addressId, addresses.id))
+				.leftJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
+				.leftJoin(accountJobs, eq(jobs.id, accountJobs.jobId))
+				.leftJoin(companies, eq(companyJobs.companyId, companies.id))
+				.leftJoin(accounts, eq(accountJobs.accountId, accounts.id));
 
 			const jobIndustriesRes = await ctx.db
 				.select({ industries })
@@ -43,31 +56,9 @@ export const jobRouter = router({
 					)
 				);
 
-			const [owner_company] = await ctx.db
-				.select({
-					id: companies.id,
-					name: companies.name,
-					emailAddress: companies.emailAddress,
-				}) // Specify the property to select
-				.from(companyJobs)
-				.where(eq(companyJobs.jobId, res.job.id))
-				.innerJoin(companies, eq(companyJobs.companyId, companies.id));
-
-			const [owner_account] = await ctx.db
-				.select({
-					id: accounts.id,
-					username: accounts.username,
-				}) // Specify the property to select
-				.from(accountJobs)
-				.where(eq(accountJobs.jobId, res.job.id))
-				.innerJoin(accounts, eq(accountJobs.accountId, accounts.id));
-
 			return {
-				...res.job,
-				address: res.address,
+				...res,
 				industries: jobIndustriesRes.map((industry) => industry.industries),
-				company: owner_company,
-				account: owner_account,
 			};
 		}),
 	createJob: accountProcedure
@@ -137,49 +128,54 @@ export const jobRouter = router({
 			const { address, industries: inputIndustries, id: jobId, ...job } = input;
 			console.log(address, inputIndustries, job);
 			try {
-			await ctx.db.transaction(async (tx) => {
-				const [currAddress] = await tx
-					.select()
-					.from(addresses)
-					.where(eq(addresses.id, job.addressId));
+				await ctx.db.transaction(async (tx) => {
+					const [currAddress] = await tx
+						.select()
+						.from(addresses)
+						.where(eq(addresses.id, job.addressId));
 
-				// if the address values have been changed, update the address
-				const addressChanged = Object.entries(address).some(([key, value]) =>
-					Object.entries(currAddress).some(([k, v]) => k === key && v !== value)
-				);
+					// if the address values have been changed, update the address
+					const addressChanged = Object.entries(address).some(([key, value]) =>
+						Object.entries(currAddress).some(
+							([k, v]) => k === key && v !== value
+						)
+					);
 
-				if (addressChanged) {
-					// Since we're reusing address in other places, we don't wanna update the current address, rather create a new one
-					const [newAddress] = await tx
-						.insert(addresses)
-						.values(address)
-						.returning({ id: addresses.id });
+					if (addressChanged) {
+						// Since we're reusing address in other places, we don't wanna update the current address, rather create a new one
+						const [newAddress] = await tx
+							.insert(addresses)
+							.values(address)
+							.returning({ id: addresses.id });
 
-					job.addressId = newAddress.id;
-				}
+						job.addressId = newAddress.id;
+					}
 
-				// update the industries, if they already exist, do nothing, otherwise insert them
-				await tx
-					.insert(jobIndustries)
-					.values(
-						inputIndustries.map((industry) => ({
-							jobId: jobId!,
-							industryId: industry.id,
-						}))
-					)
-					.onConflictDoNothing();
+					// update the industries, if they already exist, do nothing, otherwise insert them
+					await tx
+						.insert(jobIndustries)
+						.values(
+							inputIndustries.map((industry) => ({
+								jobId: jobId!,
+								industryId: industry.id,
+							}))
+						)
+						.onConflictDoNothing();
 
-				await tx
-					.delete(jobIndustries)
-					.where(
+					await tx.delete(jobIndustries).where(
 						and(
-							not(inArray(jobIndustries.industryId, inputIndustries.map((industry) => industry.id))),
+							not(
+								inArray(
+									jobIndustries.industryId,
+									inputIndustries.map((industry) => industry.id)
+								)
+							),
 							eq(jobIndustries.jobId, jobId!)
 						)
 					);
 
-				await tx.update(jobs).set(job).where(eq(jobs.id, jobId!));
-			});
+					await tx.update(jobs).set(job).where(eq(jobs.id, jobId!));
+				});
 			} catch (e) {
 				console.log(e);
 				throw e;

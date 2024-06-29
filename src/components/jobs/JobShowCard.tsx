@@ -24,27 +24,32 @@ export interface JobShowCardProps extends ComponentPropsWithoutRef<typeof Card> 
 }
 
 export const JobShowCard = ({ jobId, className, ...props }: JobShowCardProps) => {
-  const { data: job, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId })
-  if (isLoading) {
+  const { data, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId })
+  const { data: ownedCompanies, isLoading: isOwnedCompaniesLoading, isError: isOwnedCompaniesError, error: ownedCompaniesError } = trpc.company.getOwnedCompanies.useQuery({})
+  if (isLoading || isOwnedCompaniesLoading) {
     return <p>Loading...</p>
   }
-  if (isError) {
-    return <p>Error: {error.message}</p>
+  if (isError || isOwnedCompaniesError) {
+    const err = isError ? error : ownedCompaniesError
+    return <p>Error: {err?.message}</p>
   }
 
-  if (!job) {
+  if (!data) {
     return <p>No job found</p>
   }
+
+  const { industries, job, ownerCompany, ownerAccount } = data
+
 
   return (
     <>
       <div className="flex items-center mb-4">
         <Avatar>
-          <AvatarFallback>{job.account.username[0] || job.company.name[0]}</AvatarFallback>
+          <AvatarFallback>{ownerCompany?.name || ownerAccount?.username}</AvatarFallback>
         </Avatar>
         <div className="ml-2">
-          <p className="font-semibold">{job.account.username || job.company.name}</p>
-          {job.company.emailAddress && <p className="text-muted-foreground">{job.company.emailAddress}</p>}
+          <p className="font-semibold">{ownerCompany?.name || ownerAccount?.username}</p>
+          {ownerCompany?.emailAddress && <p className="text-muted-foreground">{ownerCompany?.emailAddress}</p>}
         </div>
       </div>
       <div className="flex items-center mb-4">
@@ -57,28 +62,29 @@ export const JobShowCard = ({ jobId, className, ...props }: JobShowCardProps) =>
       <p className="text-muted-foreground mb-4">{job.startDate}</p>
       <p>{job.description}</p>
       <div className="flex space-x-2 mt-4">
-        {job.industries.map((industry, index) => (
+        {industries.map((industry, index) => (
           <Badge key={index}>{industry.name}</Badge>
         ))}
       </div>
-      <div className="mt-4">
-        <Input placeholder={`Reply ${job.title}...`} />
-        <Dialog>
-          <DialogTrigger>
-            <Button className="mt-2">Drop a bid</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Are you absolutely sure?</DialogTitle>
-              <DialogDescription>
-                This action cannot be undone. This will permanently delete your account
-                and remove your data from our servers.
-              </DialogDescription>
-            </DialogHeader>
-            <DropBidForm jobId={job.id} />
-          </DialogContent>
-        </Dialog>
-      </div>
+      {ownedCompanies?.length ? (
+        <div className="mt-4">
+          <Dialog>
+            <DialogTrigger>
+              <Button className="mt-2">Drop a bid</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you absolutely sure?</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently delete your account
+                  and remove your data from our servers.
+                </DialogDescription>
+              </DialogHeader>
+              <DropBidForm jobId={job.id} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      ) : null}
     </>
   )
 }

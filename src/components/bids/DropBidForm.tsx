@@ -49,7 +49,11 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
     throw new Error("Account or user not found")
   }
 
-  const { data: ownedCompanies, isLoading: isOwnedCompaniesLoading } = trpc.company.getOwnedCompanies.useQuery();
+  const { data: ownedCompanies, isLoading: isOwnedCompaniesLoading } = trpc.company.getOwnedCompanies.useQuery({});
+
+  if (!isOwnedCompaniesLoading && !ownedCompanies) {
+    throw new Error("No owned companies")
+  }
 
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -63,7 +67,8 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
     },
   })
 
-  // @ts-ignore
+
+  // @ts-ignor
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -71,6 +76,9 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
       jobId: jobId,
     },
   })
+
+
+  console.log(ownedCompanies)
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (isLoading) {
@@ -122,34 +130,33 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
             </FormItem>
           )}
         />
-        {(ownedCompanies?.length || 0) > 1 && (
-          <FormField
-            control={form.control}
-            name="senderCompanyId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Sender Company</FormLabel>
 
-                <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Sender Company" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ownedCompanies?.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormDescription>
-                  This is the company on whose behalf you are sending the bid.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="senderCompanyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Sender Company</FormLabel>
+
+              <FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={(ownedCompanies?.length || 0) < 2}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sender Company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ownedCompanies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormDescription>
+                This is the company on whose behalf you are sending the bid.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <Button className="w-full mt-8" type="submit" disabled={isLoading}>
           {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Drop Bid"}

@@ -33,3 +33,7 @@ export function timeSince(then: Date) {
 		return `${pluralize(Math.floor(diffInDays / 365), "year")} ago`;
 	}
 }
+
+export function truncate(str: string, length: number) {
+	return str.length > length ? str.substring(0, length) + "..." : str;
+}

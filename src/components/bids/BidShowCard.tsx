@@ -41,7 +41,7 @@ const confirmDialog = (verb: string, onConfirm: () => void, isOpen: boolean, set
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button onClick={onConfirm}>{verb}</Button>
+          <Button onClick={onConfirm}>{toTitleCase(verb)}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -54,7 +54,7 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
   const { data: ownedCompanies,
     isLoading: isLoadingOwnedCompanies,
     isError: isErrorOwnedCompanies,
-    error: errorOwnedCompanies } = trpc.company.getOwnedCompanies.useQuery()
+    error: errorOwnedCompanies } = trpc.company.getOwnedCompanies.useQuery({})
   const { data: company, isLoading: isLoadingCompany, isError: isErrorCompany, error: errorCompany } = trpc.company.getCompanyById.useQuery(
     { id: bid?.bids.senderCompanyId || "" },
 
@@ -103,9 +103,9 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
       </div>
       <Link href={`/jobs/${bid.job.id}`} className="text-xl font-bold mb-2">{toTitleCase(bid.job.title)}</Link>
       <div className="flex space-x-2 mt-4">
-        <Badge >{toTitleCase(bid.bids.status)}</Badge>
-        <Badge >{`$${bid.bids.priceUsd}`}</Badge>
-        <Badge >Sent {timeSince(new Date(bid.bids.createdAt))}</Badge>
+        <Badge>{`$${bid.bids.priceUsd}`}</Badge>
+        <Badge variant="secondary">{toTitleCase(bid.bids.status)}</Badge>
+        <Badge variant="secondary">Sent {timeSince(new Date(bid.bids.createdAt))}</Badge>
       </div>
       <p>{bid.bids.note}</p>
       <div className="mt-4 w-full">

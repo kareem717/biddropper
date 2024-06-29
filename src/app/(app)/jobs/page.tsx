@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { JobIndexCard } from "@/components/jobs/JobIndexCard"
 import { JobShowCard } from "@/components/jobs/JobShowCard"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { QuickSearch } from "@/components/app/QuickSearch"
 
 export default function JobsPage() {
   const [selectedContract, setSelectedContract] = useState(null)
@@ -175,9 +176,7 @@ export default function JobsPage() {
   return (
     <div className="grid grid-cols-3">
       <main className="flex-1 p-4 col-span-1">
-        <div className="flex items-center justify-between mb-4">
-          <Input placeholder="Search" className="mb-4" />
-        </div>
+        <QuickSearch />
         <ScrollArea className="grid grid-cols-1 gap-4 h-[80vh] px-4">
           {jobs.map((job) => (
             <JobIndexCard key={job.id} jobId={job.id} onClick={() => handleContractClick(job)} className="my-2" />

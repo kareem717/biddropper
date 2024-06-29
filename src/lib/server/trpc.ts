@@ -57,13 +57,17 @@ export const accountProcedure = userProcedure.use(async ({ ctx, next }) => {
 
 export const companyOwnerProcedure = accountProcedure.use(
 	async ({ ctx, next }) => {
-		if (!ctx.ownedCompanies) {
+		const activeOwnedCompanies = ctx.ownedCompanies?.filter(
+			(company) => company.deletedAt === null
+		);
+
+		if (!activeOwnedCompanies) {
 			throw new TRPCError({
 				code: "FORBIDDEN",
 				message: "You are not the owner of any companies",
 			});
 		}
 
-		return next({ ctx: { ...ctx, ownedCompanies: ctx.ownedCompanies } });
+		return next({ ctx: { ...ctx, ownedCompanies: activeOwnedCompanies } });
 	}
 );
