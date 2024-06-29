@@ -23,13 +23,10 @@ export default async function AppLayout({
 	}
 
 	return (
-		<div className="flex h-full w-full">
-			<FullSidebar className="fixed h-full z-10" />
-			<div className="flex flex-col w-full md:ml-14">
-				<Navbar className="md:px-8 px-4 py-2 border-b " />
-				<main className="overflow-y-auto flex-grow md:p-8 p-2">
-					{children}
-				</main>
+		<div className="h-full w-full relative">
+			<Navbar className="md:px-8 px-4 py-2 border-b fixed bg-background w-full" />
+			<div className="overflow-y-auto flex-grow w-full h-full pt-16">
+				{children}
 			</div>
 		</div>
 	);
