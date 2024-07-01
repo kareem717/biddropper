@@ -22,11 +22,7 @@ export async function createTRPCContext(opts: { headers: Headers }) {
 
 	if (account) {
 		ownedCompanies = await db
-			.select({
-				id: companies.id,
-				name: companies.name,
-				deletedAt: companies.deletedAt,
-			})
+			.select()
 			.from(companies)
 			.where(eq(companies.ownerId, account.id));
 	}

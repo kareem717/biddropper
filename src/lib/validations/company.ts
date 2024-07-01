@@ -1,4 +1,4 @@
-import { createInsertSchema } from "drizzle-zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { companies } from "@/lib/db/drizzle/schema";
 import { z } from "zod";
 import { NewAddressSchema } from "./address";
@@ -46,3 +46,6 @@ export const EditCompanySchema = createInsertSchema(companies, {
 		isActive: true,
 		deletedAt: true,
 	});
+
+export type ShowCompany = z.infer<typeof ShowCompanySchema>;
+export const ShowCompanySchema = createSelectSchema(companies);

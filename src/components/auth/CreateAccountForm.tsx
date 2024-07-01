@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { accountInsertSchema } from "@/lib/validations/db";
+import { NewAccountSchema } from "@/lib/validations/account";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -42,8 +42,8 @@ export const CreateAccountForm = () => {
 		},
 	});
 
-	const form = useForm<z.infer<typeof accountInsertSchema>>({
-		resolver: zodResolver(accountInsertSchema),
+	const form = useForm<z.infer<typeof NewAccountSchema>>({
+		resolver: zodResolver(NewAccountSchema),
 		defaultValues: {
 			userId: user.id,
 			description: "",
@@ -51,7 +51,7 @@ export const CreateAccountForm = () => {
 		},
 	});
 
-	async function onSubmit(values: z.infer<typeof accountInsertSchema>) {
+	async function onSubmit(values: z.infer<typeof NewAccountSchema>) {
 		await createAccount(values);
 	}
 

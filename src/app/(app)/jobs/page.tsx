@@ -12,7 +12,7 @@ import { JobShowCard } from "@/components/jobs/JobShowCard"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { QuickSearch } from "@/components/app/QuickSearch"
 
-export default function JobsPage() {
+export default function JobIndexPage() {
   const [selectedContract, setSelectedContract] = useState(null)
   const [showDetails, setShowDetails] = useState(false)
   const jobs = [
@@ -185,7 +185,7 @@ export default function JobsPage() {
       </main>
       {showDetails && selectedContract && (
         <aside className="p-4 border-l col-span-2">
-          <JobShowCard jobId={selectedContract} />
+          <JobShowCard />
         </aside>
       )}
     </div>

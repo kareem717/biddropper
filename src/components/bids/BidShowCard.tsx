@@ -7,7 +7,6 @@ import { trpc } from "@/lib/trpc/client"
 import { ComponentPropsWithoutRef } from "react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,14 +14,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { DropBidForm } from "../bids/DropBidForm"
 import { useAuth } from "@/components/providers/AuthProvider"
 import { bidStatus } from "@/lib/db/drizzle/schema"
 import { toTitleCase, timeSince } from "@/utils"
-import { Icons } from "../Icons"
 import Link from "next/link"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
@@ -56,7 +52,7 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
     isError: isErrorOwnedCompanies,
     error: errorOwnedCompanies } = trpc.company.getOwnedCompanies.useQuery({})
   const { data: company, isLoading: isLoadingCompany, isError: isErrorCompany, error: errorCompany } = trpc.company.getCompanyById.useQuery(
-    { id: bid?.bids.senderCompanyId || "" },
+    { id: bid?.senderCompanyId || "" },
 
   );
   const [isAcceptOpen, setIsAcceptOpen] = useState(false)
@@ -89,7 +85,10 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
   }
 
 
-  const accountOwnsListing = account?.id === bid.job.ownerAccountId || ownedCompanies?.some(c => c.id === bid.job.ownerCompanyId)
+  const accountOwnsListing =
+    ('accountId' in bid.job.owner && account?.id === bid.job.owner.accountId) ||
+    ('ownerAccountId' in bid.job.owner && ownedCompanies?.some(c => c.id === bid.job.owner.companyId))
+
   return (
     <div>
       <div className="flex items-center mb-4">
@@ -103,11 +102,11 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
       </div>
       <Link href={`/jobs/${bid.job.id}`} className="text-xl font-bold mb-2">{toTitleCase(bid.job.title)}</Link>
       <div className="flex space-x-2 mt-4">
-        <Badge>{`$${bid.bids.priceUsd}`}</Badge>
-        <Badge variant="secondary">{toTitleCase(bid.bids.status)}</Badge>
-        <Badge variant="secondary">Sent {timeSince(new Date(bid.bids.createdAt))}</Badge>
+        <Badge>{`$${bid.priceUsd}`}</Badge>
+        <Badge variant="secondary">{toTitleCase(bid.status)}</Badge>
+        <Badge variant="secondary">Sent {timeSince(new Date(bid.createdAt))}</Badge>
       </div>
-      <p>{bid.bids.note}</p>
+      <p>{bid.note}</p>
       <div className="mt-4 w-full">
         {accountOwnsListing &&
           <div className="flex flex-row space-x-2">
@@ -115,7 +114,7 @@ export const BidShowCard = ({ bidId, className, ...props }: BidShowCardProps) =>
             <Button className="mt-2 w-full" key={company.id}>Accept</Button>
           </div>
         }
-        {!accountOwnsListing && ownedCompanies?.some(c => c.id === bid.bids.senderCompanyId) && bid.bids.status === bidStatus.enumValues[0] &&
+        {!accountOwnsListing && ownedCompanies?.some(c => c.id === bid.senderCompanyId) && bid.status === bidStatus.enumValues[0] &&
           <Button className="mt-2 w-full" key={company.id}>Withdraw</Button>
         }
       </div >

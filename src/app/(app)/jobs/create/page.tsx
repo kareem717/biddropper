@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export default function CreateCompanyPage() {
+export default function JobCreatePage() {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <Card>

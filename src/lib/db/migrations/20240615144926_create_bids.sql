@@ -9,7 +9,7 @@ CREATE TABLE
         sender_company_id UUID NOT NULL REFERENCES companies (id) ON UPDATE CASCADE ON DELETE RESTRICT,
         is_active BOOLEAN DEFAULT TRUE NOT NULL,
         status bid_status DEFAULT 'pending'::bid_status NOT NULL,
-        note VARCHAR(1200),
+        note VARCHAR(100),
         created_at timestamptz NOT NULL DEFAULT CLOCK_TIMESTAMP(),
         updated_at timestamptz,
         deleted_at timestamptz

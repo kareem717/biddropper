@@ -59,6 +59,8 @@
     "react-dom": "^18",
     "react-hook-form": "^7.52.0",
     "react-leaflet": "^4.2.1",
+    "react-resizable-panels": "^2.0.19",
+    "react-responsive": "^10.0.0",
     "resend": "^3.3.0",
     "server-only": "^0.0.1",
     "sonner": "^1.5.0",
@@ -66,6 +68,7 @@
     "tailwind-merge": "^2.3.0",
     "tailwind-scrollbar": "^3.1.0",
     "tailwindcss-animate": "^1.0.7",
+    "title-case": "^4.3.1",
     "tls": "^0.0.1",
     "zod": "^3.23.8",
     "zustand": "^4.5.2"

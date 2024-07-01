@@ -1,90 +1,109 @@
 "use client"
 
-import {
-  Card,
-} from "@/components/ui/card"
-import { trpc } from "@/lib/trpc/client"
-import { ComponentPropsWithoutRef } from "react"
+import { BidIndexShell } from "../bids/BidIndexShell"
+import { FC, ComponentPropsWithoutRef } from "react"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { cn } from "@/utils"
+import { titleCase } from "title-case";
+import Link from "next/link"
+import { trpc } from "@/lib/trpc/client"
+import { AddressDisplay } from "@/components/app/AddressDisplay"
+import { ShowAddress } from "@/lib/validations/address"
+import { useAuth } from "../providers/AuthProvider"
+import { useCompany } from "../providers/CompanyProvider"
 import { DropBidForm } from "../bids/DropBidForm"
 
-export interface JobShowCardProps extends ComponentPropsWithoutRef<typeof Card> {
+export interface JobShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
 }
 
-export const JobShowCard = ({ jobId, className, ...props }: JobShowCardProps) => {
-  const { data, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId })
-  const { data: ownedCompanies, isLoading: isOwnedCompaniesLoading, isError: isOwnedCompaniesError, error: ownedCompaniesError } = trpc.company.getOwnedCompanies.useQuery({})
-  if (isLoading || isOwnedCompaniesLoading) {
-    return <p>Loading...</p>
+const bidSection: FC<{ jobId: string, showBids: boolean }> = ({ jobId, showBids }) => (
+  <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
+    {showBids ? (
+      <BidIndexShell jobId={jobId} />
+    ) : (
+      <>
+        <h1 className="text-2xl font-bold mb-4">Drop a bid</h1>
+        <DropBidForm jobId={jobId} />
+      </>
+    )}
+  </div>
+);
+
+export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }) => {
+  const { data, isLoading } = trpc.job.getJobFull.useQuery({ id: jobId })
+  const { companies } = useCompany()
+  const { account } = useAuth()
+
+  if (isLoading) return <div>Loading...</div>
+  if (!data) return <div>Job not found</div>
+
+  if (!data.ownerAccount && !data.ownerCompany) throw new Error("Owner not found")
+
+  // only show the bid index if the user or their companies own the job
+  let showBids = false;
+
+  let sender: {
+    displayName: string
+    href: string
+  } = { displayName: "", href: "" }; // Initialize sender with default values
+
+  if (data.ownerAccount) {
+    sender = {
+      displayName: data.ownerAccount.username,
+      href: `/accounts/${data.ownerAccount.id}`
+    }
+    showBids = data.ownerAccount.id === account?.id;
   }
-  if (isError || isOwnedCompaniesError) {
-    const err = isError ? error : ownedCompaniesError
-    return <p>Error: {err?.message}</p>
+
+  if (data.ownerCompany) {
+    sender = {
+      displayName: data.ownerCompany.name,
+      href: `/companies/${data.ownerCompany.id}`
+    }
+
+    showBids = companies.some(c => c.id === data.ownerCompany?.id);
   }
 
-  if (!data) {
-    return <p>No job found</p>
-  }
-
-  const { industries, job, ownerCompany, ownerAccount } = data
-
-
+  console.log(companies)
   return (
-    <>
-      <div className="flex items-center mb-4">
-        <Avatar>
-          <AvatarFallback>{ownerCompany?.name || ownerAccount?.username}</AvatarFallback>
-        </Avatar>
-        <div className="ml-2">
-          <p className="font-semibold">{ownerCompany?.name || ownerAccount?.username}</p>
-          {ownerCompany?.emailAddress && <p className="text-muted-foreground">{ownerCompany?.emailAddress}</p>}
+    <div className={cn("flex flex-col md:flex-row gap-4", className)} {...props}>
+      <div className="w-full">
+        <div className="grid gap-4 h-full">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">{titleCase(data.job.title)}</h1>
+            <div className="text-sm text-muted-foreground">
+              Posted on {new Date(data.job.createdAt).toLocaleDateString()}
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Owner</div>
+              <Link href={sender.href} className="font-medium">{sender.displayName}</Link>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Address</div>
+              <AddressDisplay address={data.address as ShowAddress} className="font-medium" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 border-b border-border pb-4">
+            <div className="text-sm font-medium text-muted-foreground">Related Industries</div>
+            <div className="flex flex-wrap gap-2">
+              {data.industries.map((industry) => (
+                <Badge variant="outline" className="px-2 py-1 text-xs" key={industry.id}>
+                  {titleCase(industry.name)}
+                </Badge>
+              ))}
+            </div>
+          </div>
+          <div className="prose">
+            <p>
+              {data.job.description}
+            </p>
+          </div>
         </div>
       </div>
-      <div className="flex items-center mb-4">
-        <div className="ml-2">
-          <p className="font-semibold">{job.title}</p>
-          <p className="text-muted-foreground">{job.startDate}</p>
-        </div>
-      </div>
-      <h2 className="text-xl font-bold mb-2">{job.title}</h2>
-      <p className="text-muted-foreground mb-4">{job.startDate}</p>
-      <p>{job.description}</p>
-      <div className="flex space-x-2 mt-4">
-        {industries.map((industry, index) => (
-          <Badge key={index}>{industry.name}</Badge>
-        ))}
-      </div>
-      {ownedCompanies?.length ? (
-        <div className="mt-4">
-          <Dialog>
-            <DialogTrigger>
-              <Button className="mt-2">Drop a bid</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Are you absolutely sure?</DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. This will permanently delete your account
-                  and remove your data from our servers.
-                </DialogDescription>
-              </DialogHeader>
-              <DropBidForm jobId={job.id} />
-            </DialogContent>
-          </Dialog>
-        </div>
-      ) : null}
-    </>
+      {showBids || companies.length > 0 ? bidSection({ jobId, showBids }) : null}
+    </div>
   )
 }

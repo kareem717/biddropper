@@ -16,13 +16,6 @@ import { Input } from "@/components/ui/input"
 import { trpc } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { ComponentPropsWithoutRef, useState } from "react";
 import { Icons } from "../Icons";
 import {
@@ -35,6 +28,7 @@ import {
 import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
 import { NewBidSchema } from "@/lib/validations/bid";
 import { Textarea } from "../ui/textarea";
+import { useCompany } from "../providers/CompanyProvider";
 
 const formSchema = NewBidSchema
 
@@ -44,17 +38,7 @@ export interface DropBidFormProps extends ComponentPropsWithoutRef<"form"> {
 
 export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
   const { account, user } = useAuth()
-
-  if (!account || !user) {
-    throw new Error("Account or user not found")
-  }
-
-  const { data: ownedCompanies, isLoading: isOwnedCompaniesLoading } = trpc.company.getOwnedCompanies.useQuery({});
-
-  if (!isOwnedCompaniesLoading && !ownedCompanies) {
-    throw new Error("No owned companies")
-  }
-
+  const { companies } = useCompany()
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { getSelectedIndustries } = useIndustrySelect();
@@ -68,17 +52,21 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
   })
 
 
-  // @ts-ignor
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      senderCompanyId: ownedCompanies?.[0]?.id,
+      senderCompanyId: companies[0]?.id,
       jobId: jobId,
     },
   })
 
+  if (!account || !user) {
+    throw new Error("Account or user not found")
+  }
 
-  console.log(ownedCompanies)
+  if (companies.length === 0) {
+    throw new Error("No companies found")
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (isLoading) {
@@ -97,10 +85,7 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
       router.push(`/bids/${id}`);
     }
   }
-  const handleValidate = async () => {
-    await form.trigger()
-    console.log(form.formState.errors)
-  }
+
   return (
     <Form {...form} >
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" {...props}>
@@ -124,27 +109,25 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
             <FormItem>
               <FormLabel>Bid Note</FormLabel>
               <FormControl>
-                <Textarea {...field} value={field.value || ""} />
+                <Textarea {...field} value={field.value || ""} className="max-h-32" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="senderCompanyId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Sender Company</FormLabel>
-
               <FormControl>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={(ownedCompanies?.length || 0) < 2}>
-                  <SelectTrigger className="w-[180px]">
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={companies.length < 2}>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Sender Company" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ownedCompanies?.map((company) => (
+                    {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -157,15 +140,10 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
             </FormItem>
           )}
         />
-
         <Button className="w-full mt-8" type="submit" disabled={isLoading}>
           {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Drop Bid"}
         </Button>
       </form>
-
-      <Button className="w-full mt-8" onClick={() => handleValidate()}>
-        validate
-      </Button>
     </Form >
   );
 };

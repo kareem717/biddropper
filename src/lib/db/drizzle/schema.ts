@@ -168,6 +168,7 @@ export const addresses = pgTable("addresses", {
 	yCoordinate: numeric("y_coordinate").notNull(),
 	line1: varchar("line_1", { length: 70 }),
 	line2: varchar("line_2", { length: 70 }),
+	fullAddress: text("full_address").notNull(),
 	city: varchar("city", { length: 50 }),
 	region: varchar("region", { length: 50 }),
 	postalCode: varchar("postal_code", { length: 10 }).notNull(),
@@ -325,7 +326,6 @@ export const companies = pgTable("companies", {
 	isVerified: boolean("is_verified").default(false).notNull(),
 	dateFounded: date("date_founded").notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
-	tags: varchar("tags").array(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
 		.default(sql`clock_timestamp()`)
 		.notNull(),

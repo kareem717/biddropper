@@ -7,9 +7,14 @@ import {
 	companies,
 	bidStatus,
 	notifications,
+	accounts,
 } from "@/lib/db/drizzle/schema";
 import { router, companyOwnerProcedure } from "../trpc";
-import { EditBidSchema, NewBidSchema } from "@/lib/validations/bid";
+import {
+	DetailedBid,
+	EditBidSchema,
+	NewBidSchema,
+} from "@/lib/validations/bid";
 import { TRPCError } from "@trpc/server";
 import {
 	eq,
@@ -22,44 +27,71 @@ import {
 	lt,
 	asc,
 	desc,
+	SQL,
 } from "drizzle-orm";
 import {
 	createNotification,
 	withCursorPagination,
 	generateCursorResponse,
 } from "@/lib/server/routers/shared";
-import { QueryBuilder, alias } from "drizzle-orm/pg-core";
+import { PgSelect, alias } from "drizzle-orm/pg-core";
 import { accountProcedure } from "../trpc";
 import { z } from "zod";
 import { Context } from "@/lib/trpc/context";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { BidFilterSchema, BidFilter } from "@/lib/validations/bid";
 
-const getBidDetails = async (db: PostgresJsDatabase<any>, bidIds: string[]) => {
+const getBidDetails = async (
+	db: PostgresJsDatabase<any>,
+	bidIds: string[]
+): Promise<DetailedBid[]> => {
 	// Define the alias for companies
 	const senderCompany = alias(companies, "senderCompany");
 	const ownerCompany = alias(companies, "ownerCompany");
-	return await db
+	const res = await db
 		.select({
 			bids,
 			senderCompany: {
 				id: senderCompany.id,
 				ownerAccountId: senderCompany.ownerId,
+				name: senderCompany.name,
 			},
 			job: {
 				id: jobBids.jobId,
 				title: jobs.title,
 				jobOwnerAccountId: accountJobs.accountId,
+				jobOwnerAccountUsername: accounts.username,
 				jobOwnerCompanyId: ownerCompany.id,
+				jobOwnerCompanyName: ownerCompany.name,
 				jobOwnerCompanyOwnerAccountId: ownerCompany.ownerId,
 			},
 		})
 		.from(bids)
 		.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+		.innerJoin(jobs, eq(jobBids.jobId, jobs.id))
 		.leftJoin(accountJobs, eq(jobBids.jobId, accountJobs.jobId))
+		.leftJoin(accounts, eq(accountJobs.accountId, accounts.id))
 		.leftJoin(companyJobs, eq(jobBids.jobId, companyJobs.jobId))
 		.leftJoin(ownerCompany, eq(companyJobs.companyId, ownerCompany.id))
 		.innerJoin(senderCompany, eq(bids.senderCompanyId, senderCompany.id))
 		.where(and(inArray(bids.id, bidIds), isNull(bids.deletedAt)));
+	return res.map((r) => ({
+		...r.bids,
+		senderCompany: r.senderCompany,
+		job: {
+			...r.job,
+			owner: r.job.jobOwnerAccountId
+				? {
+						accountId: r.job.jobOwnerAccountId!,
+						accountUsername: r.job.jobOwnerAccountUsername!,
+				  }
+				: {
+						companyId: r.job.jobOwnerCompanyId!,
+						companyName: r.job.jobOwnerCompanyName!,
+						ownerAccountId: r.job.jobOwnerCompanyOwnerAccountId!,
+				  },
+		},
+	}));
 };
 
 const rejectBids = async (
@@ -130,6 +162,24 @@ const rejectBids = async (
 		);
 };
 
+const withBidFilter = <T extends PgSelect>(
+	query: T,
+	filter: BidFilter,
+	where?: SQL<unknown>[]
+) => {
+	return query.where(
+		and(
+			...(where || []),
+			filter.statuses ? inArray(bids.status, filter.statuses) : undefined,
+			filter.minPriceUsd
+				? gt(bids.priceUsd, filter.minPriceUsd.toString())
+				: undefined,
+			filter.maxPriceUsd
+				? lt(bids.priceUsd, filter.maxPriceUsd.toString())
+				: undefined
+		)
+	);
+};
 export const bidRouter = router({
 	getAccountSentBids: companyOwnerProcedure.query(async ({ ctx }) => {
 		const res = await ctx.db
@@ -215,41 +265,32 @@ export const bidRouter = router({
 		)
 		.query(async ({ ctx, input }) => {
 			const { jobId } = input;
-			return await ctx.db
+			const bidIds = await ctx.db
 				.select({
-					bids,
-					jobId: jobBids.jobId,
+					id: bids.id,
 				})
 				.from(bids)
 				.innerJoin(
 					jobBids,
 					and(eq(bids.id, jobBids.bidId), eq(jobBids.jobId, jobId))
 				);
+
+			if (!bidIds.length) {
+				return [];
+			}
+
+			return await getBidDetails(
+				ctx.db,
+				bidIds.map((b) => b.id)
+			);
 		}),
 	getBidFull: accountProcedure
 		.input(z.object({ bidId: z.string() }))
 		.query(async ({ ctx, input }) => {
 			const { bidId } = input;
-			const [res] = await ctx.db
-				.select({
-					bids,
-					job: {
-						title: jobs.title,
-						id: jobs.id,
-						ownerAccountId: accountJobs.accountId,
-						ownerCompanyId: companyJobs.companyId,
-					},
-					senderCompanyName: companies.name,
-				})
-				.from(bids)
-				.where(and(eq(bids.id, bidId), isNull(bids.deletedAt)))
-				.leftJoin(jobBids, eq(bids.id, jobBids.bidId))
-				.innerJoin(jobs, eq(jobBids.jobId, jobs.id))
-				.leftJoin(accountJobs, eq(jobs.id, accountJobs.jobId))
-				.leftJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
-				.innerJoin(companies, eq(bids.senderCompanyId, companies.id));
-
-			return res;
+			const [bid] = await getBidDetails(ctx.db, [bidId]);
+			console.log(bid);
+			return bid;
 		}),
 	createBid: companyOwnerProcedure
 		.input(NewBidSchema)
@@ -267,6 +308,7 @@ export const bidRouter = router({
 						},
 					})
 					.from(jobs)
+					.leftJoin(accountJobs, eq(jobs.id, accountJobs.jobId))
 					.leftJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
 					.leftJoin(companies, eq(companyJobs.companyId, companies.id))
 					.where(eq(jobs.id, jobId));
@@ -343,7 +385,7 @@ export const bidRouter = router({
 				});
 			}
 
-			if (bid.bids.status !== bidStatus.enumValues[0]) {
+			if (bid.status !== bidStatus.enumValues[0]) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 					message: "bid is not pending",
@@ -351,12 +393,16 @@ export const bidRouter = router({
 			}
 
 			// Verify that the bid is for a job owned by the current account or one of their companies
-			if (
-				bid.job.jobOwnerAccountId !== ctx.account.id &&
-				!ctx.ownedCompanies
+			const isAccountOwner =
+				"accountId" in bid.job.owner &&
+				bid.job.owner.accountId === ctx.account.id;
+			const isCompanyOwner =
+				"companyId" in bid.job.owner &&
+				ctx.ownedCompanies
 					.map((c) => c.id)
-					.includes(bid.job.jobOwnerCompanyId || "")
-			) {
+					.includes(bid.job.owner.companyId ?? "");
+
+			if (!isAccountOwner && !isCompanyOwner) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
 					message: "you are not the owner of the job",
@@ -440,7 +486,7 @@ export const bidRouter = router({
 				});
 			}
 
-			if (bid.bids.status !== bidStatus.enumValues[0]) {
+			if (bid.status !== bidStatus.enumValues[0]) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 					message: "bid is not pending",
@@ -453,9 +499,13 @@ export const bidRouter = router({
 					.set({ status: "withdrawn" })
 					.where(eq(bids.id, bidId));
 
-				const accountId =
-					bid.job.jobOwnerAccountId || bid.job.jobOwnerCompanyOwnerAccountId;
+				let accountId: string | undefined;
 
+				if ("accountId" in bid.job.owner) {
+					accountId = bid.job.owner.accountId;
+				} else if ("companyId" in bid.job.owner) {
+					accountId = bid.job.owner.ownerAccountId;
+				}
 				if (!accountId) {
 					throw new TRPCError({
 						code: "INTERNAL_SERVER_ERROR",

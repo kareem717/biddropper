@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { AddressAutofill } from "@mapbox/search-js-react";
 import { env } from "@/lib/env.mjs";
 import type { AddressAutofillRetrieveResponse } from "@mapbox/search-js-core";
-import useAddressInput, { Address } from "@/lib/hooks/useAddressInput";
+import useAddressInput from "@/lib/hooks/useAddressInput";
 import { cn } from "@/utils";
-import { addressInsertSchema } from "@/lib/validations/db";
+import { NewAddressSchema, NewAddress } from "@/lib/validations/address";
 
 interface AddressInputProps extends ComponentPropsWithoutRef<typeof Input> {
-  onRetrieve?: (val: Address) => void;
+  onRetrieve?: (val: NewAddress) => void;
 }
 
 const AddressInput: FC<AddressInputProps> = ({
@@ -28,7 +28,7 @@ const AddressInput: FC<AddressInputProps> = ({
       throw new Error("No address found");
     }
 
-    const parse = addressInsertSchema.safeParse({
+    const parse = NewAddressSchema.safeParse({
       postal_code: vals.postcode,
       x_coordinate: String(geo.coordinates[0]),
       y_coordinate: String(geo.coordinates[1]),
@@ -41,7 +41,7 @@ const AddressInput: FC<AddressInputProps> = ({
       // @ts-ignore
       region_code: vals.region_code,
       country: vals.country,
-      full_address: vals.full_address,
+      full_address: vals.full_address || vals.place_name,
       raw_json: res,
       // @ts-ignore
       district: vals.district,

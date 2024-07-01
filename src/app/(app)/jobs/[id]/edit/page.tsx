@@ -5,7 +5,7 @@ import { EditJobForm } from "@/components/jobs/EditJobForm";
 import { api } from "@/lib/trpc/api";
 import { trpc } from "@/lib/trpc/client";
 
-export default function EditJobPage() {
+export default function JobEditPage() {
   const jobId = useParams().id;
   const { data: job, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId as string });
 
@@ -20,13 +20,13 @@ export default function EditJobPage() {
     industries: job.industries.map(industry => ({
       id: industry.id,
       name: industry.name,
-      created_at: industry.created_at,
-      updated_at: industry.updated_at,
-      deleted_at: industry.deleted_at,
+      created_at: industry.createdAt,
+      updated_at: industry.updatedAt,
+      deleted_at: industry.deletedAt,
     })),
     address: {
       ...job.address,
-      raw_json: job.address.raw_json as any,
+      raw_json: job.address.rawJson as any,
     },
   };
   console.log(transformedJob.address);

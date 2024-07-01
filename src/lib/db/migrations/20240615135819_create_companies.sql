@@ -13,7 +13,6 @@ CREATE TABLE
         is_verified BOOLEAN DEFAULT FALSE NOT NULL,
         date_founded DATE NOT NULL,
         is_active BOOLEAN DEFAULT TRUE NOT NULL,
-        tags VARCHAR[],
         created_at timestamptz NOT NULL DEFAULT CLOCK_TIMESTAMP(),
         updated_at timestamptz,
         deleted_at timestamptz

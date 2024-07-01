@@ -8,7 +8,7 @@ import useAddressInput from "@/lib/hooks/useAddressInput";
 import { useTheme } from "next-themes";
 import { cn } from "@/utils";
 import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
-import { NewAddress } from "@/lib/validations/db";
+import { NewAddress } from "@/lib/validations/address";
 
 interface AutoFillMapProps extends ComponentPropsWithoutRef<"div"> {
   mapContainerProps?: ComponentPropsWithoutRef<typeof MapContainer>;
