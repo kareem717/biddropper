@@ -1,27 +1,25 @@
 "use client"
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter
-} from "@/components/ui/card"
 import { trpc } from "@/lib/trpc/client"
-import { cn } from "@/utils"
+import { cn, timeSince } from "@/utils"
 import { ComponentPropsWithoutRef } from "react"
 import { Badge } from "@/components/ui/badge"
+import { titleCase } from "title-case"
+import Link from "next/link"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../ui/card"
+import { ScrollArea, ScrollBar } from "../ui/scroll-area"
 
-export interface JobIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {
+export interface JobIndexCardProps extends ComponentPropsWithoutRef<'div'> {
   jobId: string
 }
+
+const INDUSTRIES_DISPLAYED = 2
 
 export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) => {
   const { data, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId })
 
   if (isLoading) {
-    return <CardContent>Loading...</CardContent>
+    return <div>Loading...</div>
   }
 
   if (isError) {
@@ -32,23 +30,30 @@ export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) 
   }
 
 
-  const { job } = data
+  const { job, industries, address } = data
+  const ownerName = data.ownerAccount?.username || data.ownerCompany?.name
+
   return (
-    <Card className={cn("cursor-pointer", className)} {...props}>
+    <Card className="overflow-hidden flex flex-col justify-between hover:scale-105 focus-within:scale-105 md:hover:scale-110 md:focus-within:scale-110 transition-all duration-150">
       <CardHeader>
-        <CardTitle>{job.title}</CardTitle>
-        <CardDescription>{job.description.substring(0, 100)}...</CardDescription>
+        <CardTitle>{titleCase(job.title)}</CardTitle>
+        <CardDescription>{address.fullAddress}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex space-x-2 mt-2">
-          <Badge>{job.propertyType}</Badge>
-          <Badge>{job.isCommercialProperty}</Badge>
-          <Badge>{job.startDateFlag}</Badge>
-        </div>
+        <p className="text-muted-foreground mb-2">Posted by {ownerName}</p>
+        <ScrollArea className="w-full whitespace-nowrap  mx-auto py-2">
+          {industries.map((industry, index) => (
+            <Badge key={index}>
+              {titleCase(industry.name)}
+            </Badge>
+          ))}
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <p className="text-muted-foreground text-sm">Posted {timeSince(new Date(job.createdAt))}</p>
       </CardContent>
-      <CardFooter className="text-muted-foreground">
-        {new Date(job.startDate).toLocaleDateString()}
+      <CardFooter className="bg-primary px-6 py-4">
+        <Link href={`/jobs/${jobId}`} className="text-background font-semibold">View Details</Link>
       </CardFooter>
-    </Card >
+    </Card>
   )
 }

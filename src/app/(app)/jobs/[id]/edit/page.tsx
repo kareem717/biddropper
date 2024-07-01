@@ -2,7 +2,6 @@
 
 import { useParams } from "next/navigation";
 import { EditJobForm } from "@/components/jobs/EditJobForm";
-import { api } from "@/lib/trpc/api";
 import { trpc } from "@/lib/trpc/client";
 
 export default function JobEditPage() {
@@ -20,13 +19,13 @@ export default function JobEditPage() {
     industries: job.industries.map(industry => ({
       id: industry.id,
       name: industry.name,
-      created_at: industry.createdAt,
-      updated_at: industry.updatedAt,
-      deleted_at: industry.deletedAt,
+      createdAt: industry.createdAt,
+      updatedAt: industry.updatedAt,
+      deletedAt: industry.deletedAt,
     })),
     address: {
       ...job.address,
-      raw_json: job.address.rawJson as any,
+      rawJson: job.address.rawJson as any,
     },
   };
   console.log(transformedJob.address);

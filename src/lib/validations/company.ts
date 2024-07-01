@@ -6,7 +6,6 @@ import { ShowIndustrySchema } from "./industry";
 
 export const NewCompanySchema = createInsertSchema(companies, {
 	name: z.string().min(3).max(60),
-	tags: z.array(z.string().min(3).max(40)).max(10).optional(),
 })
 	.extend({
 		address: NewAddressSchema,
@@ -33,7 +32,6 @@ export type EditCompany = z.infer<typeof EditCompanySchema>;
 export const EditCompanySchema = createInsertSchema(companies, {
 	id: z.string().uuid(),
 	name: z.string().min(3).max(60),
-	tags: z.array(z.string().min(3).max(40)).max(10).optional(),
 })
 	.extend({
 		address: NewAddressSchema,

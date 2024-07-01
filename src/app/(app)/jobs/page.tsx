@@ -1,20 +1,9 @@
-/**
- * v0 by Vercel.
- * @see https://v0.dev/t/uYv2hsxdoKR
- * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
- */
 "use client"
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
 import { JobIndexCard } from "@/components/jobs/JobIndexCard"
-import { JobShowCard } from "@/components/jobs/JobShowCard"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { QuickSearch } from "@/components/app/QuickSearch"
 
 export default function JobIndexPage() {
-  const [selectedContract, setSelectedContract] = useState(null)
-  const [showDetails, setShowDetails] = useState(false)
   const jobs = [
     {
       "id": "0000d238-5e64-4529-a953-e5a374be4306"
@@ -168,26 +157,19 @@ export default function JobIndexPage() {
     }
   ]
 
-  const handleContractClick = (job: any) => {
-    console.log(job.id)
-    setSelectedContract(job.id)
-    setShowDetails(true)
-  }
   return (
-    <div className="grid grid-cols-3">
-      <main className="flex-1 p-4 col-span-1">
-        <QuickSearch />
-        <ScrollArea className="grid grid-cols-1 gap-4 h-[80vh] px-4">
+    <div className="bg-background min-h-screen py-12">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-6 gap-2">
+          <h1 className="text-3xl font-bold text-primary">Available Jobs</h1>
+          <QuickSearch className="w-full md:w-1/3" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {jobs.map((job) => (
-            <JobIndexCard key={job.id} jobId={job.id} onClick={() => handleContractClick(job)} className="my-2" />
+            <JobIndexCard key={job.id} jobId={job.id} />
           ))}
-        </ScrollArea>
-      </main>
-      {showDetails && selectedContract && (
-        <aside className="p-4 border-l col-span-2">
-          <JobShowCard />
-        </aside>
-      )}
+        </div>
+      </div>
     </div>
   )
 }
