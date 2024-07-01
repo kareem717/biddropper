@@ -13,7 +13,6 @@ export interface JobIndexCardProps extends ComponentPropsWithoutRef<'div'> {
   jobId: string
 }
 
-const INDUSTRIES_DISPLAYED = 2
 
 export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) => {
   const { data, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId })

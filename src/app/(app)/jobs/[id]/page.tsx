@@ -1,7 +1,6 @@
 "use client"
 
 import { JobShowCard } from "@/components/jobs/JobShowCard";
-import { trpc } from "@/lib/trpc/client";
 import { useParams } from "next/navigation";
 
 export default function JobShowPage() {
