@@ -183,7 +183,7 @@ export const addresses = pgTable("addresses", {
 	regionCode: text("region_code"),
 });
 
-export const notifications = pgTable("notifications", {
+export const messages = pgTable("messages", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	accountId: uuid("account_id")
 		.notNull()
@@ -193,7 +193,7 @@ export const notifications = pgTable("notifications", {
 		}),
 	description: text("description").notNull(),
 	title: varchar("title", { length: 100 }).notNull(),
-	isRead: boolean("is_read").default(false).notNull(),
+	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
 		.default(sql`clock_timestamp()`)
 		.notNull(),

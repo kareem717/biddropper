@@ -210,20 +210,20 @@ export const Inbox: FC<InboxProps> = ({ className, ...props }) => {
   if (!account) throw new Error("Account not found")
   const [readNotificationId, setReadNotificationId] = useState<string[]>([])
 
-  const { data, isLoading } = trpc.notification.getNotificationsByAcoount.useQuery({
+  const { data, isLoading } = trpc.message.getMessagesByAcoount.useQuery({
     accountId: account.id,
   })
 
-  const { mutate: readNotification } = trpc.notification.readNotification.useMutation()
+  const { mutate: readNotification } = trpc.message.readMessage.useMutation()
 
   if (isLoading) return <div>Loading...</div>
-  if (!data) return <div>No notifications</div>
+  if (!data) return <div>No messages</div>
 
-  const handleNotificationFocus = (notification: any) => {
-    if (notification.description.length > 25) return
-    if (readNotificationId.includes(notification.id)) return
-    setReadNotificationId([...readNotificationId, notification.id])
-    readNotification({ id: notification.id })
+  const handleNotificationFocus = (message: any) => {
+    if (message.description.length > 25) return
+    if (readNotificationId.includes(message.id)) return
+    setReadNotificationId([...readNotificationId, message.id])
+    readNotification({ id: message.id })
   }
 
   return (
@@ -233,25 +233,25 @@ export const Inbox: FC<InboxProps> = ({ className, ...props }) => {
         <CardDescription>You have {data.length} unread messages.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 w-full p-4">
-        {data.slice(0, 3).map((notification) => (
+        {data.slice(0, 3).map((message) => (
           <Link
             className="flex items-start gap-3 rounded-lg border border-border py-2 px-4 w-full"
-            key={notification.id}
-            href={`/inbox/${notification.id}`}
-            onFocus={() => handleNotificationFocus(notification)}
+            key={message.id}
+            href={`/inbox/${message.id}`}
+            onFocus={() => handleNotificationFocus(message)}
           >
             <div className="space-y-1">
               <div className="flex items-center gap-2 justify-start">
-                {!readNotificationId.includes(notification.id) && (
+                {!readNotificationId.includes(message.id) && (
                   <div className="h-2 w-2 bg-primary rounded-full mt-1" />
                 )}
-                <p className="font-medium">{titleCase(notification.title)}</p>
+                <p className="font-medium">{titleCase(message.title)}</p>
               </div>
               <p className="text-sm text-muted-foreground">
-                {notification.description.substring(0, 25)}
-                {notification.description.length > 25 ? "..." : ""}
+                {message.description.substring(0, 25)}
+                {message.description.length > 25 ? "..." : ""}
               </p>
-              <p className="text-sm text-muted-foreground">{timeSince(new Date(notification.createdAt))}</p>
+              <p className="text-sm text-muted-foreground">{timeSince(new Date(message.createdAt))}</p>
             </div>
           </Link>
         ))}
@@ -281,7 +281,7 @@ export const FeedbackButton = () => {
 }
 
 export const InboxButton = () => {
-  const { data } = trpc.notification.getUnreadNotificationCount.useQuery()
+  const { data } = trpc.message.getUnreadMessageCount.useQuery()
   return (
     <Popover>
       <PopoverTrigger className={buttonVariants({ variant: "outline", size: "sm" })}>

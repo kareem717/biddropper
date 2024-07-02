@@ -5,7 +5,7 @@ import { industryRouter } from "./industry";
 import { companyRouter } from "./company";
 import { jobRouter } from "./job";
 import { bidRouter } from "./bid";
-import { notificationRouter } from "./notification";
+import { messageRouter } from "./message";
 import { emailRouter } from "./email";
 
 export const appRouter = router({
@@ -15,7 +15,7 @@ export const appRouter = router({
 	company: companyRouter,
 	job: jobRouter,
 	bid: bidRouter,
-	notification: notificationRouter,
+	message: messageRouter,
 	email: emailRouter,
 });
 

@@ -6,7 +6,7 @@ import {
 	jobs,
 	companies,
 	bidStatus,
-	notifications,
+	messages,
 	accounts,
 } from "@/lib/db/drizzle/schema";
 import { router, companyOwnerProcedure } from "../trpc";
@@ -30,7 +30,7 @@ import {
 	SQL,
 } from "drizzle-orm";
 import {
-	createNotification,
+	createMessage,
 	withCursorPagination,
 	generateCursorResponse,
 } from "@/lib/server/routers/shared";
@@ -357,7 +357,7 @@ export const bidRouter = router({
 					});
 				}
 
-				createNotification(
+				createMessage(
 					{
 						accountId,
 						title: "New bid",
@@ -430,7 +430,7 @@ export const bidRouter = router({
 				);
 
 				//notify the rejected bidders
-				await tx.insert(notifications).values(
+				await tx.insert(messages).values(
 					otherBidsOnSameJob.map((b) => ({
 						accountId: b.senderCompany.ownerAccountId,
 						title: "Bid rejected",
@@ -452,7 +452,7 @@ export const bidRouter = router({
 					});
 				}
 
-				createNotification(
+				createMessage(
 					{
 						accountId,
 						title: "Bid accepted",
@@ -513,7 +513,7 @@ export const bidRouter = router({
 					});
 				}
 
-				createNotification(
+				createMessage(
 					{
 						accountId,
 						title: "Bid withdrawn",

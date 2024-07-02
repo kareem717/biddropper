@@ -1,22 +1,16 @@
 import { Context } from "@/lib/trpc/context";
-import {
-	NewNotification,
-	NewNotificationSchema,
-} from "@/lib/validations/notification";
-import { notifications } from "@/lib/db/drizzle/schema";
+import { NewMessage, NewMessageSchema } from "@/lib/validations/message";
+import { messages } from "@/lib/db/drizzle/schema";
 import { PgSelect } from "drizzle-orm/pg-core";
 import { AnyColumn, SQL, asc, desc, gt, lt, and } from "drizzle-orm";
 
-export const createNotification = async (
-	input: NewNotification,
-	ctx: Context
-) => {
-	const res = NewNotificationSchema.safeParse(input);
+export const createMessage = async (input: NewMessage, ctx: Context) => {
+	const res = NewMessageSchema.safeParse(input);
 	if (!res.success) {
 		throw new Error(res.error.message);
 	}
 
-	await ctx.db.insert(notifications).values({
+	await ctx.db.insert(messages).values({
 		...res.data,
 	});
 };

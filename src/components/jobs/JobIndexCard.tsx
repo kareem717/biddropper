@@ -42,7 +42,7 @@ export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) 
         <p className="text-muted-foreground mb-2">Posted by {ownerName}</p>
         <ScrollArea className="w-full whitespace-nowrap  mx-auto py-2">
           {industries.map((industry, index) => (
-            <Badge key={index}>
+            <Badge key={index} className="mr-1">
               {titleCase(industry.name)}
             </Badge>
           ))}

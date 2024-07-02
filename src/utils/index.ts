@@ -12,25 +12,44 @@ export function toTitleCase(str: string) {
 	return str.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+const HOUR_IN_MINUTES = 60;
+const DAY_IN_MINUTES = 24 * HOUR_IN_MINUTES;
+const MONTH_IN_MINUTES = 30 * DAY_IN_MINUTES;
+const YEAR_IN_MINUTES = 12 * MONTH_IN_MINUTES;
+
 export function timeSince(then: Date) {
 	const now = new Date();
 	const diff = now.getTime() - then.getTime();
-	const diffInDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+	const diffInMinutes = Math.floor(diff / (1000 * 60));
 
 	const pluralize = (value: number, unit: string) => {
 		return `${value} ${unit}${value === 1 ? "" : "s"}`;
 	};
 
-	if (diffInDays === 0) {
-		return "less than a day ago";
-	} else if (diffInDays < 7) {
-		return `${pluralize(diffInDays, "day")} ago`;
-	} else if (diffInDays < 30) {
-		return `${pluralize(Math.floor(diffInDays / 7), "week")} ago`;
-	} else if (diffInDays < 365) {
-		return `${pluralize(Math.floor(diffInDays / 30), "month")} ago`;
+	if (diffInMinutes === 0) {
+		return "less than a minute ago";
+	} else if (diffInMinutes < HOUR_IN_MINUTES) {
+		return `${pluralize(diffInMinutes, "minute")} ago`;
+	} else if (diffInMinutes < DAY_IN_MINUTES) {
+		return `${pluralize(
+			Math.floor(diffInMinutes / HOUR_IN_MINUTES),
+			"hour"
+		)} ago`;
+	} else if (diffInMinutes < MONTH_IN_MINUTES) {
+		return `${pluralize(
+			Math.floor(diffInMinutes / DAY_IN_MINUTES),
+			"day"
+		)} ago`;
+	} else if (diffInMinutes < YEAR_IN_MINUTES) {
+		return `${pluralize(
+			Math.floor(diffInMinutes / MONTH_IN_MINUTES),
+			"month"
+		)} ago`;
 	} else {
-		return `${pluralize(Math.floor(diffInDays / 365), "year")} ago`;
+		return `${pluralize(
+			Math.floor(diffInMinutes / YEAR_IN_MINUTES),
+			"year"
+		)} ago`;
 	}
 }
 

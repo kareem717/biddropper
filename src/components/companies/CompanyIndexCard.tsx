@@ -61,9 +61,9 @@ export const CompanyIndexCard = ({ companyId, className, ...props }: CompanyInde
         <Badge variant={company.isVerified ? "default" : "outline"}>{company.isVerified ? "Verified" : "Unverified"}</Badge>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="w-full whitespace-nowrap  mx-auto py-2">
+        <ScrollArea className="w-full whitespace-nowrap mx-auto py-2">
           {company.industries.map((industry, index) => (
-            <Badge key={index}>
+            <Badge key={index} className="mr-1">
               {titleCase(industry.name)}
             </Badge>
           ))}
