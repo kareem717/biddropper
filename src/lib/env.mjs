@@ -19,6 +19,8 @@ export const env = createEnv({
 		NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: z.string().min(1),
 		NEXT_PUBLIC_MAPBOX_STYLE_DARK: z.string().min(1),
 		NEXT_PUBLIC_MAPBOX_STYLE_LIGHT: z.string().min(1),
+		NEXT_PUBLIC_SUPPORT_EMAIL: z.string().min(1),
+		NEXT_PUBLIC_OUTREACH_EMAIL: z.string().min(1),
 	},
 
 	experimental__runtimeEnv: {
@@ -29,5 +31,7 @@ export const env = createEnv({
 			process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
 		NEXT_PUBLIC_MAPBOX_STYLE_DARK: process.env.NEXT_PUBLIC_MAPBOX_STYLE_DARK,
 		NEXT_PUBLIC_MAPBOX_STYLE_LIGHT: process.env.NEXT_PUBLIC_MAPBOX_STYLE_LIGHT,
+		NEXT_PUBLIC_SUPPORT_EMAIL: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
+		NEXT_PUBLIC_OUTREACH_EMAIL: process.env.NEXT_PUBLIC_OUTREACH_EMAIL,
 	},
 });

@@ -64,4 +64,25 @@ export const notificationRouter = router({
 
 		return cnt;
 	}),
+
+	readNotification: accountProcedure
+		.input(
+			z.object({
+				id: z.string(),
+			})
+		)
+		.mutation(async ({ ctx, input }) => {
+			const { id } = input;
+
+			await ctx.db
+				.update(notifications)
+				.set({ isRead: true })
+				.where(
+					and(
+						eq(notifications.id, id),
+						eq(notifications.accountId, ctx.account.id),
+						isNull(notifications.deletedAt)
+					)
+				);
+		}),
 });

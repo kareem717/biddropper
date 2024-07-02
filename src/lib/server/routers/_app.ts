@@ -6,6 +6,7 @@ import { companyRouter } from "./company";
 import { jobRouter } from "./job";
 import { bidRouter } from "./bid";
 import { notificationRouter } from "./notification";
+import { emailRouter } from "./email";
 
 export const appRouter = router({
 	auth: authRouter,
@@ -15,6 +16,7 @@ export const appRouter = router({
 	job: jobRouter,
 	bid: bidRouter,
 	notification: notificationRouter,
+	email: emailRouter,
 });
 
 export type AppRouter = typeof appRouter;
