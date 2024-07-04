@@ -18,4 +18,7 @@ export const NewMessageSchema = createInsertSchema(messages)
 	});
 
 export type ShowMessage = z.infer<typeof ShowMessageSchema>;
-export const ShowMessageSchema = createSelectSchema(messages);
+export const ShowMessageSchema = createSelectSchema(messages).extend({
+	readAt: z.string().datetime().nullable(),
+	deletedAt: z.string().datetime().nullable(),
+});

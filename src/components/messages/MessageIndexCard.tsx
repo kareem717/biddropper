@@ -11,7 +11,7 @@ export interface MessageIndexCardProps extends ComponentPropsWithoutRef<typeof C
 
 export const MessageIndexCard: FC<MessageIndexCardProps> = ({ message, className, ...props }) => {
   return (
-    <Card className={cn("", className)} {...props}>
+    <Card className={cn("hover:bg-primary hover:text-background", className)} {...props}>
       <CardHeader className="flex items-center justify-between">
         <div className="space-y-1">
           <h3 className="text-lg font-medium">New message from Mohammed</h3>
@@ -19,8 +19,8 @@ export const MessageIndexCard: FC<MessageIndexCardProps> = ({ message, className
             {truncate(message.description, 100)}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{timeSince(new Date(message.createdAt))}</span>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {timeSince(new Date(message.createdAt))}
         </div>
       </CardHeader>
     </Card>

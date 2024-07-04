@@ -86,6 +86,8 @@ import {
   X,
   ExternalLink,
   Cog,
+  Ellipsis,
+  MailPlus,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
@@ -95,8 +97,10 @@ export type Icon = LucideIcon;
 
 export const Icons = {
   home: Home,
+  mailPlus: MailPlus,
   homeIcon: HomeIcon,
   building: Building,
+  ellipsis: Ellipsis,
   locate: Locate,
   building2: Building2,
   slash: Slash,

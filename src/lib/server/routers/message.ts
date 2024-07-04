@@ -1,10 +1,12 @@
 import { router, accountProcedure } from "../trpc";
 import {
+	accounts,
+	companies,
 	messageAccountRecipients,
 	messageCompanyRecipients,
 	messages,
 } from "@/lib/db/drizzle/schema";
-import { eq, and, isNull, desc, inArray, or, isNotNull } from "drizzle-orm";
+import { eq, and, isNull, desc } from "drizzle-orm";
 import { NewMessageSchema } from "@/lib/validations/message";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -17,7 +19,7 @@ export const messageRouter = router({
 		.mutation(async ({ ctx, input }) => {
 			createMessage(input, ctx, ctx.db);
 		}),
-	getMessagesByAccountId: accountProcedure
+	getReceivedMessagesByAccountId: accountProcedure
 		.input(
 			z.object({
 				accountId: z.string(),
@@ -57,6 +59,8 @@ export const messageRouter = router({
 
 			return res.map((message) => ({
 				...message.messages,
+				readAt: message.message_account_recipients.readAt,
+				deletedAt: message.message_account_recipients.deletedAt,
 			}));
 		}),
 	getReceivedMessagesByCompanyId: accountProcedure
@@ -87,6 +91,8 @@ export const messageRouter = router({
 					messageCompanyRecipients,
 					eq(messages.id, messageCompanyRecipients.messageId)
 				)
+				.leftJoin(accounts, eq(messages.senderAccountId, accounts.id))
+				.leftJoin(companies, eq(messages.senderCompanyId, companies.id))
 				.where(
 					and(
 						eq(messageCompanyRecipients.companyId, input.companyId),
@@ -100,6 +106,8 @@ export const messageRouter = router({
 
 			return res.map((message) => ({
 				...message.messages,
+				readAt: message.message_company_recipients.readAt,
+				deletedAt: message.message_company_recipients.deletedAt,
 			}));
 		}),
 	getUnreadMessageCountByAccountId: accountProcedure
@@ -156,22 +164,21 @@ export const messageRouter = router({
 		.input(
 			z.object({
 				id: z.string(),
-				accountId: z.string().optional(),
-				companyId: z.string().optional(),
+				recipient: z.union([
+					z.object({
+						accountId: z.string(),
+					}),
+					z.object({
+						companyId: z.string(),
+					}),
+				]),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const { id, accountId, companyId } = input;
+			const { id, recipient } = input;
 
-			if (!accountId && !companyId) {
-				throw new TRPCError({
-					code: "BAD_REQUEST",
-					message: "you must provide an accountId or companyId",
-				});
-			}
-
-			if (accountId) {
-				if (ctx.account.id !== accountId) {
+			if ("accountId" in recipient) {
+				if (ctx.account.id !== recipient.accountId) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
 						message: "you cannot read this account message",
@@ -182,11 +189,11 @@ export const messageRouter = router({
 					.update(messageAccountRecipients)
 					.set({ readAt: new Date().toISOString() })
 					.where(eq(messageAccountRecipients.messageId, id));
-			} else if (companyId) {
+			} else if ("companyId" in recipient) {
 				const ownedCompanyIds =
 					ctx.ownedCompanies?.map((company) => company.id) || [];
 
-				if (!ownedCompanyIds.includes(companyId)) {
+				if (!ownedCompanyIds.includes(recipient.companyId)) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
 						message: "you cannot read this company message",
@@ -196,6 +203,110 @@ export const messageRouter = router({
 				await ctx.db
 					.update(messageCompanyRecipients)
 					.set({ readAt: new Date().toISOString() })
+					.where(eq(messageCompanyRecipients.messageId, id));
+			}
+		}),
+	deleteMessage: accountProcedure
+		.input(
+			z.object({
+				id: z.string(),
+				recipient: z.union([
+					z.object({
+						accountId: z.string(),
+					}),
+					z.object({
+						companyId: z.string(),
+					}),
+				]),
+			})
+		)
+		.mutation(async ({ ctx, input }) => {
+			const { id, recipient } = input;
+
+			if ("accountId" in recipient) {
+				if (ctx.account.id !== recipient.accountId) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "you cannot delete this account message",
+					});
+				}
+
+				await ctx.db
+					.update(messageAccountRecipients)
+					.set({ deletedAt: new Date().toISOString() })
+					.where(
+						and(
+							eq(messageAccountRecipients.messageId, id),
+							// We don't want to delete the message if it's already been deleted
+							isNull(messageAccountRecipients.deletedAt)
+						)
+					);
+			} else if ("companyId" in recipient) {
+				const ownedCompanyIds =
+					ctx.ownedCompanies?.map((company) => company.id) || [];
+
+				if (!ownedCompanyIds.includes(recipient.companyId)) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "you cannot delete this company message",
+					});
+				}
+
+				await ctx.db
+					.update(messageCompanyRecipients)
+					.set({ deletedAt: new Date().toISOString() })
+					.where(
+						and(
+							eq(messageCompanyRecipients.messageId, id),
+							// We don't want to delete the message if it's already been deleted
+							isNull(messageCompanyRecipients.deletedAt)
+						)
+					);
+			}
+		}),
+	unreadMessage: accountProcedure
+		.input(
+			z.object({
+				id: z.string(),
+				recipient: z.union([
+					z.object({
+						accountId: z.string(),
+					}),
+					z.object({
+						companyId: z.string(),
+					}),
+				]),
+			})
+		)
+		.mutation(async ({ ctx, input }) => {
+			const { id, recipient } = input;
+
+			if ("accountId" in recipient) {
+				if (ctx.account.id !== recipient.accountId) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "you cannot unread this account message",
+					});
+				}
+
+				await ctx.db
+					.update(messageAccountRecipients)
+					.set({ readAt: null })
+					.where(eq(messageAccountRecipients.messageId, id));
+			} else if ("companyId" in recipient) {
+				const ownedCompanyIds =
+					ctx.ownedCompanies?.map((company) => company.id) || [];
+
+				if (!ownedCompanyIds.includes(recipient.companyId)) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "you cannot unread this company message",
+					});
+				}
+
+				await ctx.db
+					.update(messageCompanyRecipients)
+					.set({ readAt: null })
 					.where(eq(messageCompanyRecipients.messageId, id));
 			}
 		}),
