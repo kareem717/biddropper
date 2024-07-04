@@ -1,5 +1,3 @@
-"use client";
-
 import { CreateJobForm } from "@/components/jobs/CreateJobForm";
 import {
   Card,

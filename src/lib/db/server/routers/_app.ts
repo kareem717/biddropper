@@ -1,5 +1,5 @@
 import { authRouter } from "./auth";
-import { router } from "@/lib/server/trpc";
+import { router } from "@/lib/db/server/trpc";
 import { accountRouter } from "./account";
 import { industryRouter } from "./industry";
 import { companyRouter } from "./company";

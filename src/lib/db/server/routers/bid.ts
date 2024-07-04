@@ -33,7 +33,7 @@ import {
 	createMessage,
 	withCursorPagination,
 	generateCursorResponse,
-} from "@/lib/server/routers/shared";
+} from "@/lib/db/server/routers/shared";
 import { PgSelect, alias } from "drizzle-orm/pg-core";
 import { accountProcedure } from "../trpc";
 import { z } from "zod";
@@ -359,11 +359,18 @@ export const bidRouter = router({
 
 				createMessage(
 					{
-						accountId,
+						sender: {
+							accountId,
+						},
+						recipients: {
+							accountIds: [ctx.account.id],
+							companyIds: [],
+						},
 						title: "New bid",
 						description: `You have received a new bid for ${job.title}`,
 					},
-					ctx
+					ctx,
+					tx
 				);
 
 				return newbid.id;
@@ -454,11 +461,18 @@ export const bidRouter = router({
 
 				createMessage(
 					{
-						accountId,
+						sender: {
+							accountId,
+						},
+						recipients: {
+							accountIds: [ctx.account.id],
+							companyIds: [],
+						},
 						title: "Bid accepted",
 						description: `You have been accepted for ${bid.job.title}!`,
 					},
-					ctx
+					ctx,
+					tx
 				);
 			});
 		}),
@@ -494,7 +508,7 @@ export const bidRouter = router({
 			}
 
 			await ctx.db.transaction(async (tx) => {
-				await ctx.db
+				await tx
 					.update(bids)
 					.set({ status: "withdrawn" })
 					.where(eq(bids.id, bidId));
@@ -515,11 +529,18 @@ export const bidRouter = router({
 
 				createMessage(
 					{
-						accountId,
+						sender: {
+							accountId,
+						},
+						recipients: {
+							accountIds: [ctx.account.id],
+							companyIds: [],
+						},
 						title: "Bid withdrawn",
 						description: `A bid for the job ${bid.job.title} has been withdrawn`,
 					},
-					ctx
+					ctx,
+					tx
 				);
 			});
 		}),

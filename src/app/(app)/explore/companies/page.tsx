@@ -24,7 +24,7 @@ export default async function CompanyIndexPage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {companies.map((company) => (
+          {companies?.map((company) => (
             <CompanyIndexCard key={company.id} companyId={company.id} />
           ))}
           <Link href="/companies/create" className="hover:scale-105 focus-within:scale-105 md:hover:scale-110 md:focus-within:scale-110 transition-transform duration-150 w-full h-full flex items-center justify-center rounded-lg border">

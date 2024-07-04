@@ -1,5 +1,5 @@
 import { industries } from "@/lib/db/drizzle/schema";
-import { publicProcedure, router } from "@/lib/server/trpc";
+import { publicProcedure, router } from "@/lib/db/server/trpc";
 import { TRPCError } from "@trpc/server";
 import { isNull } from "drizzle-orm";
 

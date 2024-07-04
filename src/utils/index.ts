@@ -1,6 +1,7 @@
 import { customAlphabet } from "nanoid";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { env } from "process";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -56,3 +57,22 @@ export function timeSince(then: Date) {
 export function truncate(str: string, length: number) {
 	return str.length > length ? str.substring(0, length) + "..." : str;
 }
+
+/**
+ * Register service.
+ * @description Stores instances in `global` to prevent memory leaks in development.
+ * @arg {string} name Service name.
+ * @arg {function} initFn Function returning the service instance.
+ * @return {*} Service instance.
+ */
+export const registerService = <T>(name: string, initFn: () => T) => {
+	if (env.NODE_ENV === "development") {
+		if (!(name in global)) {
+			// @ts-ignore
+			global[name] = initFn();
+		}
+		// @ts-ignore
+		return global[name] as ReturnType<typeof initFn>;
+	}
+	return initFn();
+};

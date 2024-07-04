@@ -1,7 +1,7 @@
 "use client"
 
 import { BidIndexShell } from "../bids/BidIndexShell"
-import { FC, ComponentPropsWithoutRef } from "react"
+import { FC, ComponentPropsWithoutRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/utils"
 import { titleCase } from "title-case";
@@ -12,13 +12,40 @@ import { ShowAddress } from "@/lib/validations/address"
 import { useAuth } from "../providers/AuthProvider"
 import { useCompany } from "../providers/CompanyProvider"
 import { DropBidForm } from "../bids/DropBidForm"
-
-export interface JobShowCardProps extends ComponentPropsWithoutRef<"div"> {
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
+import { Icons } from "../Icons"
+export interface JobOwnerShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
 }
 
-export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }) => {
+export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, ...props }) => {
+  const [dialogOpen, setDialogOpen] = useState(false)
   const { data, isLoading } = trpc.job.getJobFull.useQuery({ id: jobId })
+  const { mutateAsync, isLoading: isDeleting } = trpc.job.deleteJob.useMutation({
+    onSuccess: () => {
+      toast.success("Success!", {
+        description: "The job has been deleted."
+      })
+      setDialogOpen(false)
+    },
+    onError: () => {
+      toast.error("Uh oh!", {
+        description: "The job could not be deleted. Please try again."
+      })
+    }
+  })
   const { companies } = useCompany()
   const { account } = useAuth()
 
@@ -46,7 +73,10 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
     }
   }
 
-  console.log(companies)
+  const handleJobDelete = async () => {
+    await mutateAsync({ id: jobId })
+  }
+
   return (
     <div className={cn("flex flex-col md:flex-row gap-4", className)} {...props}>
       <div className="w-full">
@@ -82,14 +112,36 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
               {data.job.description}
             </p>
           </div>
+          <div className="flex gap-2 w-full">
+            <Link href={`/job/${jobId}/edit`} className={cn(buttonVariants(), "w-full")}>
+              Edit
+            </Link>
+            <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <AlertDialogTrigger className={cn(buttonVariants({ variant: "outline" }), "w-full")} disabled={isDeleting}>
+                {isDeleting ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Delete"}
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                </AlertDialogHeader>
+                <AlertDialogDescription>
+                  This action is destructive. This will permanently delete the job, and all the data associated it.
+                  The only way to recover it is by contacting support.
+                </AlertDialogDescription>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDialogOpen(false)} >Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleJobDelete}>
+                    {isDeleting ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </div>
-      {companies.length > 0 && (
-        <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
-          <h1 className="text-2xl font-bold mb-4">Drop a bid</h1>
-          <DropBidForm jobId={jobId} />
-        </div>
-      )}
+      <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
+        <BidIndexShell jobId={jobId} />
+      </div>
     </div>
   )
 }

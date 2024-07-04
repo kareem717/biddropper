@@ -7,3 +7,4 @@ const connectionString = env.DATABASE_URL;
 const client = postgres(connectionString);
 
 export const db = registerService("db", () => drizzle(client));
+export type DB = typeof db;

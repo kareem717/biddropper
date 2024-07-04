@@ -1,6 +1,6 @@
 import {
 	pgTable,
-	PgSchema,
+	pgSchema,
 	pgEnum,
 	uuid,
 	varchar,
@@ -13,7 +13,6 @@ import {
 	bigint,
 	date,
 	primaryKey,
-	pgSchema,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -90,6 +89,22 @@ export const users = authSchema.table("users", {
 	id: uuid("id").primaryKey(),
 });
 
+export const messageCompanyRecipients = pgTable("message_company_recipients", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	messageId: uuid("message_id")
+		.notNull()
+		.references(() => messages.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	companyId: uuid("company_id")
+		.notNull()
+		.references(() => companies.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+});
+
 export const projects = pgTable("projects", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	title: varchar("title", { length: 100 }).notNull(),
@@ -163,6 +178,36 @@ export const reviews = pgTable("reviews", {
 	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
+export const messageAccountRecipients = pgTable("message_account_recipients", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	messageId: uuid("message_id")
+		.notNull()
+		.references(() => messages.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+	accountId: uuid("account_id")
+		.notNull()
+		.references(() => accounts.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+});
+
+export const messageThread = pgTable("message_thread", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	messageId: uuid("message_id").references(() => messages.id, {
+		onDelete: "restrict",
+		onUpdate: "cascade",
+	}),
+	createdAt: timestamp("created_at", {
+		withTimezone: true,
+		mode: "string",
+	}).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
+
 export const addresses = pgTable("addresses", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	xCoordinate: numeric("x_coordinate").notNull(),
@@ -194,6 +239,14 @@ export const messages = pgTable("messages", {
 		.notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	senderCompanyId: uuid("sender_company_id").references(() => companies.id, {
+		onDelete: "restrict",
+		onUpdate: "cascade",
+	}),
+	senderAccountId: uuid("sender_account_id").references(() => accounts.id, {
+		onDelete: "restrict",
+		onUpdate: "cascade",
+	}),
 });
 
 export const gooseDbVersion = pgTable("goose_db_version", {
@@ -202,84 +255,6 @@ export const gooseDbVersion = pgTable("goose_db_version", {
 	versionId: bigint("version_id", { mode: "number" }).notNull(),
 	isApplied: boolean("is_applied").notNull(),
 	tstamp: timestamp("tstamp", { mode: "string" }).defaultNow(),
-});
-
-export const messageCompanySender = pgTable("message_company_sender", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	messageId: uuid("message_id")
-		.notNull()
-		.references(() => messages.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	companyId: uuid("company_id")
-		.notNull()
-		.references(() => companies.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-});
-
-export const messageAccountSender = pgTable("message_account_sender", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	messageId: uuid("message_id")
-		.notNull()
-		.references(() => messages.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	accountId: uuid("account_id")
-		.notNull()
-		.references(() => accounts.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-});
-
-export const messageCompanyRecipients = pgTable("message_company_recipients", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	messageId: uuid("message_id")
-		.notNull()
-		.references(() => messages.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	companyId: uuid("company_id")
-		.notNull()
-		.references(() => companies.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-});
-
-export const messageAccountRecipients = pgTable("message_account_recipients", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	messageId: uuid("message_id")
-		.notNull()
-		.references(() => messages.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	accountId: uuid("account_id")
-		.notNull()
-		.references(() => accounts.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-});
-
-export const messageThread = pgTable("message_thread", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	messageId: uuid("message_id").references(() => messages.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-	createdAt: timestamp("created_at", {
-		withTimezone: true,
-		mode: "string",
-	}).defaultNow(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
 export const accounts = pgTable("accounts", {

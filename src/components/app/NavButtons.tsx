@@ -210,7 +210,7 @@ export const Inbox: FC<InboxProps> = ({ className, ...props }) => {
   if (!account) throw new Error("Account not found")
   const [readNotificationId, setReadNotificationId] = useState<string[]>([])
 
-  const { data, isLoading } = trpc.message.getMessagesByAcoount.useQuery({
+  const { data, isLoading } = trpc.message.getMessagesByAccountId.useQuery({
     accountId: account.id,
   })
 
@@ -271,7 +271,7 @@ export const FeedbackButton = () => {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger className={buttonVariants({ variant: "outline", size: "sm" })}>
-        Feedback
+        <span>Feedback</span>
       </PopoverTrigger>
       <PopoverContent className="max-w-lg p-4 mx-4">
         <FeedbackForm onSubmit={() => setIsOpen(false)} />
@@ -281,7 +281,11 @@ export const FeedbackButton = () => {
 }
 
 export const InboxButton = () => {
-  const { data } = trpc.message.getUnreadMessageCount.useQuery()
+  const { account } = useAuth()
+  if (!account) throw new Error("Account not found")
+  const { data } = trpc.message.getUnreadMessageCountByAccountId.useQuery({
+    accountId: account.id,
+  })
   return (
     <Popover>
       <PopoverTrigger className={buttonVariants({ variant: "outline", size: "sm" })}>

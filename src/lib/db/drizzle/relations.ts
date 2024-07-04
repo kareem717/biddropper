@@ -1,20 +1,23 @@
 import { relations } from "drizzle-orm/relations";
-import { companies, projects, bids, accounts, reviews, messageCompanySender, messages, messageAccountSender, messageCompanyRecipients, messageAccountRecipients, messageThread, usersInAuth, accountSubscriptions, contracts, addresses, jobs, media, jobBids, contractBids, companyIndustries, industries, jobIndustries, accountJobs, contractJobs, companyJobs, jobMedia, projectMedia, reviewMedia } from "./schema";
+import { companies, messageCompanyRecipients, messages, projects, bids, accounts, reviews, messageAccountRecipients, messageThread, usersInAuth, accountSubscriptions, contracts, addresses, jobs, media, jobBids, contractBids, companyIndustries, industries, jobIndustries, accountJobs, contractJobs, companyJobs, jobMedia, projectMedia, reviewMedia } from "./schema";
 
-export const projectsRelations = relations(projects, ({one, many}) => ({
+export const messageCompanyRecipientsRelations = relations(messageCompanyRecipients, ({one}) => ({
 	company: one(companies, {
-		fields: [projects.companyId],
+		fields: [messageCompanyRecipients.companyId],
 		references: [companies.id]
 	}),
-	projectMedias: many(projectMedia),
+	message: one(messages, {
+		fields: [messageCompanyRecipients.messageId],
+		references: [messages.id]
+	}),
 }));
 
 export const companiesRelations = relations(companies, ({one, many}) => ({
+	messageCompanyRecipients: many(messageCompanyRecipients),
 	projects: many(projects),
 	bids: many(bids),
 	reviews: many(reviews),
-	messageCompanySenders: many(messageCompanySender),
-	messageCompanyRecipients: many(messageCompanyRecipients),
+	messages: many(messages),
 	contracts: many(contracts),
 	address: one(addresses, {
 		fields: [companies.addressId],
@@ -30,6 +33,28 @@ export const companiesRelations = relations(companies, ({one, many}) => ({
 	}),
 	companyIndustries: many(companyIndustries),
 	companyJobs: many(companyJobs),
+}));
+
+export const messagesRelations = relations(messages, ({one, many}) => ({
+	messageCompanyRecipients: many(messageCompanyRecipients),
+	messageAccountRecipients: many(messageAccountRecipients),
+	messageThreads: many(messageThread),
+	account: one(accounts, {
+		fields: [messages.senderAccountId],
+		references: [accounts.id]
+	}),
+	company: one(companies, {
+		fields: [messages.senderCompanyId],
+		references: [companies.id]
+	}),
+}));
+
+export const projectsRelations = relations(projects, ({one, many}) => ({
+	company: one(companies, {
+		fields: [projects.companyId],
+		references: [companies.id]
+	}),
+	projectMedias: many(projectMedia),
 }));
 
 export const bidsRelations = relations(bids, ({one, many}) => ({
@@ -55,8 +80,8 @@ export const reviewsRelations = relations(reviews, ({one, many}) => ({
 
 export const accountsRelations = relations(accounts, ({one, many}) => ({
 	reviews: many(reviews),
-	messageAccountSenders: many(messageAccountSender),
 	messageAccountRecipients: many(messageAccountRecipients),
+	messages: many(messages),
 	usersInAuth: one(usersInAuth, {
 		fields: [accounts.userId],
 		references: [usersInAuth.id]
@@ -64,47 +89,6 @@ export const accountsRelations = relations(accounts, ({one, many}) => ({
 	accountSubscriptions: many(accountSubscriptions),
 	companies: many(companies),
 	accountJobs: many(accountJobs),
-}));
-
-export const messageCompanySenderRelations = relations(messageCompanySender, ({one}) => ({
-	company: one(companies, {
-		fields: [messageCompanySender.companyId],
-		references: [companies.id]
-	}),
-	message: one(messages, {
-		fields: [messageCompanySender.messageId],
-		references: [messages.id]
-	}),
-}));
-
-export const messagesRelations = relations(messages, ({many}) => ({
-	messageCompanySenders: many(messageCompanySender),
-	messageAccountSenders: many(messageAccountSender),
-	messageCompanyRecipients: many(messageCompanyRecipients),
-	messageAccountRecipients: many(messageAccountRecipients),
-	messageThreads: many(messageThread),
-}));
-
-export const messageAccountSenderRelations = relations(messageAccountSender, ({one}) => ({
-	account: one(accounts, {
-		fields: [messageAccountSender.accountId],
-		references: [accounts.id]
-	}),
-	message: one(messages, {
-		fields: [messageAccountSender.messageId],
-		references: [messages.id]
-	}),
-}));
-
-export const messageCompanyRecipientsRelations = relations(messageCompanyRecipients, ({one}) => ({
-	company: one(companies, {
-		fields: [messageCompanyRecipients.companyId],
-		references: [companies.id]
-	}),
-	message: one(messages, {
-		fields: [messageCompanyRecipients.messageId],
-		references: [messages.id]
-	}),
 }));
 
 export const messageAccountRecipientsRelations = relations(messageAccountRecipients, ({one}) => ({
