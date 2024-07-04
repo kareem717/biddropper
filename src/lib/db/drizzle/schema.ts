@@ -91,6 +91,8 @@ export const users = authSchema.table("users", {
 
 export const messageCompanyRecipients = pgTable("message_company_recipients", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 	messageId: uuid("message_id")
 		.notNull()
 		.references(() => messages.id, {
@@ -180,6 +182,8 @@ export const reviews = pgTable("reviews", {
 
 export const messageAccountRecipients = pgTable("message_account_recipients", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 	messageId: uuid("message_id")
 		.notNull()
 		.references(() => messages.id, {
@@ -233,7 +237,6 @@ export const messages = pgTable("messages", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	description: text("description").notNull(),
 	title: varchar("title", { length: 100 }).notNull(),
-	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
 		.default(sql`clock_timestamp()`)
 		.notNull(),

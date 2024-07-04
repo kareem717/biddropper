@@ -1,12 +1,20 @@
 import { Context } from "@/lib/trpc/context";
 import { NewMessage, NewMessageSchema } from "@/lib/validations/message";
-import { messageAccountRecipients, messageAccountSender, messageCompanyRecipients, messageCompanySender, messages } from "@/lib/db/drizzle/schema";
+import {
+	messageAccountRecipients,
+	messageCompanyRecipients,
+	messages,
+} from "@/lib/db/drizzle/schema";
 import { PgSelect } from "drizzle-orm/pg-core";
 import { AnyColumn, SQL, asc, desc, gt, lt, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { DB } from "@/lib/db";
 
-export const createMessage = async (input: NewMessage, ctx: Context, db: DB) => {
+export const createMessage = async (
+	input: NewMessage,
+	ctx: Context,
+	db: DB
+) => {
 	const res = NewMessageSchema.safeParse(input);
 	if (!res.success) {
 		throw new Error(res.error.message);
@@ -19,8 +27,15 @@ export const createMessage = async (input: NewMessage, ctx: Context, db: DB) => 
 		});
 	}
 
-	const { sender, recipients, ...message } = res.data;
+	const { recipients, ...message } = res.data;
 	const { accountIds, companyIds } = recipients;
+
+	if (!message.senderAccountId && !message.senderCompanyId) {
+		throw new TRPCError({
+			code: "BAD_REQUEST",
+			message: "you must provide a sender",
+		});
+	}
 
 	if (accountIds.length === 0 && companyIds.length === 0) {
 		throw new TRPCError({
@@ -29,35 +44,11 @@ export const createMessage = async (input: NewMessage, ctx: Context, db: DB) => 
 		});
 	}
 
-	const isAccountSender = sender.accountId === ctx.account.id;
-	const isCompanySender = sender.companyId
-		? ctx.ownedCompanies?.some((company) => company.id === sender.companyId)
-		: false;
-
-	if (!isAccountSender && !isCompanySender) {
-		throw new TRPCError({
-			code: "FORBIDDEN",
-			message: "you cannot send a message on behalf of this account or company",
-		});
-	}
-
 	await db.transaction(async (tx) => {
 		const [msg] = await tx
 			.insert(messages)
-			.values(input)
+			.values(message)
 			.returning({ id: messages.id });
-
-		if (isAccountSender) {
-			await tx.insert(messageAccountSender).values({
-				messageId: msg.id,
-				accountId: ctx.account!.id,
-			});
-		} else if (isCompanySender && sender.companyId) {
-			await tx.insert(messageCompanySender).values({
-				messageId: msg.id,
-				companyId: sender.companyId,
-			});
-		}
 
 		if (recipients.accountIds.length > 0) {
 			await tx.insert(messageAccountRecipients).values(

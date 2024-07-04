@@ -22,10 +22,11 @@ export const messageRouter = router({
 			z.object({
 				accountId: z.string(),
 				includeRead: z.boolean().optional().default(false),
+				includeDeleted: z.boolean().optional().default(false),
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { accountId, includeRead } = input;
+			const { accountId, includeRead, includeDeleted } = input;
 
 			if (ctx.account.id !== accountId) {
 				throw new TRPCError({
@@ -43,9 +44,13 @@ export const messageRouter = router({
 				)
 				.where(
 					and(
-						eq(messageAccountRecipients.accountId, input.accountId),
-						includeRead ? undefined : isNull(messages.readAt),
-						isNull(messages.deletedAt)
+						and(
+							eq(messageAccountRecipients.accountId, input.accountId),
+							includeRead ? undefined : isNull(messageAccountRecipients.readAt),
+							includeDeleted
+								? undefined
+								: isNull(messageAccountRecipients.deletedAt)
+						)
 					)
 				)
 				.orderBy(desc(messages.createdAt));
@@ -54,15 +59,16 @@ export const messageRouter = router({
 				...message.messages,
 			}));
 		}),
-	getMessagesByCompanyId: accountProcedure
+	getReceivedMessagesByCompanyId: accountProcedure
 		.input(
 			z.object({
 				companyId: z.string(),
 				includeRead: z.boolean().optional().default(false),
+				includeDeleted: z.boolean().optional().default(false),
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { companyId, includeRead } = input;
+			const { companyId, includeRead, includeDeleted } = input;
 
 			const ownedCompanyIds =
 				ctx.ownedCompanies?.map((company) => company.id) || [];
@@ -84,8 +90,10 @@ export const messageRouter = router({
 				.where(
 					and(
 						eq(messageCompanyRecipients.companyId, input.companyId),
-						includeRead ? undefined : isNull(messages.readAt),
-						isNull(messages.deletedAt)
+						includeRead ? undefined : isNull(messageCompanyRecipients.readAt),
+						includeDeleted
+							? undefined
+							: isNull(messageCompanyRecipients.deletedAt)
 					)
 				)
 				.orderBy(desc(messages.createdAt));
@@ -111,8 +119,8 @@ export const messageRouter = router({
 				.where(
 					and(
 						eq(messageAccountRecipients.accountId, input.accountId),
-						isNull(messages.readAt),
-						isNull(messages.deletedAt)
+						isNull(messageAccountRecipients.readAt),
+						isNull(messageAccountRecipients.deletedAt)
 					)
 				)
 				.groupBy(messageAccountRecipients.accountId);
@@ -136,8 +144,8 @@ export const messageRouter = router({
 				.where(
 					and(
 						eq(messageCompanyRecipients.companyId, input.companyId),
-						isNull(messages.readAt),
-						isNull(messages.deletedAt)
+						isNull(messageCompanyRecipients.readAt),
+						isNull(messageCompanyRecipients.deletedAt)
 					)
 				)
 				.groupBy(messageCompanyRecipients.companyId);
@@ -148,48 +156,47 @@ export const messageRouter = router({
 		.input(
 			z.object({
 				id: z.string(),
+				accountId: z.string().optional(),
+				companyId: z.string().optional(),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const { id } = input;
+			const { id, accountId, companyId } = input;
 
-			const ownedCompanyIds =
-				ctx.ownedCompanies?.map((company) => company.id) || [];
+			if (!accountId && !companyId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "you must provide an accountId or companyId",
+				});
+			}
 
-			const messageExists = await ctx.db
-				.select()
-				.from(messages)
-				.leftJoin(
-					messageAccountRecipients,
-					and(
-						eq(messages.id, messageAccountRecipients.messageId),
-						eq(messageAccountRecipients.accountId, ctx.account.id)
-					)
-				)
-				.leftJoin(
-					messageCompanyRecipients,
-					and(
-						eq(messages.id, messageCompanyRecipients.messageId),
-						inArray(messageCompanyRecipients.companyId, ownedCompanyIds)
-					)
-				)
-				.where(
-					and(
-						eq(messages.id, id),
-						isNull(messages.deletedAt),
-						or(
-							isNotNull(messageAccountRecipients.accountId),
-							isNotNull(messageCompanyRecipients.companyId)
-						)
-					)
-				)
-				.limit(1);
+			if (accountId) {
+				if (ctx.account.id !== accountId) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "you cannot read this account message",
+					});
+				}
 
-			if (messageExists) {
 				await ctx.db
-					.update(messages)
+					.update(messageAccountRecipients)
 					.set({ readAt: new Date().toISOString() })
-					.where(eq(messages.id, id));
+					.where(eq(messageAccountRecipients.messageId, id));
+			} else if (companyId) {
+				const ownedCompanyIds =
+					ctx.ownedCompanies?.map((company) => company.id) || [];
+
+				if (!ownedCompanyIds.includes(companyId)) {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "you cannot read this company message",
+					});
+				}
+
+				await ctx.db
+					.update(messageCompanyRecipients)
+					.set({ readAt: new Date().toISOString() })
+					.where(eq(messageCompanyRecipients.messageId, id));
 			}
 		}),
 });
