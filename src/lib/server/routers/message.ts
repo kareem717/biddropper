@@ -6,8 +6,8 @@ import {
 	messageCompanyRecipients,
 	messages,
 } from "@/lib/db/drizzle/schema";
-import { eq, and, isNull, desc } from "drizzle-orm";
-import { NewMessageSchema } from "@/lib/validations/message";
+import { eq, and, isNull, desc, ilike, isNotNull, or, sql } from "drizzle-orm";
+import { NewMessageSchema, ShowMessageSchema } from "@/lib/validations/message";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { count } from "drizzle-orm";
@@ -23,12 +23,13 @@ export const messageRouter = router({
 		.input(
 			z.object({
 				accountId: z.string(),
+				keywordQuery: z.string().optional(),
 				includeRead: z.boolean().optional().default(false),
 				includeDeleted: z.boolean().optional().default(false),
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { accountId, includeRead, includeDeleted } = input;
+			const { accountId, keywordQuery, includeRead, includeDeleted } = input;
 
 			if (ctx.account.id !== accountId) {
 				throw new TRPCError({
@@ -38,30 +39,64 @@ export const messageRouter = router({
 			}
 
 			const res = await ctx.db
-				.select()
+				.select({
+					messages,
+					readAt: messageAccountRecipients.readAt,
+					deletedAt: messageAccountRecipients.deletedAt,
+					senderCompany: {
+						id: companies.id,
+						name: companies.name,
+						deletedAt: companies.deletedAt,
+					},
+					senderAccount: {
+						id: accounts.id,
+						name: accounts.username,
+						deletedAt: accounts.deletedAt,
+					},
+				})
 				.from(messages)
 				.innerJoin(
 					messageAccountRecipients,
 					eq(messages.id, messageAccountRecipients.messageId)
 				)
+				.leftJoin(accounts, eq(messages.senderAccountId, accounts.id))
+				.leftJoin(companies, eq(messages.senderCompanyId, companies.id))
 				.where(
 					and(
-						and(
-							eq(messageAccountRecipients.accountId, input.accountId),
-							includeRead ? undefined : isNull(messageAccountRecipients.readAt),
-							includeDeleted
-								? undefined
-								: isNull(messageAccountRecipients.deletedAt)
-						)
+						eq(messageAccountRecipients.accountId, input.accountId),
+						includeRead ? undefined : isNull(messageAccountRecipients.readAt),
+						includeDeleted
+							? undefined
+							: isNull(messageAccountRecipients.deletedAt),
+						keywordQuery
+							? sql`messages.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
+							: undefined
 					)
 				)
-				.orderBy(desc(messages.createdAt));
+				.orderBy(
+					keywordQuery
+						? sql`ts_rank(messages.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
+						: desc(messages.createdAt),
+					desc(messages.createdAt)
+				);
 
-			return res.map((message) => ({
+			const out = res.map((message) => ({
 				...message.messages,
-				readAt: message.message_account_recipients.readAt,
-				deletedAt: message.message_account_recipients.deletedAt,
+				readAt: message.readAt,
+				deletedAt: message.deletedAt,
+				sender: message.messages.senderAccountId
+					? {
+							type: "account",
+							...message.senderAccount,
+					  }
+					: {
+							type: "company",
+							...message.senderCompany,
+					  },
 			}));
+
+			console.log(out);
+			return out;
 		}),
 	getReceivedMessagesByCompanyId: accountProcedure
 		.input(
@@ -69,10 +104,12 @@ export const messageRouter = router({
 				companyId: z.string(),
 				includeRead: z.boolean().optional().default(false),
 				includeDeleted: z.boolean().optional().default(false),
+				keywordQuery: z.string().optional(),
 			})
 		)
+		.output(z.array(ShowMessageSchema))
 		.query(async ({ ctx, input }) => {
-			const { companyId, includeRead, includeDeleted } = input;
+			const { companyId, includeRead, includeDeleted, keywordQuery } = input;
 
 			const ownedCompanyIds =
 				ctx.ownedCompanies?.map((company) => company.id) || [];
@@ -85,7 +122,21 @@ export const messageRouter = router({
 			}
 
 			const res = await ctx.db
-				.select()
+				.select({
+					messages,
+					readAt: messageCompanyRecipients.readAt,
+					deletedAt: messageCompanyRecipients.deletedAt,
+					senderCompany: {
+						id: companies.id,
+						name: companies.name,
+						deletedAt: companies.deletedAt,
+					},
+					senderAccount: {
+						id: accounts.id,
+						name: accounts.username,
+						deletedAt: accounts.deletedAt,
+					},
+				})
 				.from(messages)
 				.innerJoin(
 					messageCompanyRecipients,
@@ -99,15 +150,27 @@ export const messageRouter = router({
 						includeRead ? undefined : isNull(messageCompanyRecipients.readAt),
 						includeDeleted
 							? undefined
-							: isNull(messageCompanyRecipients.deletedAt)
+							: isNull(messageCompanyRecipients.deletedAt),
+						keywordQuery
+							? ilike(messages.title, `%${keywordQuery}%`)
+							: undefined
 					)
 				)
 				.orderBy(desc(messages.createdAt));
 
 			return res.map((message) => ({
 				...message.messages,
-				readAt: message.message_company_recipients.readAt,
-				deletedAt: message.message_company_recipients.deletedAt,
+				readAt: message.readAt,
+				deletedAt: message.deletedAt,
+				sender: message.messages.senderAccountId
+					? {
+							type: "account",
+							...message.senderAccount,
+					  }
+					: {
+							type: "company",
+							...message.senderCompany,
+					  },
 			}));
 		}),
 	getUnreadMessageCountByAccountId: accountProcedure

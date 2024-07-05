@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { companies, messageCompanyRecipients, messages, projects, bids, accounts, reviews, messageAccountRecipients, messageThread, usersInAuth, accountSubscriptions, contracts, addresses, jobs, media, jobBids, contractBids, companyIndustries, industries, jobIndustries, accountJobs, contractJobs, companyJobs, jobMedia, projectMedia, reviewMedia } from "./schema";
+import { companies, messageCompanyRecipients, messages, projects, bids, accounts, reviews, messageAccountRecipients, messageThread, accountSubscriptions, contracts, addresses, jobs, media, usersInAuth, jobBids, contractBids, companyIndustries, industries, jobIndustries, accountJobs, contractJobs, companyJobs, jobMedia, projectMedia, reviewMedia } from "./schema";
 
 export const messageCompanyRecipientsRelations = relations(messageCompanyRecipients, ({one}) => ({
 	company: one(companies, {
@@ -82,12 +82,12 @@ export const accountsRelations = relations(accounts, ({one, many}) => ({
 	reviews: many(reviews),
 	messageAccountRecipients: many(messageAccountRecipients),
 	messages: many(messages),
+	accountSubscriptions: many(accountSubscriptions),
+	companies: many(companies),
 	usersInAuth: one(usersInAuth, {
 		fields: [accounts.userId],
 		references: [usersInAuth.id]
 	}),
-	accountSubscriptions: many(accountSubscriptions),
-	companies: many(companies),
 	accountJobs: many(accountJobs),
 }));
 
@@ -107,10 +107,6 @@ export const messageThreadRelations = relations(messageThread, ({one}) => ({
 		fields: [messageThread.messageId],
 		references: [messages.id]
 	}),
-}));
-
-export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
-	accounts: many(accounts),
 }));
 
 export const accountSubscriptionsRelations = relations(accountSubscriptions, ({one}) => ({
@@ -152,6 +148,10 @@ export const mediaRelations = relations(media, ({many}) => ({
 	jobMedias: many(jobMedia),
 	projectMedias: many(projectMedia),
 	reviewMedias: many(reviewMedia),
+}));
+
+export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
+	accounts: many(accounts),
 }));
 
 export const jobBidsRelations = relations(jobBids, ({one}) => ({

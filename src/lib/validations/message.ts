@@ -21,4 +21,10 @@ export type ShowMessage = z.infer<typeof ShowMessageSchema>;
 export const ShowMessageSchema = createSelectSchema(messages).extend({
 	readAt: z.string().datetime().nullable(),
 	deletedAt: z.string().datetime().nullable(),
+	sender: z.object({
+		id: z.string(),
+		name: z.string(),
+		deletedAt: z.string().datetime().nullable(),
+		type: z.enum(["account", "company"]),
+	}),
 });

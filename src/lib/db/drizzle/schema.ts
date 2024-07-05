@@ -3,18 +3,20 @@ import {
 	pgSchema,
 	pgEnum,
 	uuid,
+	timestamp,
 	varchar,
 	text,
 	boolean,
-	timestamp,
 	numeric,
 	jsonb,
 	serial,
 	bigint,
+	index,
 	date,
 	primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { tsvector } from "./customTypes";
 
 export const aalLevel = pgEnum("aal_level", ["aal1", "aal2", "aal3"]);
 export const codeChallengeMethod = pgEnum("code_challenge_method", [
@@ -91,8 +93,6 @@ export const users = authSchema.table("users", {
 
 export const messageCompanyRecipients = pgTable("message_company_recipients", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 	messageId: uuid("message_id")
 		.notNull()
 		.references(() => messages.id, {
@@ -105,6 +105,8 @@ export const messageCompanyRecipients = pgTable("message_company_recipients", {
 			onDelete: "restrict",
 			onUpdate: "cascade",
 		}),
+	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
 export const projects = pgTable("projects", {
@@ -182,8 +184,6 @@ export const reviews = pgTable("reviews", {
 
 export const messageAccountRecipients = pgTable("message_account_recipients", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 	messageId: uuid("message_id")
 		.notNull()
 		.references(() => messages.id, {
@@ -196,6 +196,8 @@ export const messageAccountRecipients = pgTable("message_account_recipients", {
 			onDelete: "restrict",
 			onUpdate: "cascade",
 		}),
+	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
 export const messageThread = pgTable("message_thread", {
@@ -233,24 +235,36 @@ export const addresses = pgTable("addresses", {
 	fullAddress: text("full_address").notNull(),
 });
 
-export const messages = pgTable("messages", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	description: text("description").notNull(),
-	title: varchar("title", { length: 100 }).notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	senderCompanyId: uuid("sender_company_id").references(() => companies.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-	senderAccountId: uuid("sender_account_id").references(() => accounts.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-});
+export const messages = pgTable(
+	"messages",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		description: text("description").notNull(),
+		title: varchar("title", { length: 100 }).notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+		senderCompanyId: uuid("sender_company_id").references(() => companies.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+		senderAccountId: uuid("sender_account_id").references(() => accounts.id, {
+			onDelete: "restrict",
+			onUpdate: "cascade",
+		}),
+		englishSearchVector: tsvector("english_search_vector"),
+	},
+	(table) => {
+		return {
+			englishSearchVectorIdx: index("messages_english_search_vector_idx").using(
+				"gin",
+				table.englishSearchVector
+			),
+		};
+	}
+);
 
 export const gooseDbVersion = pgTable("goose_db_version", {
 	id: serial("id").primaryKey().notNull(),
@@ -258,20 +272,6 @@ export const gooseDbVersion = pgTable("goose_db_version", {
 	versionId: bigint("version_id", { mode: "number" }).notNull(),
 	isApplied: boolean("is_applied").notNull(),
 	tstamp: timestamp("tstamp", { mode: "string" }).defaultNow(),
-});
-
-export const accounts = pgTable("accounts", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	userId: uuid("user_id")
-		.notNull()
-		.references(() => users.id, { onDelete: "restrict", onUpdate: "cascade" }),
-	username: text("username").notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	description: text("description"),
 });
 
 export const accountSubscriptions = pgTable("account_subscriptions", {
@@ -326,67 +326,121 @@ export const industries = pgTable("industries", {
 	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
-export const jobs = pgTable("jobs", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-	isCommercialProperty: boolean("is_commercial_property")
-		.default(false)
-		.notNull(),
-	description: varchar("description", { length: 3000 }).notNull(),
-	startDate: timestamp("start_date", {
-		withTimezone: true,
-		mode: "string",
-	}).notNull(),
-	endDate: timestamp("end_date", { withTimezone: true, mode: "string" }),
-	startDateFlag: startDateFlag("start_date_flag").default("none").notNull(),
-	propertyType: enumJobsPropertyType("property_type").notNull(),
-	addressId: uuid("address_id")
-		.notNull()
-		.references(() => addresses.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	title: varchar("title", { length: 100 }).notNull(),
-	tags: varchar("tags").array(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
+export const jobs = pgTable(
+	"jobs",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		isActive: boolean("is_active").default(true).notNull(),
+		isCommercialProperty: boolean("is_commercial_property")
+			.default(false)
+			.notNull(),
+		description: varchar("description", { length: 3000 }).notNull(),
+		startDate: timestamp("start_date", {
+			withTimezone: true,
+			mode: "string",
+		}).notNull(),
+		endDate: timestamp("end_date", { withTimezone: true, mode: "string" }),
+		startDateFlag: startDateFlag("start_date_flag").default("none").notNull(),
+		propertyType: enumJobsPropertyType("property_type").notNull(),
+		addressId: uuid("address_id")
+			.notNull()
+			.references(() => addresses.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		title: varchar("title", { length: 100 }).notNull(),
+		tags: varchar("tags").array(),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 
-export const companies = pgTable("companies", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	name: varchar("name", { length: 50 }).notNull(),
-	ownerId: uuid("owner_id")
-		.notNull()
-		.references(() => accounts.id, {
+		englishSearchVector: tsvector("english_search_vector"),
+	},
+	(table) => {
+		return {
+			englishSearchVectorIdx: index("jobs_english_search_vector_idx").using(
+				"gin",
+				table.englishSearchVector
+			),
+		};
+	}
+);
+
+export const companies = pgTable(
+	"companies",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		name: varchar("name", { length: 50 }).notNull(),
+		ownerId: uuid("owner_id")
+			.notNull()
+			.references(() => accounts.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		addressId: uuid("address_id")
+			.notNull()
+			.references(() => addresses.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		serviceArea: numeric("service_area", { precision: 7, scale: 3 }),
+		emailAddress: varchar("email_address", { length: 320 }).notNull(),
+		phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
+		websiteUrl: text("website_url"),
+		isVerified: boolean("is_verified").default(false).notNull(),
+		dateFounded: date("date_founded").notNull(),
+		isActive: boolean("is_active").default(true).notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+		imageId: uuid("image_id").references(() => media.id, {
 			onDelete: "restrict",
 			onUpdate: "cascade",
 		}),
-	addressId: uuid("address_id")
-		.notNull()
-		.references(() => addresses.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	serviceArea: numeric("service_area", { precision: 7, scale: 3 }),
-	emailAddress: varchar("email_address", { length: 320 }).notNull(),
-	phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
-	websiteUrl: text("website_url"),
-	isVerified: boolean("is_verified").default(false).notNull(),
-	dateFounded: date("date_founded").notNull(),
-	isActive: boolean("is_active").default(true).notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	imageId: uuid("image_id").references(() => media.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-});
+
+		englishSearchVector: tsvector("english_search_vector"),
+	},
+	(table) => {
+		return {
+			englishSearchVectorIdx: index(
+				"companies_english_search_vector_idx"
+			).using("gin", table.englishSearchVector),
+		};
+	}
+);
+
+export const accounts = pgTable(
+	"accounts",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		username: text("username").notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+		description: text("description"),
+		englishSearchVector: tsvector("english_search_vector"),
+	},
+	(table) => {
+		return {
+			englishSearchVectorIdx: index("accounts_english_search_vector_idx").using(
+				"gin",
+				table.englishSearchVector
+			),
+		};
+	}
+);
 
 export const jobBids = pgTable(
 	"job_bids",

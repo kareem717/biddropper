@@ -5,22 +5,27 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
+  DialogTrigger,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { ComponentPropsWithoutRef, FC, useEffect, useState } from "react";
 import { cn } from "@/utils";
+import { Input } from "../ui/input";
 
 export interface QuickSearchProps extends ComponentPropsWithoutRef<typeof Button> {
+  onSearch: (query: string) => void;
 }
 
 export const QuickSearch: FC<QuickSearchProps> = ({
   className,
+  onSearch,
   ...props
 }) => {
+  const [searching, setSearching] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -36,6 +41,7 @@ export const QuickSearch: FC<QuickSearchProps> = ({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
 
   return (
     <Dialog open={isSearchDialogOpen} onOpenChange={setSearchDialogOpen}>
@@ -54,11 +60,16 @@ export const QuickSearch: FC<QuickSearchProps> = ({
           </span>
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="p-8">
         <DialogHeader>
-          <DialogTitle>Search</DialogTitle>
-          <DialogDescription>Sample search query.</DialogDescription>
+          <DialogTitle>Are you absolutely sure?</DialogTitle>
+          <DialogDescription>
+            This action cannot be undone. This will permanently delete your account
+            and remove your data from our servers.
+          </DialogDescription>
         </DialogHeader>
+        <Input value={query} onChange={(e) => setQuery(e.target.value)} disabled={searching} />
+        <Button variant="secondary" className="w-full" onClick={() => onSearch(query)} disabled={searching}>{searching ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Search"}</Button>
       </DialogContent>
     </Dialog>
   );

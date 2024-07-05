@@ -20,6 +20,7 @@ import { QuickSearch } from "../app/QuickSearch"
 import { Button } from "../ui/button"
 import { Icons } from "../Icons"
 import { CreateMessageForm } from "./CreateMessageForm"
+import { trpc } from "@/lib/trpc/client"
 
 export interface MessageInboxProps {
   messages: ShowMessage[]
@@ -28,9 +29,19 @@ export interface MessageInboxProps {
   } | {
     companyId: string
   }
+  onSearch: (query: string) => void
+  onDelete?: () => void
+  onMarkAsRead?: () => void
+  onMarkAsUnread?: () => void
 }
 
-export const MessageInbox: FC<MessageInboxProps> = ({ messages, recipient, ...props }) => {
+export const MessageInbox: FC<MessageInboxProps> = ({ messages,
+  recipient,
+  onSearch,
+  onDelete,
+  onMarkAsRead,
+  onMarkAsUnread,
+  ...props }) => {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false)
   const [selectedMessage, setSelectedMessage] = useState<ShowMessage | null>(null)
 
@@ -39,10 +50,26 @@ export const MessageInbox: FC<MessageInboxProps> = ({ messages, recipient, ...pr
     setDrawerOpen(true)
   }
 
+  const handleDelete = () => {
+    setSelectedMessage(null)
+    onDelete?.()
+  }
+
+  const handleMarkAsRead = () => {
+    setSelectedMessage(null)
+    onMarkAsRead?.()
+  }
+
+  const handleMarkAsUnread = () => {
+    setSelectedMessage(null)
+    onMarkAsUnread?.()
+  }
+
+
   return (
     <div className=" flex flex-col gap-6">
       <div className="flex flex-row items-center gap-2 w-full">
-        <QuickSearch className="w-full" />
+        <QuickSearch className="w-full" onSearch={onSearch} />
         <Drawer >
           <DrawerTrigger asChild  >
             <Button className="flex items-center gap-2">
@@ -74,12 +101,9 @@ export const MessageInbox: FC<MessageInboxProps> = ({ messages, recipient, ...pr
             <MessageShowCard
               message={selectedMessage}
               recipient={recipient}
-              onMarkAsRead={() => setDrawerOpen(false)}
-              onMarkAsUnread={() => setDrawerOpen(false)}
-              onDelete={() => {
-                setDrawerOpen(false)
-                setSelectedMessage(null)
-              }}
+              onMarkAsRead={handleMarkAsRead}
+              onMarkAsUnread={handleMarkAsUnread}
+              onDelete={handleDelete}
               className="border-none shadow-none"
             />
           </DrawerContent>

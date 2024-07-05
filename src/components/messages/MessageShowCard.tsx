@@ -70,10 +70,7 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({ message, recipient, 
     <Card className={cn("", className)} {...props}>
       <CardHeader className="flex items-center justify-between">
         <div className="space-y-1">
-          <h3 className="text-lg font-medium">New message from Mohammed2</h3>
-          <p className="text-sm text-muted-foreground truncate max-w-[50ch]">
-            {truncate(message.description, 100)}
-          </p>
+          <h3 className="text-lg font-medium">New message from {message.sender.name}</h3>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{timeSince(new Date(message.createdAt))}</span>
