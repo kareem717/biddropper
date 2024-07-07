@@ -7,11 +7,16 @@ import {
 	accounts,
 } from "@/lib/db/drizzle/schema";
 import { router, accountProcedure } from "../trpc";
-import { eq } from "drizzle-orm";
+import { desc, eq, exists, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { industries, jobIndustries } from "@/lib/db/drizzle/schema";
 import { EditJobSchema, NewJobSchema } from "@/lib/validations/job";
 import { and, isNull, inArray, not } from "drizzle-orm";
+import {
+	withPagination,
+	generatePaginationResponse,
+	getOwnedJobs,
+} from "./shared";
 
 export const jobRouter = router({
 	getJobFull: accountProcedure
@@ -193,5 +198,93 @@ export const jobRouter = router({
 				.update(jobs)
 				.set({ deletedAt: new Date().toISOString() })
 				.where(eq(jobs.id, id));
+		}),
+	searchJobsByKeyword: accountProcedure
+		.input(
+			z.object({
+				keywordQuery: z.string(),
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				includeDeleted: z.boolean().optional().default(false),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const { keywordQuery, cursor, pageSize, includeDeleted } = input;
+
+			const ownedJobs = await getOwnedJobs(ctx, ctx.db, ctx.account.id);
+
+			const res = await withPagination(
+				ctx.db
+					.select({
+						id: jobs.id,
+						title: jobs.title,
+						deletedAt: jobs.deletedAt,
+					})
+					.from(jobs)
+					.where(
+						and(
+							not(
+								inArray(
+									jobs.id,
+									ownedJobs.map((job) => job.id)
+								)
+							),
+							includeDeleted ? undefined : isNull(jobs.deletedAt),
+							sql`jobs.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
+						)
+					)
+					.orderBy(
+						sql`ts_rank(jobs.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
+					)
+					.$dynamic(),
+				cursor,
+				pageSize
+			);
+
+			return generatePaginationResponse(res, cursor, pageSize);
+		}),
+	recommendJobs: accountProcedure
+		.input(
+			z.object({
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				includeDeleted: z.boolean().optional().default(false),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			// TODO: Need to track recommendations per account/company and then which ones they acctually view/bid on
+			const { cursor, pageSize, includeDeleted } = input;
+
+			const ownedJobs = await getOwnedJobs(ctx, ctx.db, ctx.account.id);
+
+			// TODO: implement recommendation logic
+			const res = await withPagination(
+				ctx.db
+					.select()
+					.from(jobs)
+					.where(
+						and(
+							not(
+								inArray(
+									jobs.id,
+									ownedJobs.map((job) => job.id)
+								)
+							),
+							not(
+								inArray(
+									jobs.id,
+									ownedJobs.map((job) => job.id)
+								)
+							),
+							includeDeleted ? undefined : isNull(jobs.deletedAt)
+						)
+					)
+					.orderBy(desc(jobs.createdAt))
+					.$dynamic(),
+				cursor,
+				pageSize
+			);
+
+			return generatePaginationResponse(res, cursor, pageSize);
 		}),
 });

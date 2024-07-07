@@ -1,12 +1,15 @@
 import { Context } from "@/lib/trpc/context";
 import { NewMessage, NewMessageSchema } from "@/lib/validations/message";
 import {
+	accountJobs,
+	companyJobs,
+	jobs,
 	messageAccountRecipients,
 	messageCompanyRecipients,
 	messages,
 } from "@/lib/db/drizzle/schema";
 import { PgSelect } from "drizzle-orm/pg-core";
-import { AnyColumn, SQL, asc, desc, gt, lt, and } from "drizzle-orm";
+import { SQL, and, eq, exists, inArray, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { DB } from "@/lib/db";
 
@@ -77,36 +80,61 @@ export type CursorPaginationOptions = {
 	orderByExpr?: SQL<unknown>;
 };
 
-export const withCursorPagination = <T extends PgSelect>(
+export const withPagination = <T extends PgSelect>(
 	query: T,
-	orderByCol: AnyColumn,
-	options: CursorPaginationOptions
-) => {
-	return query
-		.where(
-			and(
-				...(options.where || []),
-				options.cursor ? gt(orderByCol, options.cursor) : undefined
-			)
-		)
-		.orderBy(options.orderByExpr || asc(orderByCol))
-		.limit((options.limit || 10) + 1);
-};
-
-export const generateCursorResponse = <T extends Record<string, any>>(
-	cursorKeyPath: string,
-	data: T[],
+	page: number,
 	pageSize: number
 ) => {
-	// Utility function to get nested value
-	const getNestedValue = (obj: T, path: string) => {
-		return path.split(".").reduce((acc, part) => acc && acc[part], obj);
+	return query.offset((page - 1) * pageSize).limit(pageSize + 1);
+};
+
+export const generatePaginationResponse = <T>(
+	res: T[],
+	page: number,
+	pageSize: number
+) => {
+	const hasNext = res.length > pageSize;
+	const hasPrevious = page > 1;
+	return {
+		data: res.slice(0, pageSize),
+		hasNext,
+		hasPrevious,
+		nextPage: hasNext ? page + 1 : null,
+		previousPage: hasPrevious ? page - 1 : null,
 	};
+};
 
-	const hasNextPage = data.length > pageSize;
-	const nextCursor = hasNextPage
-		? getNestedValue(data[pageSize - 1], cursorKeyPath)
-		: undefined;
+export const getOwnedJobs = async (ctx: Context, db: DB, accountId: string) => {
+	const ownedCompanyIds =
+		ctx.ownedCompanies?.map((company) => company.id) || [];
 
-	return { data: data.slice(0, pageSize), nextCursor };
+	return await db
+		.select({ id: jobs.id })
+		.from(jobs)
+		.where(
+			or(
+				exists(
+					db
+						.select()
+						.from(companyJobs)
+						.where(
+							and(
+								eq(companyJobs.jobId, jobs.id),
+								inArray(companyJobs.companyId, ownedCompanyIds)
+							)
+						)
+				),
+				exists(
+					db
+						.select()
+						.from(accountJobs)
+						.where(
+							and(
+								eq(accountJobs.jobId, jobs.id),
+								eq(accountJobs.accountId, accountId)
+							)
+						)
+				)
+			)
+		);
 };

@@ -33,6 +33,8 @@ export interface MessageInboxProps {
   onDelete?: () => void
   onMarkAsRead?: () => void
   onMarkAsUnread?: () => void
+  onLoadMore: () => void
+  hasNext: boolean
 }
 
 export const MessageInbox: FC<MessageInboxProps> = ({ messages,
@@ -41,6 +43,8 @@ export const MessageInbox: FC<MessageInboxProps> = ({ messages,
   onDelete,
   onMarkAsRead,
   onMarkAsUnread,
+  onLoadMore,
+  hasNext,
   ...props }) => {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false)
   const [selectedMessage, setSelectedMessage] = useState<ShowMessage | null>(null)
@@ -63,6 +67,10 @@ export const MessageInbox: FC<MessageInboxProps> = ({ messages,
   const handleMarkAsUnread = () => {
     setSelectedMessage(null)
     onMarkAsUnread?.()
+  }
+
+  const handleLoadMore = () => {
+    onLoadMore?.()
   }
 
 
@@ -94,6 +102,7 @@ export const MessageInbox: FC<MessageInboxProps> = ({ messages,
           ))
           }
         </div >
+        {hasNext && <Button onClick={handleLoadMore}>Load More</Button>}
       </ScrollArea>
       {selectedMessage && (
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>

@@ -6,7 +6,19 @@ import {
 	messageCompanyRecipients,
 	messages,
 } from "@/lib/db/drizzle/schema";
-import { eq, and, isNull, desc, ilike, isNotNull, or, sql } from "drizzle-orm";
+import {
+	eq,
+	and,
+	isNull,
+	desc,
+	ilike,
+	isNotNull,
+	or,
+	sql,
+	gt,
+	not,
+	inArray,
+} from "drizzle-orm";
 import { NewMessageSchema, ShowMessageSchema } from "@/lib/validations/message";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -22,14 +34,23 @@ export const messageRouter = router({
 	getReceivedMessagesByAccountId: accountProcedure
 		.input(
 			z.object({
-				accountId: z.string(),
+				accountId: z.string().uuid(),
 				keywordQuery: z.string().optional(),
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
 				includeRead: z.boolean().optional().default(false),
 				includeDeleted: z.boolean().optional().default(false),
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { accountId, keywordQuery, includeRead, includeDeleted } = input;
+			const {
+				accountId,
+				keywordQuery,
+				cursor: page,
+				pageSize,
+				includeRead,
+				includeDeleted,
+			} = input;
 
 			if (ctx.account.id !== accountId) {
 				throw new TRPCError({
@@ -78,7 +99,9 @@ export const messageRouter = router({
 						? sql`ts_rank(messages.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
 						: desc(messages.createdAt),
 					desc(messages.createdAt)
-				);
+				)
+				.offset((page - 1) * pageSize)
+				.limit(pageSize + 1);
 
 			const out = res.map((message) => ({
 				...message.messages,
@@ -95,22 +118,36 @@ export const messageRouter = router({
 					  },
 			}));
 
-			console.log(out);
-			return out;
+			const hasNext = out.length > pageSize;
+			const hasPrevious = page > 1;
+			return {
+				data: out.slice(0, pageSize),
+				hasNext,
+				hasPrevious,
+				nextPage: hasNext ? page + 1 : null,
+				previousPage: hasPrevious ? page - 1 : null,
+			};
 		}),
 	getReceivedMessagesByCompanyId: accountProcedure
 		.input(
 			z.object({
 				companyId: z.string(),
+				keywordQuery: z.string().optional(),
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
 				includeRead: z.boolean().optional().default(false),
 				includeDeleted: z.boolean().optional().default(false),
-				keywordQuery: z.string().optional(),
 			})
 		)
-		.output(z.array(ShowMessageSchema))
 		.query(async ({ ctx, input }) => {
-			const { companyId, includeRead, includeDeleted, keywordQuery } = input;
-
+			const {
+				companyId,
+				keywordQuery,
+				cursor: page,
+				pageSize,
+				includeRead,
+				includeDeleted,
+			} = input;
 			const ownedCompanyIds =
 				ctx.ownedCompanies?.map((company) => company.id) || [];
 
@@ -147,18 +184,25 @@ export const messageRouter = router({
 				.where(
 					and(
 						eq(messageCompanyRecipients.companyId, input.companyId),
-						includeRead ? undefined : isNull(messageCompanyRecipients.readAt),
+						includeRead ? undefined : isNull(messageAccountRecipients.readAt),
 						includeDeleted
 							? undefined
-							: isNull(messageCompanyRecipients.deletedAt),
+							: isNull(messageAccountRecipients.deletedAt),
 						keywordQuery
-							? ilike(messages.title, `%${keywordQuery}%`)
+							? sql`messages.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
 							: undefined
 					)
 				)
-				.orderBy(desc(messages.createdAt));
+				.orderBy(
+					keywordQuery
+						? sql`ts_rank(messages.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
+						: desc(messages.createdAt),
+					desc(messages.createdAt)
+				)
+				.offset((page - 1) * pageSize)
+				.limit(pageSize + 1);
 
-			return res.map((message) => ({
+			const out = res.map((message) => ({
 				...message.messages,
 				readAt: message.readAt,
 				deletedAt: message.deletedAt,
@@ -172,6 +216,16 @@ export const messageRouter = router({
 							...message.senderCompany,
 					  },
 			}));
+
+			const hasNext = out.length > pageSize;
+			const hasPrevious = page > 1;
+			return {
+				data: out.slice(0, pageSize),
+				hasNext,
+				hasPrevious,
+				nextPage: hasNext ? page + 1 : null,
+				previousPage: hasPrevious ? page - 1 : null,
+			};
 		}),
 	getUnreadMessageCountByAccountId: accountProcedure
 		.input(
@@ -373,4 +427,5 @@ export const messageRouter = router({
 					.where(eq(messageCompanyRecipients.messageId, id));
 			}
 		}),
+
 });

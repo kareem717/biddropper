@@ -1,8 +1,9 @@
 import { accounts } from "@/lib/db/drizzle/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, sql, not } from "drizzle-orm";
 import { accountProcedure, router, userProcedure } from "../trpc";
 import { NewAccountSchema, EditAccountSchema } from "@/lib/validations/account";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 export const accountRouter = router({
 	createAccount: userProcedure
@@ -51,5 +52,47 @@ export const accountRouter = router({
 				.update(accounts)
 				.set(input)
 				.where(eq(accounts.id, accountId));
+		}),
+	searhAccountsByKeyword: accountProcedure
+		.input(
+			z.object({
+				keywordQuery: z.string(),
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				includeDeleted: z.boolean().optional().default(false),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const { keywordQuery, cursor: page, pageSize, includeDeleted } = input;
+
+			const res = await ctx.db
+				.select({
+					id: accounts.id,
+					username: accounts.username,
+					deletedAt: accounts.deletedAt,
+				})
+				.from(accounts)
+				.where(
+					and(
+						not(eq(accounts.id, ctx.account.id)),
+						includeDeleted ? undefined : isNull(accounts.deletedAt),
+						sql`accounts.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
+					)
+				)
+				.orderBy(
+					sql`ts_rank(accounts.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
+				)
+				.offset((page - 1) * pageSize)
+				.limit(pageSize + 1);
+
+			const hasNext = res.length > pageSize;
+			const hasPrevious = page > 1;
+			return {
+				data: res.slice(0, pageSize),
+				hasNext,
+				hasPrevious,
+				nextPage: hasNext ? page + 1 : null,
+				previousPage: hasPrevious ? page - 1 : null,
+			};
 		}),
 });

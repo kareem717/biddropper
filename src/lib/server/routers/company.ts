@@ -5,9 +5,10 @@ import {
 } from "@/lib/db/drizzle/schema";
 import { router, accountProcedure, companyOwnerProcedure } from "../trpc";
 import { EditCompanySchema, NewCompanySchema } from "@/lib/validations/company";
-import { eq, and, isNull, inArray, not } from "drizzle-orm";
+import { eq, and, isNull, inArray, not, sql, desc } from "drizzle-orm";
 import { z } from "zod";
 import { industries } from "@/lib/db/drizzle/schema";
+import { generatePaginationResponse, withPagination } from "./shared";
 
 export const companyRouter = router({
 	getOwnedCompanies: accountProcedure
@@ -172,5 +173,83 @@ export const companyRouter = router({
 				.update(companies)
 				.set({ deletedAt: new Date().toISOString() })
 				.where(eq(companies.id, id));
+		}),
+	searchCompaniesByKeyword: accountProcedure
+		.input(
+			z.object({
+				keywordQuery: z.string(),
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				includeDeleted: z.boolean().optional().default(false),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const { keywordQuery, cursor, pageSize, includeDeleted } = input;
+
+			const ownedCompanyIds =
+				ctx.ownedCompanies?.map((company) => company.id) || [];
+
+			const res = await withPagination(
+				ctx.db
+					.select({
+						id: companies.id,
+						name: companies.name,
+						deletedAt: companies.deletedAt,
+					})
+					.from(companies)
+					.where(
+						and(
+							not(inArray(companies.id, ownedCompanyIds)),
+							includeDeleted ? undefined : isNull(companies.deletedAt),
+							sql`companies.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
+						)
+					)
+					.orderBy(
+						sql`ts_rank(companies.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
+					)
+					.$dynamic(),
+				cursor,
+				pageSize
+			);
+
+			return generatePaginationResponse(res, cursor, pageSize);
+		}),
+	recommendCompanies: accountProcedure
+		.input(
+			z.object({
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				includeDeleted: z.boolean().optional().default(false),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			// TODO: Need to track recommendations per account/company and then which ones they acctually view/select
+			const { cursor, pageSize, includeDeleted } = input;
+
+			const ownedCompanyIds =
+				ctx.ownedCompanies?.map((company) => company.id) || [];
+
+			// TODO: implement recommendation logic
+			const res = await withPagination(
+				ctx.db
+					.select({
+						id: companies.id,
+						name: companies.name,
+						deletedAt: companies.deletedAt,
+					})
+					.from(companies)
+					.where(
+						and(
+							not(inArray(companies.id, ownedCompanyIds)),
+							includeDeleted ? undefined : isNull(companies.deletedAt)
+						)
+					)
+					.orderBy(desc(companies.createdAt))
+					.$dynamic(),
+				cursor,
+				pageSize
+			);
+
+			return generatePaginationResponse(res, cursor, pageSize);
 		}),
 });

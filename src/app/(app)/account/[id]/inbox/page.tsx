@@ -9,16 +9,21 @@ export default function AccountInboxPage({ params }: { params: { id: string } })
   const [includeRead, setIncludeRead] = useState<boolean>(false)
   const [includeDeleted, setIncludeDeleted] = useState<boolean>(false)
 
-  const { data: messages, isLoading, isError, error, refetch } = trpc.message.getReceivedMessagesByAccountId.useQuery({
+  const { data, isLoading, isError, error, fetchNextPage, hasNextPage, refetch } = trpc.message.getReceivedMessagesByAccountId.useInfiniteQuery({
     accountId: params.id,
     keywordQuery,
     includeRead,
     includeDeleted,
+    pageSize: 2,
+  }, {
+    getNextPageParam: (lastPage, pages) => lastPage.nextPage,
+    getPreviousPageParam: (lastPage, pages) => lastPage.previousPage,
   })
 
-  console.log(messages)
   if (isError) return <div>Error: {error.message}</div>
   if (isLoading) return <div>Loading...</div>
+
+  const messages = data?.pages.map(page => page.data).flat()
 
   const handleSearch = (query: string) => {
     setIncludeDeleted(true)
@@ -27,7 +32,14 @@ export default function AccountInboxPage({ params }: { params: { id: string } })
     refetch()
   }
 
+
   return (
-    <MessageInbox messages={messages} recipient={{ accountId: params.id }} onSearch={handleSearch} />
+    <MessageInbox
+      messages={messages}
+      recipient={{ accountId: params.id }}
+      onSearch={handleSearch}
+      hasNext={hasNextPage ?? false}
+      onLoadMore={() => fetchNextPage()}
+    />
   )
 }
