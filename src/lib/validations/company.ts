@@ -26,6 +26,7 @@ export const NewCompanySchema = createInsertSchema(companies, {
 		deletedAt: true,
 		imageId: true,
 		addressId: true,
+		englishSearchVector: true,
 	});
 
 export type EditCompany = z.infer<typeof EditCompanySchema>;
@@ -43,6 +44,7 @@ export const EditCompanySchema = createInsertSchema(companies, {
 		isVerified: true,
 		isActive: true,
 		deletedAt: true,
+		englishSearchVector: true,
 	});
 
 export type ShowCompany = z.infer<typeof ShowCompanySchema>;

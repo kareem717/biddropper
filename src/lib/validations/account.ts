@@ -6,10 +6,12 @@ export const NewAccountSchema = createInsertSchema(accounts).omit({
 	createdAt: true,
 	updatedAt: true,
 	deletedAt: true,
+	englishSearchVector: true,
 });
 
 export const EditAccountSchema = createInsertSchema(accounts).omit({
 	createdAt: true,
 	updatedAt: true,
 	deletedAt: true,
+	englishSearchVector: true,
 });

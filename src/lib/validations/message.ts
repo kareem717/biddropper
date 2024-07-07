@@ -15,6 +15,7 @@ export const NewMessageSchema = createInsertSchema(messages)
 		createdAt: true,
 		updatedAt: true,
 		deletedAt: true,
+		englishSearchVector: true,
 	});
 
 export type ShowMessage = z.infer<typeof ShowMessageSchema>;

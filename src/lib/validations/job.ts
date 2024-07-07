@@ -29,6 +29,7 @@ export const NewJobSchema = createInsertSchema(jobs, {
 		deletedAt: true,
 		isActive: true,
 		addressId: true,
+		englishSearchVector: true,
 	});
 
 export type EditJob = z.infer<typeof EditJobSchema>;
@@ -46,4 +47,5 @@ export const EditJobSchema = createInsertSchema(jobs, {
 		updatedAt: true,
 		deletedAt: true,
 		isActive: true,
+		englishSearchVector: true,
 	});
