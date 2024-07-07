@@ -24,7 +24,6 @@ export const NewCompanySchema = createInsertSchema(companies, {
 		createdAt: true,
 		updatedAt: true,
 		deletedAt: true,
-		imageId: true,
 		addressId: true,
 		englishSearchVector: true,
 	});

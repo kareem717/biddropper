@@ -49,13 +49,13 @@ ALTER TABLE messages
 ADD COLUMN account_id UUID REFERENCES accounts ON UPDATE CASCADE ON DELETE RESTRICT;
 
 ALTER TABLE messages
+DROP CONSTRAINT check_sender_not_null;
+
+ALTER TABLE messages
 DROP COLUMN sender_company_id;
 
 ALTER TABLE messages
 DROP COLUMN sender_account_id;
-
-ALTER TABLE messages
-DROP CONSTRAINT check_sender_not_null;
 
 DROP TABLE message_company_recipients;
 

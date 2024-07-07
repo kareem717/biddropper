@@ -4,9 +4,9 @@ import {
 	jobs,
 	addresses,
 	industries,
-	job_industries,
+	jobIndustries,
 	bids,
-	bid_status,
+	bidStatus,
 } from "./drizzle/schema";
 import { faker } from "@faker-js/faker";
 import { randomUUID } from "crypto";
@@ -20,7 +20,7 @@ const main = async () => {
 	const industryData: (typeof industries.$inferInsert)[] = [];
 	const addressData: (typeof addresses.$inferInsert)[] = [];
 	const jobData: (typeof jobs.$inferInsert)[] = [];
-	const jobIndustryData: (typeof job_industries.$inferInsert)[] = [];
+	const jobIndustryData: (typeof jobIndustries.$inferInsert)[] = [];
 	const bidData: (typeof bids.$inferInsert)[] = [];
 
 	await db.transaction(async (tx) => {
@@ -34,20 +34,21 @@ const main = async () => {
 		await tx.insert(industries).values(industryData);
 		console.log("Seed done [industries]");
 
-		for (let i = 0; i < 50000; i++) {
+		for (let i = 0; i < 5000; i++) {
 			addressData.push({
 				id: randomUUID(),
-				x_coordinate: String(faker.location.latitude()),
-				y_coordinate: String(faker.location.longitude()),
-				line_1: faker.location.streetAddress(),
-				line_2: faker.location.secondaryAddress(),
+				xCoordinate: String(faker.location.latitude()),
+				yCoordinate: String(faker.location.longitude()),
+				line1: faker.location.streetAddress(),
+				line2: faker.location.secondaryAddress(),
 				city: faker.location.city(),
+				fullAddress: `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.state()} ${faker.location.zipCode()}`, // Added fullAddress
 				region: faker.location.state(),
-				postal_code: faker.location.zipCode(),
+				postalCode: faker.location.zipCode(),
 				country: faker.location.country(),
-				raw_json: null,
+				rawJson: null,
 				district: faker.location.city(),
-				region_code: faker.location.city(),
+				regionCode: faker.location.city(),
 			});
 		}
 		console.log("Seed start [addresses]");
@@ -57,25 +58,25 @@ const main = async () => {
 		}
 		console.log("Seed done [addresses]");
 
-		for (let i = 0; i < 20000; i++) {
+		for (let i = 0; i < 5000; i++) {
 			jobData.push({
 				id: randomUUID(),
-				is_active: faker.datatype.boolean(),
-				is_commercial_property: faker.datatype.boolean(),
+				isActive: faker.datatype.boolean(),
+				isCommercialProperty: faker.datatype.boolean(),
 				description: faker.lorem.sentence({ min: 10, max: 200 }),
-				start_date: faker.date.recent().toISOString(),
-				end_date: faker.date.future().toISOString(),
-				start_date_flag: faker.helpers.arrayElement([
+				startDate: faker.date.recent().toISOString(),
+				endDate: faker.date.future().toISOString(),
+				startDateFlag: faker.helpers.arrayElement([
 					"none",
 					"flexible",
 					"urgent",
 				])!,
-				property_type: faker.helpers.arrayElement([
+				propertyType: faker.helpers.arrayElement([
 					"detached",
 					"apartment",
 					"semi-detached",
 				])!,
-				address_id: faker.helpers.arrayElement(
+				addressId: faker.helpers.arrayElement(
 					addressData.map((address) => address.id)
 				)!,
 				title: faker.company.buzzPhrase(),
@@ -97,28 +98,26 @@ const main = async () => {
 			jobIndustryData.push(
 				...industries.map((industry) => ({
 					id: randomUUID(),
-					job_id: jobData[i].id!,
-					industry_id: industry!,
+					jobId: jobData[i].id!,
+					industryId: industry!,
 				}))
 			);
 		}
 		console.log("Seed start [job_industries]");
 		// insert in batches of 1k
 		for (let i = 0; i < jobIndustryData.length; i += 1000) {
-			await tx
-				.insert(job_industries)
-				.values(jobIndustryData.slice(i, i + 1000));
+			await tx.insert(jobIndustries).values(jobIndustryData.slice(i, i + 1000));
 		}
 		console.log("Seed done [job_industries]");
 
 		// add 1-50 bids per job
-		for (let j = 0; j < 50000; j++) {
+		for (let j = 0; j < 5000; j++) {
 			bidData.push({
 				id: randomUUID(),
-				sender_company_id: "44141008-0a47-42d9-818c-d51240e050d4",
-				note: faker.lorem.sentence({ min: 10, max: 15 }),
-				price_usd: faker.number.int({ min: 1000, max: 24999999 }).toString(),
-				status: faker.helpers.arrayElement(bid_status.enumValues),
+				senderCompanyId: "2331d376-3ec5-4691-95c9-f38f1db6dc6b",
+				note: faker.lorem.sentence({ min: 1, max: 5 }),
+				priceUsd: faker.number.int({ min: 1000, max: 24999999 }).toString(),
+				status: faker.helpers.arrayElement(bidStatus.enumValues),
 			});
 		}
 		console.log("Seed start [bids]");

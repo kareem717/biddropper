@@ -17,6 +17,7 @@ ALTER TABLE accounts
 ADD COLUMN english_search_vector tsvector GENERATED ALWAYS AS (TO_TSVECTOR('english', username)) STORED;
 
 CREATE INDEX jobs_english_search_vector_idx ON jobs USING gin (english_search_vector);
+
 CREATE INDEX messages_english_search_vector_idx ON messages USING gin (english_search_vector);
 
 CREATE INDEX companies_english_search_vector_idx ON companies USING gin (english_search_vector);
@@ -27,7 +28,9 @@ CREATE INDEX accounts_english_search_vector_idx ON accounts USING gin (english_s
 -- +goose Down
 -- +goose StatementBegin
 DROP INDEX jobs_english_search_vector_idx;
-drop index messages_english_search_vector_idx;
+
+DROP INDEX messages_english_search_vector_idx;
+
 DROP INDEX companies_english_search_vector_idx;
 
 DROP INDEX accounts_english_search_vector_idx;
