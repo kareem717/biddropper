@@ -3,14 +3,17 @@
 import { MessageInbox } from "@/components/messages/MessageInbox"
 import { trpc } from "@/lib/trpc/client"
 import { useState } from "react"
+import { useAuth } from "@/components/providers/AuthProvider"
 
-export default function AccountInboxPage({ params }: { params: { id: string } }) {
+export default function AccountInboxPage() {
+  const { account } = useAuth()
+  if (!account) throw new Error("Account not found")
+
   const [keywordQuery, setKeywordQuery] = useState<string | undefined>(undefined)
   const [includeRead, setIncludeRead] = useState<boolean>(false)
   const [includeDeleted, setIncludeDeleted] = useState<boolean>(false)
-
   const { data, isLoading, isError, error, fetchNextPage, hasNextPage, refetch } = trpc.message.getReceivedMessagesByAccountId.useInfiniteQuery({
-    accountId: params.id,
+    accountId: account.id,
     keywordQuery,
     includeRead,
     includeDeleted,
@@ -36,7 +39,7 @@ export default function AccountInboxPage({ params }: { params: { id: string } })
   return (
     <MessageInbox
       messages={messages}
-      recipient={{ accountId: params.id }}
+      recipient={{ accountId: account.id }}
       onSearch={handleSearch}
       hasNext={hasNextPage ?? false}
       onLoadMore={() => fetchNextPage()}

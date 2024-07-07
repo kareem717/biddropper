@@ -32,7 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useState } from "react";
+import { ComponentPropsWithoutRef, useState, FC } from "react";
 import { Icons } from "../Icons";
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -56,9 +56,17 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useCompany } from "../providers/CompanyProvider";
 import { NewMessageSchema } from "@/lib/validations/message";
 
+
+export interface CreateMessageFormProps extends ComponentPropsWithoutRef<"form"> {
+  recipients?: {
+    accountIds?: string[],
+    companyIds?: string[]
+  }
+}
+
 const formSchema = NewMessageSchema
 
-export const CreateMessageForm = () => {
+export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, ...props }) => {
   const { account, user } = useAuth()
   const { companies: ownedCompanies } = useCompany()
   if (!account || !user) {
@@ -67,7 +75,6 @@ export const CreateMessageForm = () => {
 
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { getSelectedIndustries } = useIndustrySelect();
 
   const { mutateAsync: createMessage, isLoading, isError } = trpc.message.createMessage.useMutation({
     onError: () => {
@@ -77,10 +84,13 @@ export const CreateMessageForm = () => {
     },
   })
 
+
+
   // @ts-ignore
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      recipients,
       senderAccountId: account.id,
       senderCompanyId: ownedCompanies.length > 0 ? ownedCompanies[0].id : undefined,
     },

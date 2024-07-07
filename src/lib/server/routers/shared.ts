@@ -80,7 +80,7 @@ export type CursorPaginationOptions = {
 	orderByExpr?: SQL<unknown>;
 };
 
-export const withPagination = <T extends PgSelect>(
+export const withOffsetPagination = <T extends PgSelect>(
 	query: T,
 	page: number,
 	pageSize: number
@@ -88,7 +88,7 @@ export const withPagination = <T extends PgSelect>(
 	return query.offset((page - 1) * pageSize).limit(pageSize + 1);
 };
 
-export const generatePaginationResponse = <T>(
+export const generateOffsetPaginationResponse = <T>(
 	res: T[],
 	page: number,
 	pageSize: number
@@ -138,3 +138,4 @@ export const getOwnedJobs = async (ctx: Context, db: DB, accountId: string) => {
 			)
 		);
 };
+

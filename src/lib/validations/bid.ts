@@ -25,11 +25,20 @@ export const EditBidSchema = createInsertSchema(bids, {
 	isActive: true,
 });
 
-export type Bid = z.infer<typeof SelectBidSchema>;
-export const SelectBidSchema = createSelectSchema(bids);
+export type ShowBid = z.infer<typeof ShowBidSchema>;
+export const ShowBidSchema = z.object({
+	bids: createSelectSchema(bids),
+	job: z.object({
+		id: z.string().uuid(),
+		title: z.string(),
+		description: z.string(),
+		createdAt: z.string(),
+		deletedAt: z.string().nullable(),
+	}),
+});
 
 export type DetailedBid = z.infer<typeof DetailedBidSchema>;
-export const DetailedBidSchema = SelectBidSchema.extend({
+export const DetailedBidSchema = ShowBidSchema.extend({
 	senderCompany: z.object({
 		id: z.string().uuid(),
 		name: z.string(),

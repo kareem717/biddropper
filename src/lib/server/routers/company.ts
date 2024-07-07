@@ -8,7 +8,7 @@ import { EditCompanySchema, NewCompanySchema } from "@/lib/validations/company";
 import { eq, and, isNull, inArray, not, sql, desc } from "drizzle-orm";
 import { z } from "zod";
 import { industries } from "@/lib/db/drizzle/schema";
-import { generatePaginationResponse, withPagination } from "./shared";
+import { generateOffsetPaginationResponse, withOffsetPagination } from "./shared";
 
 export const companyRouter = router({
 	getOwnedCompanies: accountProcedure
@@ -189,7 +189,7 @@ export const companyRouter = router({
 			const ownedCompanyIds =
 				ctx.ownedCompanies?.map((company) => company.id) || [];
 
-			const res = await withPagination(
+			const res = await withOffsetPagination(
 				ctx.db
 					.select({
 						id: companies.id,
@@ -212,7 +212,7 @@ export const companyRouter = router({
 				pageSize
 			);
 
-			return generatePaginationResponse(res, cursor, pageSize);
+			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 	recommendCompanies: accountProcedure
 		.input(
@@ -230,7 +230,7 @@ export const companyRouter = router({
 				ctx.ownedCompanies?.map((company) => company.id) || [];
 
 			// TODO: implement recommendation logic
-			const res = await withPagination(
+			const res = await withOffsetPagination(
 				ctx.db
 					.select({
 						id: companies.id,
@@ -250,6 +250,6 @@ export const companyRouter = router({
 				pageSize
 			);
 
-			return generatePaginationResponse(res, cursor, pageSize);
+			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 });

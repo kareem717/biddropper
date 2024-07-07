@@ -1,6 +1,6 @@
 "use client"
 
-import { BidIndexShell } from "../bids/BidIndexShell"
+import { ReceivedBidIndexShell } from "../bids/BidIndexShell"
 import { FC, ComponentPropsWithoutRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/utils"
@@ -140,7 +140,7 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
         </div>
       </div>
       <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
-        <BidIndexShell jobId={jobId} />
+        <ReceivedBidIndexShell jobId={jobId} />
       </div>
     </div>
   )

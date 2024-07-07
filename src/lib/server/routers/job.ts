@@ -13,8 +13,8 @@ import { industries, jobIndustries } from "@/lib/db/drizzle/schema";
 import { EditJobSchema, NewJobSchema } from "@/lib/validations/job";
 import { and, isNull, inArray, not } from "drizzle-orm";
 import {
-	withPagination,
-	generatePaginationResponse,
+	withOffsetPagination,
+	generateOffsetPaginationResponse,
 	getOwnedJobs,
 } from "./shared";
 
@@ -213,7 +213,7 @@ export const jobRouter = router({
 
 			const ownedJobs = await getOwnedJobs(ctx, ctx.db, ctx.account.id);
 
-			const res = await withPagination(
+			const res = await withOffsetPagination(
 				ctx.db
 					.select({
 						id: jobs.id,
@@ -241,7 +241,7 @@ export const jobRouter = router({
 				pageSize
 			);
 
-			return generatePaginationResponse(res, cursor, pageSize);
+			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 	recommendJobs: accountProcedure
 		.input(
@@ -258,7 +258,7 @@ export const jobRouter = router({
 			const ownedJobs = await getOwnedJobs(ctx, ctx.db, ctx.account.id);
 
 			// TODO: implement recommendation logic
-			const res = await withPagination(
+			const res = await withOffsetPagination(
 				ctx.db
 					.select()
 					.from(jobs)
@@ -285,6 +285,6 @@ export const jobRouter = router({
 				pageSize
 			);
 
-			return generatePaginationResponse(res, cursor, pageSize);
+			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 });

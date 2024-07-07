@@ -1,6 +1,5 @@
 "use client"
 
-import { BidIndexShell } from "../bids/BidIndexShell"
 import { FC, ComponentPropsWithoutRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/utils"
@@ -12,6 +11,17 @@ import { ShowAddress } from "@/lib/validations/address"
 import { useAuth } from "../providers/AuthProvider"
 import { useCompany } from "../providers/CompanyProvider"
 import { DropBidForm } from "../bids/DropBidForm"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "../ui/button";
+import { CreateMessageForm } from "../messages/CreateMessageForm";
+
 
 export interface JobShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
@@ -88,6 +98,20 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
         <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
           <h1 className="text-2xl font-bold mb-4">Drop a bid</h1>
           <DropBidForm jobId={jobId} />
+          <Dialog>
+            <DialogTrigger asChild><Button variant="outline" className="w-full mt-2">Request More Info</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Request More Info</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently delete your account
+                  and remove your data from our servers.
+                </DialogDescription>
+
+                <CreateMessageForm />
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </div>

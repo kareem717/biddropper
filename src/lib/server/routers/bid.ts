@@ -31,8 +31,8 @@ import {
 } from "drizzle-orm";
 import {
 	createMessage,
-	withCursorPagination,
-	generateCursorResponse,
+	withOffsetPagination,
+	generateOffsetPaginationResponse,
 } from "@/lib/server/routers/shared";
 import { PgSelect, alias } from "drizzle-orm/pg-core";
 import { accountProcedure } from "../trpc";
@@ -76,7 +76,7 @@ const getBidDetails = async (
 		.innerJoin(senderCompany, eq(bids.senderCompanyId, senderCompany.id))
 		.where(and(inArray(bids.id, bidIds), isNull(bids.deletedAt)));
 	return res.map((r) => ({
-		...r.bids,
+		bids: r.bids,
 		senderCompany: r.senderCompany,
 		job: {
 			...r.job,
@@ -162,100 +162,203 @@ const rejectBids = async (
 		);
 };
 
-const withBidFilter = <T extends PgSelect>(
-	query: T,
-	filter: BidFilter,
-	where?: SQL<unknown>[]
-) => {
-	return query.where(
-		and(
-			...(where || []),
-			filter.statuses ? inArray(bids.status, filter.statuses) : undefined,
-			filter.minPriceUsd
-				? gt(bids.priceUsd, filter.minPriceUsd.toString())
-				: undefined,
-			filter.maxPriceUsd
-				? lt(bids.priceUsd, filter.maxPriceUsd.toString())
-				: undefined
-		)
-	);
-};
 export const bidRouter = router({
-	getAccountSentBids: companyOwnerProcedure.query(async ({ ctx }) => {
-		const res = await ctx.db
-			.select()
-			.from(bids)
-			.where(
-				and(eq(bids.senderCompanyId, ctx.account.id), isNull(bids.deletedAt))
-			)
-			.innerJoin(jobBids, eq(bids.id, jobBids.bidId));
-		return res;
-	}),
-	getAccountReceivedBids: accountProcedure
+	getSentBidsByCompanyId: companyOwnerProcedure
 		.input(
 			z.object({
-				statuses: z.array(z.enum(bidStatus.enumValues)).optional(),
-				cursor: z.string().uuid().optional(),
-				limit: z.number().optional().default(5),
+				filter: z.object({
+					statuses: z
+						.array(z.enum(bidStatus.enumValues))
+						.optional()
+						.default(["pending"]),
+					jobIdFilter: z.string().uuid().optional(),
+					includeDeleted: z.boolean().optional().default(false),
+				}),
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				companyId: z.string().uuid(),
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const ownedJobIds = await ctx.db
-				.select({
-					jobId: jobs.id,
-				})
-				.from(jobs)
-				.leftJoin(accountJobs, eq(jobs.id, accountJobs.jobId))
-				.leftJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
-				.where(
-					and(
-						or(
-							eq(accountJobs.accountId, ctx.account.id),
-							eq(companyJobs.companyId, ctx.account.id)
-						),
-						isNull(jobs.deletedAt)
+			const { filter, cursor, pageSize, companyId } = input;
+
+			const ownedCompanyIds = ctx.ownedCompanies.map((c) => c.id);
+
+			if (!ownedCompanyIds.includes(companyId)) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "you are not the owner of the company",
+				});
+			}
+
+			const res = await withOffsetPagination(
+				ctx.db
+					.select({
+						bids,
+						job: {
+							id: jobs.id,
+							title: jobs.title,
+							description: jobs.description,
+							createdAt: jobs.createdAt,
+							deletedAt: jobs.deletedAt,
+						},
+					})
+					.from(bids)
+					.innerJoin(jobBids, and(eq(bids.id, jobBids.bidId)))
+					.innerJoin(jobs, eq(jobBids.jobId, jobs.id))
+					.where(
+						and(
+							eq(bids.senderCompanyId, companyId),
+							eq(bids.status, "pending"),
+							filter.jobIdFilter
+								? eq(jobBids.jobId, filter.jobIdFilter)
+								: undefined
+						)
 					)
-				);
+					.$dynamic(),
+				cursor,
+				pageSize
+			);
 
-			if (!ownedJobIds.length) {
-				return [];
+			return generateOffsetPaginationResponse(res, cursor, pageSize);
+		}),
+	getReceivedBidsByCompanyId: companyOwnerProcedure
+		.input(
+			z.object({
+				filter: z.object({
+					statuses: z
+						.array(z.enum(bidStatus.enumValues))
+						.optional()
+						.default(["pending"]),
+					jobIdFilter: z.string().uuid().optional(),
+					senderCompanyIdFilter: z.string().uuid().optional(),
+					includeDeleted: z.boolean().optional().default(false),
+				}),
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				companyId: z.string().uuid(),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const { filter, cursor, pageSize, companyId } = input;
+
+			const ownedCompanyIds = ctx.ownedCompanies.map((c) => c.id) || [];
+
+			if (!ownedCompanyIds.includes(companyId)) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "you are not the owner of the company",
+				});
 			}
 
-			const baseQuery = ctx.db
-				.select({
-					bids,
-					jobId: jobBids.jobId,
-				})
-				.from(bids)
-				.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
-				.$dynamic();
+			const res = await withOffsetPagination(
+				ctx.db
+					.select({
+						bids,
+						job: {
+							id: jobs.id,
+							title: jobs.title,
+							description: jobs.description,
+							createdAt: jobs.createdAt,
+							deletedAt: jobs.deletedAt,
+						},
+					})
+					.from(bids)
+					.innerJoin(companyJobs, eq(companyJobs.companyId, companyId))
+					.innerJoin(jobs, eq(companyJobs.jobId, jobs.id))
+					.innerJoin(
+						jobBids,
+						and(
+							eq(companyJobs.companyId, companyId),
+							eq(bids.id, jobBids.bidId)
+						)
+					)
+					.where(
+						and(
+							inArray(bids.status, filter.statuses),
+							filter.includeDeleted ? undefined : isNull(bids.deletedAt),
+							filter.jobIdFilter
+								? eq(jobBids.jobId, filter.jobIdFilter)
+								: undefined,
+							filter.senderCompanyIdFilter
+								? eq(bids.senderCompanyId, filter.senderCompanyIdFilter)
+								: undefined
+						)
+					)
+					.$dynamic(),
+				cursor,
+				pageSize
+			);
 
-			const whereClause = [
-				isNull(bids.deletedAt),
-				inArray(
-					jobBids.jobId,
-					ownedJobIds.map((j) => j.jobId)
-				),
-			];
+			return generateOffsetPaginationResponse(res, cursor, pageSize);
+		}),
+	getReceivedBidsByAccountId: accountProcedure
+		.input(
+			z.object({
+				filter: z.object({
+					statuses: z
+						.array(z.enum(bidStatus.enumValues))
+						.optional()
+						.default(["pending"]),
+					jobIdFilter: z.string().uuid().optional(),
+					senderCompanyIdFilter: z.string().uuid().optional(),
+					includeDeleted: z.boolean().optional().default(false),
+				}),
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				accountId: z.string().uuid(),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const { filter, cursor, pageSize, accountId } = input;
 
-			// use default bid statuses (anything except withdrawn) if not specified
-			if (input.statuses) {
-				whereClause.push(inArray(bids.status, input.statuses));
-			} else {
-				whereClause.push(not(eq(bids.status, "withdrawn")));
+			if (ctx.account.id !== accountId) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "you are not the owner of the company",
+				});
 			}
 
-			if (input.cursor) {
-				whereClause.push(gt(bids.id, input.cursor));
-			}
+			const res = await withOffsetPagination(
+				ctx.db
+					.select({
+						bids,
+						job: {
+							id: jobs.id,
+							title: jobs.title,
+							description: jobs.description,
+							createdAt: jobs.createdAt,
+							deletedAt: jobs.deletedAt,
+						},
+					})
+					.from(bids)
+					.innerJoin(accountJobs, eq(accountJobs.accountId, ctx.account.id))
+					.innerJoin(jobs, eq(accountJobs.jobId, jobs.id))
+					.innerJoin(
+						jobBids,
+						and(
+							eq(accountJobs.accountId, ctx.account.id),
+							eq(bids.id, jobBids.bidId)
+						)
+					)
+					.where(
+						and(
+							inArray(bids.status, filter.statuses),
+							filter.includeDeleted ? undefined : isNull(bids.deletedAt),
+							filter.jobIdFilter
+								? eq(jobBids.jobId, filter.jobIdFilter)
+								: undefined,
+							filter.senderCompanyIdFilter
+								? eq(bids.senderCompanyId, filter.senderCompanyIdFilter)
+								: undefined
+						)
+					)
+					.$dynamic(),
+				cursor,
+				pageSize
+			);
 
-			const response = await withCursorPagination(baseQuery, bids.id, {
-				where: whereClause,
-				cursor: input.cursor,
-				limit: input.limit,
-			});
-
-			return generateCursorResponse("bids.id", response, input.limit);
+			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 	getJobBids: accountProcedure
 		.input(
@@ -359,9 +462,7 @@ export const bidRouter = router({
 
 				createMessage(
 					{
-						sender: {
-							accountId,
-						},
+						senderAccountId: accountId,
 						recipients: {
 							accountIds: [ctx.account.id],
 							companyIds: [],
@@ -392,7 +493,7 @@ export const bidRouter = router({
 				});
 			}
 
-			if (bid.status !== bidStatus.enumValues[0]) {
+			if (bid.bids.status !== bidStatus.enumValues[0]) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 					message: "bid is not pending",
@@ -461,9 +562,7 @@ export const bidRouter = router({
 
 				createMessage(
 					{
-						sender: {
-							accountId,
-						},
+						senderAccountId: accountId,
 						recipients: {
 							accountIds: [ctx.account.id],
 							companyIds: [],
@@ -500,7 +599,7 @@ export const bidRouter = router({
 				});
 			}
 
-			if (bid.status !== bidStatus.enumValues[0]) {
+			if (bid.bids.status !== bidStatus.enumValues[0]) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 					message: "bid is not pending",
@@ -529,9 +628,7 @@ export const bidRouter = router({
 
 				createMessage(
 					{
-						sender: {
-							accountId,
-						},
+						senderAccountId: accountId,
 						recipients: {
 							accountIds: [ctx.account.id],
 							companyIds: [],
