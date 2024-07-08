@@ -90,7 +90,6 @@ const authSchema = pgSchema("auth");
 export const users = authSchema.table("users", {
 	id: uuid("id").primaryKey(),
 });
-
 export const industries = pgTable("industries", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	name: varchar("name", { length: 255 }).notNull(),
@@ -149,6 +148,7 @@ export const jobs = pgTable(
 			.notNull(),
 		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+		// TODO: failed to parse database type 'tsvector'
 		englishSearchVector: tsvector("english_search_vector"),
 	},
 	(table) => {
@@ -201,7 +201,7 @@ export const messages = pgTable(
 			onDelete: "restrict",
 			onUpdate: "cascade",
 		}),
-
+		// TODO: failed to parse database type 'tsvector'
 		englishSearchVector: tsvector("english_search_vector"),
 	},
 	(table) => {
@@ -293,7 +293,7 @@ export const companies = pgTable(
 			.notNull(),
 		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-
+		// TODO: failed to parse database type 'tsvector'
 		englishSearchVector: tsvector("english_search_vector"),
 	},
 	(table) => {
@@ -322,7 +322,7 @@ export const accounts = pgTable(
 			.notNull(),
 		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-
+		// TODO: failed to parse database type 'tsvector'
 		englishSearchVector: tsvector("english_search_vector"),
 	},
 	(table) => {
@@ -341,6 +341,51 @@ export const gooseDbVersion = pgTable("goose_db_version", {
 	versionId: bigint("version_id", { mode: "number" }).notNull(),
 	isApplied: boolean("is_applied").notNull(),
 	tstamp: timestamp("tstamp", { mode: "string" }).defaultNow(),
+});
+
+export const jobRecommendationHistory = pgTable("job_recommendation_history", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	accountId: uuid("account_id")
+		.notNull()
+		.references(() => accounts.id),
+	jobId: uuid("job_id")
+		.notNull()
+		.references(() => jobs.id),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
+
+export const jobViewHistory = pgTable("job_view_history", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	accountId: uuid("account_id")
+		.notNull()
+		.references(() => accounts.id),
+	jobId: uuid("job_id")
+		.notNull()
+		.references(() => jobs.id),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+});
+
+export const accountJobFavourites = pgTable("account_job_favourites", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	accountId: uuid("account_id")
+		.notNull()
+		.references(() => accounts.id),
+	jobId: uuid("job_id")
+		.notNull()
+		.references(() => jobs.id),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
 export const accountJobs = pgTable(

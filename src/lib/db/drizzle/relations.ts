@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { companies, bids, addresses, jobs, accounts, messages, messageCompanyRecipients, messageAccountRecipients, messageThread, usersInAuth, accountJobs, companyJobs, jobBids, companyIndustries, industries, jobIndustries } from "./schema";
+import { companies, bids, addresses, jobs, accounts, messages, messageCompanyRecipients, messageAccountRecipients, messageThread, usersInAuth, jobRecommendationHistory, jobViewHistory, accountJobFavourites, accountJobs, companyJobs, jobBids, companyIndustries, industries, jobIndustries } from "./schema";
 
 export const bidsRelations = relations(bids, ({one, many}) => ({
 	company: one(companies, {
@@ -30,6 +30,9 @@ export const jobsRelations = relations(jobs, ({one, many}) => ({
 		fields: [jobs.addressId],
 		references: [addresses.id]
 	}),
+	jobRecommendationHistories: many(jobRecommendationHistory),
+	jobViewHistories: many(jobViewHistory),
+	accountJobFavourites: many(accountJobFavourites),
 	accountJobs: many(accountJobs),
 	companyJobs: many(companyJobs),
 	jobBids: many(jobBids),
@@ -63,6 +66,9 @@ export const accountsRelations = relations(accounts, ({one, many}) => ({
 		fields: [accounts.userId],
 		references: [usersInAuth.id]
 	}),
+	jobRecommendationHistories: many(jobRecommendationHistory),
+	jobViewHistories: many(jobViewHistory),
+	accountJobFavourites: many(accountJobFavourites),
 	accountJobs: many(accountJobs),
 }));
 
@@ -97,6 +103,39 @@ export const messageThreadRelations = relations(messageThread, ({one}) => ({
 
 export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	accounts: many(accounts),
+}));
+
+export const jobRecommendationHistoryRelations = relations(jobRecommendationHistory, ({one}) => ({
+	account: one(accounts, {
+		fields: [jobRecommendationHistory.accountId],
+		references: [accounts.id]
+	}),
+	job: one(jobs, {
+		fields: [jobRecommendationHistory.jobId],
+		references: [jobs.id]
+	}),
+}));
+
+export const jobViewHistoryRelations = relations(jobViewHistory, ({one}) => ({
+	account: one(accounts, {
+		fields: [jobViewHistory.accountId],
+		references: [accounts.id]
+	}),
+	job: one(jobs, {
+		fields: [jobViewHistory.jobId],
+		references: [jobs.id]
+	}),
+}));
+
+export const accountJobFavouritesRelations = relations(accountJobFavourites, ({one}) => ({
+	account: one(accounts, {
+		fields: [accountJobFavourites.accountId],
+		references: [accounts.id]
+	}),
+	job: one(jobs, {
+		fields: [accountJobFavourites.jobId],
+		references: [jobs.id]
+	}),
 }));
 
 export const accountJobsRelations = relations(accountJobs, ({one}) => ({
