@@ -5,9 +5,12 @@ import {
 	jobs,
 	companies,
 	accounts,
+	jobRecommendationHistory,
+	jobViewHistory,
+	accountJobFavourites,
 } from "@/lib/db/drizzle/schema";
 import { router, accountProcedure } from "../trpc";
-import { desc, eq, exists, or, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { industries, jobIndustries } from "@/lib/db/drizzle/schema";
 import { EditJobSchema, NewJobSchema } from "@/lib/validations/job";
@@ -264,18 +267,14 @@ export const jobRouter = router({
 					.from(jobs)
 					.where(
 						and(
-							not(
-								inArray(
-									jobs.id,
-									ownedJobs.map((job) => job.id)
-								)
-							),
-							not(
-								inArray(
-									jobs.id,
-									ownedJobs.map((job) => job.id)
-								)
-							),
+							ownedJobs.length > 0
+								? not(
+										inArray(
+											jobs.id,
+											ownedJobs.map((job) => job.id)
+										)
+								  )
+								: undefined,
 							includeDeleted ? undefined : isNull(jobs.deletedAt)
 						)
 					)
@@ -285,6 +284,91 @@ export const jobRouter = router({
 				pageSize
 			);
 
+			const output = generateOffsetPaginationResponse(res, cursor, pageSize);
+
+			// Use output since it slices and removes a job for pagination
+			const recommendedJobs = output.data.map((job) => ({
+				jobId: job.id,
+				accountId: ctx.account.id,
+			}));
+
+			// Track job recommendation
+			await ctx.db.insert(jobRecommendationHistory).values(recommendedJobs);
+
+			return output;
+		}),
+	favouriteJob: accountProcedure
+		.input(z.object({ jobId: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			const ownedJobIds = await getOwnedJobs(ctx, ctx.db, ctx.account.id);
+
+			if (ownedJobIds.some((job) => job.id === input.jobId)) {
+				throw new Error("You cannot favourite a job you own");
+			}
+
+			await ctx.db.insert(accountJobFavourites).values({
+				accountId: ctx.account.id,
+				jobId: input.jobId,
+			});
+		}),
+	unfavouriteJob: accountProcedure
+		.input(z.object({ jobId: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db
+				.update(accountJobFavourites)
+				.set({
+					deletedAt: new Date().toISOString(),
+				})
+				.where(
+					and(
+						eq(accountJobFavourites.accountId, ctx.account.id),
+						eq(accountJobFavourites.jobId, input.jobId)
+					)
+				);
+		}),
+	getFavouritedJobs: accountProcedure
+		.input(
+			z.object({
+				cursor: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+				includeDeleted: z.boolean().optional().default(false),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const { cursor, pageSize, includeDeleted } = input;
+
+			const res = await withOffsetPagination(
+				ctx.db
+					.select({
+						id: jobs.id,
+						title: jobs.title,
+						deletedAt: jobs.deletedAt,
+					})
+					.from(jobs)
+					.innerJoin(
+						accountJobFavourites,
+						eq(jobs.id, accountJobFavourites.jobId)
+					)
+					.where(
+						and(
+							includeDeleted ? undefined : isNull(jobs.deletedAt),
+							eq(accountJobFavourites.accountId, ctx.account.id)
+						)
+					)
+					.orderBy(desc(accountJobFavourites.createdAt))
+					.$dynamic(),
+				cursor,
+				pageSize
+			);
+
 			return generateOffsetPaginationResponse(res, cursor, pageSize);
+		}),
+	trackJobView: accountProcedure
+		.input(z.object({ jobId: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			await ctx.db.insert(jobViewHistory).values({
+				jobId: input.jobId,
+				accountId: ctx.account.id,
+			});
 		}),
 });

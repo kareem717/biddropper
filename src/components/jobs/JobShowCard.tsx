@@ -1,6 +1,6 @@
 "use client"
 
-import { FC, ComponentPropsWithoutRef } from "react"
+import { FC, ComponentPropsWithoutRef, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/utils"
 import { titleCase } from "title-case";
@@ -29,8 +29,18 @@ export interface JobShowCardProps extends ComponentPropsWithoutRef<"div"> {
 
 export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }) => {
   const { data, isLoading } = trpc.job.getJobFull.useQuery({ id: jobId })
+  const { mutate } = trpc.job.trackJobView.useMutation()
+
   const { companies } = useCompany()
   const { account } = useAuth()
+
+  useEffect(() => {
+    if (isLoading) return
+    if (!data) return
+    if (account) {
+      mutate({ jobId });
+    }
+  }, [mutate, jobId, account, data, isLoading]);
 
   if (isLoading) return <div>Loading...</div>
   if (!data) return <div>Job not found</div>
@@ -55,6 +65,8 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
       href: `/companies/${data.ownerCompany.id}`
     }
   }
+
+
 
   console.log(companies)
   return (

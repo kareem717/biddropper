@@ -51,7 +51,7 @@ export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) 
         <p className="text-muted-foreground text-sm">Posted {timeSince(new Date(job.createdAt))}</p>
       </CardContent>
       <CardFooter className="bg-primary px-6 py-4">
-        <Link href={`/jobs/${jobId}`} className="text-background font-semibold">View Details</Link>
+        <Link href={`/explore/jobs/${jobId}`} className="text-background font-semibold">View Details</Link>
       </CardFooter>
     </Card>
   )
