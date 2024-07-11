@@ -88,6 +88,7 @@ import {
   Cog,
   Ellipsis,
   MailPlus,
+  Rocket,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
@@ -97,6 +98,7 @@ export type Icon = LucideIcon;
 
 export const Icons = {
   home: Home,
+  rocket: Rocket,
   mailPlus: MailPlus,
   homeIcon: HomeIcon,
   building: Building,
