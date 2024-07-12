@@ -33,7 +33,6 @@ export const SupportRequestEmail: React.FC<Readonly<SupportRequestEmailProps>> =
       Request: <span className="text-muted-foreground text-sm">{requestText}</span>
     </p>
     <hr />
-    <Icons.biddropper className="h-40 w-40" />
     <a href={env.NEXT_PUBLIC_APP_URL}>biddropper.com</a>
     <p>Ontario, Canada</p>
   </div>
