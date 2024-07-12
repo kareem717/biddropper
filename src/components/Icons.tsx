@@ -33,6 +33,7 @@ import {
   Filter,
   Footprints,
   HardHat,
+  ArrowUpRight,
   Home,
   Image,
   Library,
@@ -90,6 +91,8 @@ import {
   MailPlus,
   Rocket,
   Info,
+  Map,
+  Radio,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
@@ -99,10 +102,13 @@ export type Icon = LucideIcon;
 
 export const Icons = {
   home: Home,
+  map: Map,
+  radio: Radio,
   info: Info,
   minus: Minus,
   rocket: Rocket,
   mailPlus: MailPlus,
+  arrowUpRight: ArrowUpRight,
   homeIcon: HomeIcon,
   building: Building,
   ellipsis: Ellipsis,

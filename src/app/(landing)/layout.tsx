@@ -1,9 +1,6 @@
 
 import { LandingFooter } from "@/components/landing/Footer";
-import { LandingHero } from "@/components/landing/Hero";
 import { LandingNavBar } from "@/components/landing/NavBar";
-import { Button } from "@/components/ui/button";
-
 
 export default async function LandingLayout({
   children,

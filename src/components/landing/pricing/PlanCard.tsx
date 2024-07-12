@@ -14,7 +14,7 @@ export interface PricingCardProps extends ComponentPropsWithoutRef<'div'> {
 
 export const PricingCard = ({ className, isAnnual, plan, ...props }: PricingCardProps) => {
   return (
-    <div className={cn("rounded-lg border shadow-sm flex flex-col justify-between items-center gap-4 py-6 w-72 h-[400px]", plan.highlight && "bg-muted-foreground/5 scale-110 mx-3", className)} {...props}>
+    <div className={cn("rounded-lg border shadow-sm flex flex-col justify-between items-center gap-12 py-6 w-72", plan.highlight && "bg-muted-foreground/5 scale-110 mx-3", className)} {...props}>
       <div className="px-6 flex flex-col gap-2 items-start justify-start w-full">
         <h2 className="text-lg font-medium leading-6 text-primary">{plan.name}</h2>
         <p className="mt-8">
