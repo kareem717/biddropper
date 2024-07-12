@@ -1,3 +1,4 @@
+import { PricingHero } from "@/components/landing/pricing/PricingHero";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,9 +7,11 @@ export const metadata: Metadata = {
 };
 
 export default function PricingPage() {
-	return (
-		<div>
-			pricing
-		</div>
-	);
+  return (
+    <div>
+      <section className="md:my-20 my-10">
+        <PricingHero />
+      </section>
+    </div>
+  );
 }

@@ -11,6 +11,7 @@ import AuthProvider from "@/components/providers/AuthProvider";
 import { cn } from "@/utils";
 import { ShowCompany } from "@/lib/validations/company";
 import CompanyProvider from "@/components/providers/CompanyProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -53,7 +54,9 @@ export default async function RootLayout({
 								enableSystem
 								disableTransitionOnChange
 							>
-								{children}
+								<TooltipProvider>
+									{children}
+								</TooltipProvider>
 							</ThemeProvider>
 							<Toaster richColors />
 						</TrpcProvider>

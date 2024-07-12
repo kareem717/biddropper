@@ -13,7 +13,7 @@ export default async function LandingLayout({
 
   return (
     <div className="flex flex-col min-h-screen">
-      <LandingNavBar className="w-full h-10 sm:h-16" />
+      <LandingNavBar className="w-full h-12 sm:h-16" />
       <main className="flex-1 mt-10 sm:mt-16">
         {children}
       </main>

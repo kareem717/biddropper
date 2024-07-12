@@ -89,6 +89,7 @@ import {
   Ellipsis,
   MailPlus,
   Rocket,
+  Info,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
@@ -98,6 +99,8 @@ export type Icon = LucideIcon;
 
 export const Icons = {
   home: Home,
+  info: Info,
+  minus: Minus,
   rocket: Rocket,
   mailPlus: MailPlus,
   homeIcon: HomeIcon,
@@ -144,7 +147,6 @@ export const Icons = {
   check: Check,
   add: Plus,
   addCircle: PlusCircle,
-  remove: Minus,
   view: Eye,
   gavel: Gavel,
   hide: EyeOff,
