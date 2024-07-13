@@ -50,7 +50,7 @@ export const LandingNavBar = ({ className, items, cta, secondaryCta, ...props }:
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <div className={cn("flex items-center justify-between backdrop-blur-md border-b fixed top-0 z-50 w-full px-4 sm:px-6 lg:px-8", className)} {...props}>
+    <div className={cn("flex items-center justify-between sm:backdrop-blur-md bg-card sm:bg-transparent border-b fixed top-0 z-50 w-full px-4 sm:px-6 lg:px-8", className)} {...props}>
       <LogoDiv />
       <NavigationMenu className="hidden lg:block">
         <NavigationMenuList>
@@ -60,8 +60,8 @@ export const LandingNavBar = ({ className, items, cta, secondaryCta, ...props }:
                 <NavigationMenuItem key={index}>
                   <NavigationMenuTrigger className="bg-transparent">{item.label}</NavigationMenuTrigger>
                   <NavigationMenuContent className="flex flex-col items-center justify-center gap-2 p-1">
-                    {item.submenu.map((subitem, index) => (
-                      <Link href={subitem.href}>
+                    {item.submenu.map((subitem, subIndex) => (
+                      <Link href={subitem.href} key={subIndex}>
                         <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
                           {subitem.label}
                         </NavigationMenuLink>
@@ -114,6 +114,7 @@ export const LandingNavBar = ({ className, items, cta, secondaryCta, ...props }:
                         {item.submenu.map((subitem, index) => (
                           <Link
                             href={subitem.href}
+                            key={index}
                             onClick={() => setIsOpen(false)}
                           >
                             {subitem.label}

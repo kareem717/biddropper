@@ -1,3 +1,5 @@
+"use client"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -62,7 +64,7 @@ export const CreateJobForm = () => {
     throw new Error("Account or user not found")
   }
 
-  const { data: ownedCompanies, isLoading: isOwnedCompaniesLoading } = trpc.company.getOwnedCompanies.useQuery();
+  const { data: ownedCompanies, isLoading: isOwnedCompaniesLoading } = trpc.company.getOwnedCompanies.useQuery({});
 
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
