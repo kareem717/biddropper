@@ -2,11 +2,12 @@
 
 import { cn } from "@/utils"
 import Image from "next/image"
-import { ComponentPropsWithoutRef } from "react"
+import { ComponentPropsWithoutRef, FC } from "react"
 import { Icons } from "@/components/Icons"
+import { Image as ImageType } from "@/config/types"
 
 export interface FeatureCardProps extends ComponentPropsWithoutRef<'div'> {
-  imageSrc: string
+  image: ImageType
   header: string
   description: string
   points: {
@@ -17,7 +18,7 @@ export interface FeatureCardProps extends ComponentPropsWithoutRef<'div'> {
   orientation?: "left" | "right"
 }
 
-export const FeatureCard = ({ className, imageSrc, header, description, points, orientation = "left", ...props }: FeatureCardProps) => {
+export const FeatureCard: FC<FeatureCardProps> = ({ className, image, header, description, points, orientation = "left", ...props }) => {
   return (
     <div className={cn("overflow-hidden py-12 sm:py-24", className)} {...props}>
       <div className="p-4 mx-auto max-w-7xl">
@@ -48,7 +49,7 @@ export const FeatureCard = ({ className, imageSrc, header, description, points, 
               </dl>
             </div>
           </div>
-          <Image src={imageSrc} width={768} height={512} className={cn("w-[48rem] max-w-none rounded-xl border shadow-xl sm:w-[48rem]", orientation === "left" ? "md:-ml-4 lg:-ml-0" : "md:-mr-4 lg:-mr-0")} alt="Feature image" />
+          <Image src={image.src} width={image.width} height={image.height} className={cn("w-[48rem] max-w-none rounded-xl border shadow-xl sm:w-[48rem]", orientation === "left" ? "md:-ml-4 lg:-ml-0" : "md:-mr-4 lg:-mr-0")} alt={image.alt} />
         </div>
       </div>
     </div>

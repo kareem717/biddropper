@@ -1,9 +1,10 @@
 "use client"
 
 import { Icons } from "@/components/Icons"
-import { Button } from "@/components/ui/button"
-import { Plan } from "@/config/pricing"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { Plan } from "@/config/landing/pricing"
 import { cn } from "@/utils"
+import Link from "next/link"
 import { ComponentPropsWithoutRef } from "react"
 
 
@@ -18,7 +19,7 @@ export const PricingCard = ({ className, isAnnual, plan, ...props }: PricingCard
       <div className="px-6 flex flex-col gap-2 items-start justify-start w-full">
         <h2 className="text-lg font-medium leading-6 text-primary">{plan.name}</h2>
         <p className="mt-8">
-          <span className="text-4xl font-bold tracking-tight">${isAnnual ? plan.price.annual : plan.price.monthly}</span>{" "}
+          <span className="text-4xl font-bold tracking-tight">${isAnnual ? plan.price.annual : plan.price.monthly}</span>
           <span className="text-base font-medium text-muted-foreground">/month</span>
         </p>
         <p className="mt-4 text-sm  text-muted-foreground">{plan.description}</p>
@@ -34,7 +35,7 @@ export const PricingCard = ({ className, isAnnual, plan, ...props }: PricingCard
         </ul>
       </div>
       <div className="px-4 flex justify-center w-full">
-        <Button className="w-full">{plan.cta}</Button>
+        <Link href={plan.cta.href} className={cn(buttonVariants(), "w-full")}>{plan.cta.label}</Link>
       </div>
     </div>
   )

@@ -1,24 +1,24 @@
 import { Metadata } from "next";
 import Image from "next/image";
-import about from "@/config/about";
+import AboutConfig from "@/config/landing/about";
 
 export const metadata: Metadata = {
-  title: about.title,
+  title: AboutConfig.title,
   description: "About",
 };
 
 export default function AboutPage() {
   return (
-    <>
+    <div>
       <div className="mt-20 relative sm:mt-44">
         <h1 className="md:text-5xl text-3xl font-bold relative mx-auto max-w-2xl text-left">
-          {about.title}
+          {AboutConfig.title}
         </h1>
         <div className="mx-auto mt-6 max-w-2xl space-y-5 text-left text-lg font-medium leading-[1.75 text-muted-foreground">
-          {about.description.map((item) => (
-            <p>{item}</p>
+          {AboutConfig.description.map((item) => (
+            <p key={item}>{item}</p>
           ))}
-          <p className="text-base italic text-muted-foreground/80">- Kareem Yakubu, Founder of biddropper</p>
+          <p className="text-base italic text-muted-foreground/80">- {AboutConfig.descriptionAuthor}</p>
         </div>
       </div>
       <div className="absolute inset-x-0 mx-auto -mb-16 h-64 w-[600px] transform-gpu rounded-full bg-secondary/20 blur-[90px] sm:-mb-32" />
@@ -28,22 +28,22 @@ export default function AboutPage() {
           The Team
         </h3>
         <div className="mx-auto mt-6 max-w-2xl space-y-5 text-left text-lg font-medium leading-[1.75] text-muted-foreground">
-          {about.teamDescription.map((item) => (
-            <p>{item}</p>
+          {AboutConfig.teamDescription.map((item) => (
+            <p key={item}>{item}</p>
           ))}
         </div>
         <Image
-          alt="biddropper team"
-          src={about.teamPhoto.src}
-          width="1920"
-          height="1080"
+          alt={AboutConfig.teamPhoto.alt}
+          src={AboutConfig.teamPhoto.src}
+          width={AboutConfig.teamPhoto.width}
+          height={AboutConfig.teamPhoto.height}
           decoding="async"
           data-nimg="1"
           className="mx-auto mt-12 w-full max-w-2xl rounded-2xl border-x border-t shadow-2xl shadow-accent"
           loading="lazy"
         />
-        <p className="mt-6 text-center text-sm text-muted-foreground">{about.teamPhoto.caption}</p>
+        <p className="mt-6 text-center text-sm text-muted-foreground">{AboutConfig.teamPhoto.caption}</p>
       </div>
-    </>
+    </div>
   );
 }

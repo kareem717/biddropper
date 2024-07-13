@@ -1,5 +1,6 @@
 
 import { FeatureFooter } from "@/components/landing/features/FeatureFooter";
+import FeaturesConfig from "@/config/landing/features";
 
 export default async function LandingLayout({
   children,
@@ -10,7 +11,10 @@ export default async function LandingLayout({
     <div className="flex flex-col min-h-screen">
       {children}
       <section className="my-6">
-        <FeatureFooter />
+        <FeatureFooter
+          cta={FeaturesConfig.footer.cta}
+          secondaryCta={FeaturesConfig.footer.secondaryCta}
+        />
       </section>
     </div>
   );

@@ -1,18 +1,18 @@
 "use client"
+
 import { ComponentPropsWithoutRef, useState } from "react"
 import { PricingCard } from "./PlanCard"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import pricing from "@/config/pricing"
+import pricing from "@/config/landing/pricing"
+import { cn } from "@/utils"
 
-export interface PricingHeroProps extends ComponentPropsWithoutRef<'div'> {
-}
-
+export interface PricingHeroProps extends ComponentPropsWithoutRef<'div'> {}
 
 export const PricingHero = ({ className, ...props }: PricingHeroProps) => {
   const [isAnnual, setIsAnnual] = useState(true)
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8 w-full items-center justify-center">
+    <div className={cn("flex flex-col gap-6 md:gap-8 w-full items-center justify-center", className)} {...props}>
       <div className="px-4 pb-4 sm:px-0 text-center space-y-4 md:space-y-8">
         <h1 className="md:text-5xl text-3xl mx-auto max-w-3xl">{pricing.hero.title}</h1>
         <h2 className="md:text-xl max-w-lg mx-auto">{pricing.hero.description}</h2>

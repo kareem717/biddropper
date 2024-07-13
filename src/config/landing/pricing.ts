@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { CTA } from "../types";
 
 export type Plan = {
 	name: string;
@@ -8,7 +8,7 @@ export type Plan = {
 		monthly: number;
 	};
 	featureSummary: string[];
-	cta: string;
+	cta: CTA;
 	highlight?: boolean;
 };
 
@@ -18,7 +18,10 @@ const plans: Plan[] = [
 		price: { annual: 12, monthly: 19 },
 		description: "A basic plan for individuals.",
 		featureSummary: ["Bidding", "Company Profile"],
-		cta: "Get started for free",
+		cta: {
+			label: "Get started for free",
+			href: "/get-started",
+		},
 	},
 	{
 		name: "Pro",
@@ -26,14 +29,20 @@ const plans: Plan[] = [
 		description: "A plan for individuals.",
 		featureSummary: ["Everything in Starter", "CRM"],
 		highlight: true,
-		cta: "Get started for free",
+		cta: {
+			label: "Get started for free",
+			href: "/get-started",
+		},
 	},
 	{
 		name: "Enterprise",
 		price: { annual: 300, monthly: 450 },
 		description: "A plan for qweqwe.",
 		featureSummary: ["Everything in Pro", "Custom Domain"],
-		cta: "Contact us",
+		cta: {
+			label: "Contact us",
+			href: "/contact",
+		},
 	},
 ];
 

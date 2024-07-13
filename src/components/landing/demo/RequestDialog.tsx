@@ -1,5 +1,6 @@
 "use client"
-import { ComponentPropsWithoutRef } from "react"
+
+import { ComponentPropsWithoutRef, FC } from "react"
 import {
   Dialog,
   DialogContent,
@@ -11,12 +12,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/utils"
 import { DemoRequestForm } from "./RequestForm"
-import demo from "@/config/demo"
+import demo from "@/config/landing/demo"
 
-export interface DemoRequestDialogProps extends ComponentPropsWithoutRef<typeof DialogTrigger> {
-}
+export interface DemoRequestDialogProps extends ComponentPropsWithoutRef<typeof DialogTrigger> { }
 
-export const DemoRequestDialog = ({ className, ...props }: DemoRequestDialogProps) => {
+export const DemoRequestDialog: FC<DemoRequestDialogProps> = ({ className, ...props }) => {
   return (
     <Dialog>
       <DialogTrigger asChild className={cn("w-full", className)} {...props}>

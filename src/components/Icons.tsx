@@ -93,6 +93,7 @@ import {
   Info,
   Map,
   Radio,
+  Heart,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
@@ -106,6 +107,7 @@ export const Icons = {
   radio: Radio,
   info: Info,
   minus: Minus,
+  heart: Heart,
   rocket: Rocket,
   mailPlus: MailPlus,
   arrowUpRight: ArrowUpRight,

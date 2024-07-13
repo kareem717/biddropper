@@ -1,11 +1,9 @@
 "use client"
-
 import { cn } from "@/utils"
-import { ComponentPropsWithoutRef } from "react"
+import { ComponentPropsWithoutRef, useState } from "react"
 import Link from "next/link"
 import { LogoDiv } from "../app/LogoDiv"
 import { Button } from "../ui/button"
-import redirects from "@/config/redirects"
 import {
   Sheet,
   SheetContent,
@@ -16,70 +14,81 @@ import { Icons } from "../Icons"
 import {
   NavigationMenu,
   NavigationMenuContent,
-  NavigationMenuIndicator,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  NavigationMenuViewport,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import landing from "@/config/landing"
+import { buttonVariants } from "@/components/ui/button"
+import { CTA } from "@/config/types"
 
 export interface LandingNavBarProps extends ComponentPropsWithoutRef<'div'> {
+  items: ({
+    label: string;
+    submenu: {
+      label: string;
+      href: string;
+    }[];
+    href?: undefined;
+  } | {
+    label: string;
+    href: string;
+    submenu?: undefined;
+  })[]
+  cta: CTA
+  secondaryCta: CTA
 }
 
+export const LandingNavBar = ({ className, items, cta, secondaryCta, ...props }: LandingNavBarProps) => {
+  const [isOpen, setIsOpen] = useState(false)
 
-export const LandingNavBar = ({ className, ...props }: LandingNavBarProps) => {
   return (
     <div className={cn("flex items-center justify-between backdrop-blur-md border-b fixed top-0 z-50 w-full px-4 sm:px-6 lg:px-8", className)} {...props}>
       <LogoDiv />
       <NavigationMenu className="hidden lg:block">
         <NavigationMenuList>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Features</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <Link href={redirects.features.sell}>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Sell
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={redirects.pricing} legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Pricing
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={redirects.demo} legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Demo
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={redirects.about} legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                About
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={redirects.contact} legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Contact Us
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
+          {items.map((item, index) => {
+            if (item.submenu) {
+              return (
+                <NavigationMenuItem key={index}>
+                  <NavigationMenuTrigger className="bg-transparent">{item.label}</NavigationMenuTrigger>
+                  <NavigationMenuContent className="flex flex-col items-center justify-center gap-2 p-1">
+                    {item.submenu.map((subitem, index) => (
+                      <Link href={subitem.href}>
+                        <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
+                          {subitem.label}
+                        </NavigationMenuLink>
+                      </Link>
+                    ))}
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              )
+            } else {
+              return (
+                <NavigationMenuItem key={index}>
+                  <Link href={item.href} legacyBehavior passHref>
+                    <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
+                      {item.label}
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              )
+            }
+          })}
         </NavigationMenuList>
       </NavigationMenu>
-      <div className="hidden lg:flex flex-row items-center justify-between gap-2 ">
-        <Button variant="ghost">Demo</Button>
-        <Button>Get Started</Button>
+      <div className="hidden lg:flex flex-row items-center justify-between gap-2">
+        <Link href={cta.href} className={cn(buttonVariants(), "w-full")}>{cta.label}</Link>
+        <Link href={secondaryCta.href} className={cn(buttonVariants({ variant: "outline" }), "w-full")}>{secondaryCta.label}</Link>
       </div>
-      <Sheet>
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger className="lg:hidden" asChild>
           <Button variant="ghost">
             <Icons.menu className="w-6 h-6" />
@@ -91,16 +100,46 @@ export const LandingNavBar = ({ className, ...props }: LandingNavBarProps) => {
               <LogoDiv className="w-full" />
             </SheetHeader>
             <nav className="flex flex-col items-start justify-between gap-4">
-              <Link href={redirects.features.sell} className="text-sm hover:text-muted-foreground transition-all duration-200">Sell</Link>
-              <Link href={redirects.pricing} className="text-sm hover:text-muted-foreground transition-all duration-200">Pricing</Link>
-              <Link href={redirects.about} className="text-sm hover:text-muted-foreground transition-all duration-200">Demo</Link>
-              <Link href={redirects.about} className="text-sm hover:text-muted-foreground transition-all duration-200">About</Link>
-              <Link href={redirects.contact} className="text-sm hover:text-muted-foreground transition-all duration-200">Contact Us</Link>
+              {items.map((item, index) => {
+                if (item.submenu) {
+                  return (
+                    <Collapsible className="flex flex-col items-start justify-between gap-2" key={index}>
+                      <div className="flex flex-row items-center justify-between gap-2">
+                        <span>{item.label}</span>
+                        <CollapsibleTrigger >
+                          <Icons.chevronDown className="w-4 h-4" />
+                        </CollapsibleTrigger>
+                      </div>
+                      <CollapsibleContent className="ml-3 text-sm text-muted-foreground hover:text-foreground transition-all duration-200 flex flex-col items-start justify-center gap-2">
+                        {item.submenu.map((subitem, index) => (
+                          <Link
+                            href={subitem.href}
+                            onClick={() => setIsOpen(false)}
+                          >
+                            {subitem.label}
+                          </Link>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )
+                } else {
+                  return (
+                    <Link
+                      key={index}
+                      href={item.href}
+                      className="text-sm hover:text-muted-foreground transition-all duration-200"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                }
+              })}
             </nav>
           </div>
-          <div className="flex flex-row items-center justify-between gap-2 w-full">
-            <Button className="w-full">Get Started</Button>
-            <Button variant="secondary" className="w-full">Demo</Button>
+          <div className="flex flex-row items-center justify-between gap-4 w-full">
+            <Link href={landing.cta.href} className={cn(buttonVariants(), "w-full")}>{landing.cta.label}</Link>
+            <Link href={landing.secondaryCta.href} className={cn(buttonVariants({ variant: "outline" }), "w-full")}>{landing.secondaryCta.label}</Link>
           </div>
         </SheetContent>
       </Sheet>

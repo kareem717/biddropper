@@ -1,17 +1,9 @@
 "use client"
 
-import { trpc } from "@/lib/trpc/client"
-import { cn, timeSince } from "@/utils"
 import { ComponentPropsWithoutRef } from "react"
-import { Badge } from "@/components/ui/badge"
-import { titleCase } from "title-case"
 import Link from "next/link"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../ui/card"
-import { ScrollArea, ScrollBar } from "../ui/scroll-area"
 
-export interface LandingFooterProps extends ComponentPropsWithoutRef<'div'> {
-}
-
+export interface LandingFooterProps extends ComponentPropsWithoutRef<'div'> {}
 
 export const LandingFooter = ({ className, ...props }: LandingFooterProps) => {
   return (

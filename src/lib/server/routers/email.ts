@@ -9,7 +9,7 @@ import {
 	DemoRequestEmail,
 	DemoRequestCallbackEmail,
 } from "@/components/emails/DemoRequest";
-import demo from "@/config/demo";
+import demo from "@/config/landing/demo";
 
 export const emailRouter = router({
 	submitFeedback: accountProcedure
