@@ -1,6 +1,7 @@
 "use client";
 
 import { ChartShell } from "@/components/dashboard/ChartShell";
+import { MetricSummary } from "@/components/dashboard/MetricSummary";
 import {
 	Select,
 	SelectContent,
@@ -27,10 +28,8 @@ export default function DashboardPage() {
 			</div>
 			<div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mt-8">
 				{[...Array(4)].map((_, i) => (
-					<ChartShell key={i} title="Total Bids">
-						<div className="w-full">
-							hello
-						</div>
+					<ChartShell key={i}>
+						<MetricSummary label="Total Bids" icon="gavel" value="100K" percentageChange={i % 2 === 0 ? 10 : -10} description="This is a description" />
 					</ChartShell>
 				))}
 			</div>

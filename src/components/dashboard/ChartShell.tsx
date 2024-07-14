@@ -17,15 +17,16 @@ export interface ChartShellProps extends ComponentPropsWithoutRef<typeof Card> {
 }
 
 export const ChartShell: FC<ChartShellProps> = ({ title, description, footer, className, children, ...props }) => {
+  const needsHeader = title || description
   return (
     <Card className={cn(className)} {...props}>
-      {title || description ? (
+      {needsHeader ? (
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
       ) : null}
-      <CardContent className="flex justify-center items-center">
+      <CardContent className={cn("flex justify-center items-center", needsHeader ? "pt-0" : "pt-6")}>
         {children}
       </CardContent>
       {footer ? <CardFooter>{footer}</CardFooter> : null}
