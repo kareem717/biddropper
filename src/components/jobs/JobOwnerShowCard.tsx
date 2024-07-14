@@ -9,10 +9,7 @@ import Link from "next/link"
 import { trpc } from "@/lib/trpc/client"
 import { AddressDisplay } from "@/components/app/AddressDisplay"
 import { ShowAddress } from "@/lib/validations/address"
-import { useAuth } from "../providers/AuthProvider"
-import { useCompany } from "../providers/CompanyProvider"
-import { DropBidForm } from "../bids/DropBidForm"
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 import { Icons } from "../Icons"
+
 export interface JobOwnerShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
 }
@@ -46,11 +44,12 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
       })
     }
   })
-  const { companies } = useCompany()
-  const { account } = useAuth()
 
-  if (isLoading) return <div>Loading...</div>
+  const { data: bids, isLoading: isBidsLoading } = trpc.bid.getRecievedBidsByJobId.useQuery({ jobId })
+
+  if (isLoading || isBidsLoading) return <div>Loading...</div>
   if (!data) return <div>Job not found</div>
+
 
   if (!data.ownerAccount && !data.ownerCompany) throw new Error("Owner not found")
 
@@ -78,7 +77,7 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
   }
 
   return (
-    <div className={cn("flex flex-col md:flex-row gap-4", className)} {...props}>
+    <div  {...props} className={cn("flex flex-col md:flex-row gap-4", className)}>
       <div className="w-full">
         <div className="grid gap-4 h-full">
           <div className="flex items-center justify-between">
@@ -140,7 +139,7 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
         </div>
       </div>
       <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
-        <ReceivedBidIndexShell jobId={jobId} />
+        <ReceivedBidIndexShell bids={bids || []} />
       </div>
     </div>
   )

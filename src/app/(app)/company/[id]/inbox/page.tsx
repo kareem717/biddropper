@@ -2,6 +2,7 @@
 
 import { MessageInbox } from "@/components/messages/MessageInbox"
 import { trpc } from "@/lib/trpc/client"
+import { ShowMessage } from "@/lib/validations/message"
 import { useState } from "react"
 
 export default function CompanyInboxPage({ params }: { params: { id: string } }) {
@@ -23,7 +24,13 @@ export default function CompanyInboxPage({ params }: { params: { id: string } })
   if (isError) return <div>Error: {error.message}</div>
   if (isLoading) return <div>Loading...</div>
 
-  const messages = data?.pages.map(page => page.data).flat()
+  const messages = data?.pages
+    .map(page => page.data)
+    .flat()
+    .filter(message => message.sender?.id) // Filter out messages with undefined sender.id
+    .map(message => ({
+      ...message,
+    }))
 
   const handleSearch = (query: string) => {
     setIncludeDeleted(true)
@@ -34,6 +41,7 @@ export default function CompanyInboxPage({ params }: { params: { id: string } })
 
   return (
     <MessageInbox
+      //@ts-ignore
       messages={messages}
       recipient={{ companyId: params.id }}
       onSearch={handleSearch}

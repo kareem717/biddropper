@@ -210,22 +210,24 @@ export const Inbox: FC<InboxProps> = ({ className, ...props }) => {
   if (!account) throw new Error("Account not found")
   const [readNotificationId, setReadNotificationId] = useState<string[]>([])
 
-  const { data, isLoading } = trpc.message.getMessagesByAccountId.useQuery({
+  const { data: res, isLoading } = trpc.message.getReceivedMessagesByAccountId.useQuery({
     accountId: account.id,
   })
 
   const { mutate: readNotification } = trpc.message.readMessage.useMutation()
 
   if (isLoading) return <div>Loading...</div>
-  if (!data) return <div>No messages</div>
+  if (!res) return <div>No messages</div>
 
   const handleNotificationFocus = (message: any) => {
     if (message.description.length > 25) return
     if (readNotificationId.includes(message.id)) return
     setReadNotificationId([...readNotificationId, message.id])
-    readNotification({ id: message.id })
+    readNotification({ id: message.id, recipient: { accountId: account.id } })
   }
 
+  const data = res?.data
+  
   return (
     <Card className={cn("shadow-none border-0", className)} {...props}>
       <CardHeader>

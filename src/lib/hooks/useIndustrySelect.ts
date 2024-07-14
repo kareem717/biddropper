@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { industries } from "../db/drizzle/schema";
 import { Industry as DbIndustry } from "../db/types";
 
 export type Industry = DbIndustry;

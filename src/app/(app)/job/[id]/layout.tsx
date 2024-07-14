@@ -28,7 +28,7 @@ export default async function JobLayout({
     });
 
     // Check if the user's company owns the job
-    if (!getOwnedCompanies?.some(company => company.id === job.ownerCompany.id)) {
+    if (!getOwnedCompanies?.some(company => company.id === job.ownerCompany?.id)) {
       throw new Error("Forbidden");
     }
   } else {

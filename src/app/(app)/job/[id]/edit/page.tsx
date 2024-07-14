@@ -15,7 +15,7 @@ export default function JobEditPage() {
 
   // Transform the job data to match the expected type
   const transformedJob = {
-    ...job,
+    ...job.job,
     industries: job.industries.map(industry => ({
       id: industry.id,
       name: industry.name,
@@ -28,6 +28,7 @@ export default function JobEditPage() {
       rawJson: job.address.rawJson as any,
     },
   };
+
   console.log(transformedJob.address);
   return <EditJobForm job={transformedJob} />;
 }

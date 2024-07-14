@@ -10,41 +10,21 @@ import {
 	accounts,
 } from "@/lib/db/drizzle/schema";
 import { router, companyOwnerProcedure } from "../trpc";
-import {
-	DetailedBid,
-	EditBidSchema,
-	NewBidSchema,
-} from "@/lib/validations/bid";
+import { EditBidSchema, NewBidSchema } from "@/lib/validations/bid";
 import { TRPCError } from "@trpc/server";
-import {
-	eq,
-	and,
-	isNull,
-	or,
-	not,
-	inArray,
-	gt,
-	lt,
-	asc,
-	desc,
-	SQL,
-} from "drizzle-orm";
+import { eq, and, isNull, not, inArray } from "drizzle-orm";
 import {
 	createMessage,
 	withOffsetPagination,
 	generateOffsetPaginationResponse,
 } from "@/lib/server/routers/shared";
-import { PgSelect, alias } from "drizzle-orm/pg-core";
+import { alias } from "drizzle-orm/pg-core";
 import { accountProcedure } from "../trpc";
 import { z } from "zod";
 import { Context } from "@/lib/trpc/context";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { BidFilterSchema, BidFilter } from "@/lib/validations/bid";
 
-const getBidDetails = async (
-	db: PostgresJsDatabase<any>,
-	bidIds: string[]
-): Promise<DetailedBid[]> => {
+const getBidDetails = async (db: PostgresJsDatabase<any>, bidIds: string[]) => {
 	// Define the alias for companies
 	const senderCompany = alias(companies, "senderCompany");
 	const ownerCompany = alias(companies, "ownerCompany");
@@ -59,6 +39,9 @@ const getBidDetails = async (
 			job: {
 				id: jobBids.jobId,
 				title: jobs.title,
+				description: jobs.description,
+				createdAt: jobs.createdAt,
+				deletedAt: jobs.deletedAt,
 				jobOwnerAccountId: accountJobs.accountId,
 				jobOwnerAccountUsername: accounts.username,
 				jobOwnerCompanyId: ownerCompany.id,
@@ -360,7 +343,7 @@ export const bidRouter = router({
 
 			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
-	getJobBids: accountProcedure
+	getRecievedBidsByJobId: accountProcedure
 		.input(
 			z.object({
 				jobId: z.string(),

@@ -38,6 +38,7 @@ export default function AccountInboxPage() {
 
   return (
     <MessageInbox
+      //@ts-ignore
       messages={messages}
       recipient={{ accountId: account.id }}
       onSearch={handleSearch}

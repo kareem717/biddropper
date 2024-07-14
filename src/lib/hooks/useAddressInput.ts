@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { NewAddress } from "../validations/db";
+import { NewAddress } from "@/lib//validations/address";
 
 interface useAddressInputProps {
   address: NewAddress | undefined;
