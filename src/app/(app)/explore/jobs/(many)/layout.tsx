@@ -3,7 +3,7 @@
 import { Icons } from "@/components/Icons";
 import { QuickSearch } from "@/components/app/QuickSearch";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

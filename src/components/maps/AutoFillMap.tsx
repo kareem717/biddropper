@@ -1,23 +1,24 @@
+"use client";
+
 import { ComponentPropsWithoutRef, useMemo, FC, useEffect } from "react";
 import { env } from "@/lib/env.mjs";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import AddressInput from "./features/AddressInput";
+import AddressInput from "./AddressInput";
 import useAddressInput from "@/lib/hooks/useAddressInput";
 import { useTheme } from "next-themes";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
 import { NewAddress } from "@/lib/validations/address";
 
+const DEFAULT_POSITION = { lat: 43.6532, lng: -79.3832 };
+
 interface AutoFillMapProps extends ComponentPropsWithoutRef<"div"> {
   mapContainerProps?: ComponentPropsWithoutRef<typeof MapContainer>;
-  defaultAddress?: NewAddress;
   addressInputProps?: ComponentPropsWithoutRef<typeof AddressInput>;
+  defaultAddress?: NewAddress;
 }
-
-
-const defaultPosition = { lat: 43.6532, lng: -79.3832 };
 
 export const AutoFillMap: FC<AutoFillMapProps> = ({
   mapContainerProps,
@@ -27,8 +28,13 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
   ...props
 }) => {
   const { getAddress } = useAddressInput();
-  const { getAddress: getMapAddress, setAddress: setMapAddress } = useAutoFillMap();
+  const { setAddress: setMapAddress } = useAutoFillMap();
   const { theme } = useTheme();
+  const address = getAddress();
+  const centerPosition = {
+    lat: Number(address?.yCoordinate) || DEFAULT_POSITION.lat,
+    lng: Number(address?.xCoordinate) || DEFAULT_POSITION.lng,
+  };
 
   const mapStyle = useMemo(
     () =>
@@ -38,25 +44,19 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
     [theme],
   );
 
-  useEffect(() => {
-    if (defaultAddress) {
-      defaultPosition.lat = Number(defaultAddress.yCoordinate);
-      defaultPosition.lng = Number(defaultAddress.xCoordinate);
-      setMapAddress(defaultAddress);
-    }
-  }, [defaultAddress, setMapAddress])
-
-  const address = getAddress();
-  const centerPosition = {
-    lat: Number(address?.yCoordinate) || defaultPosition.lat,
-    lng: Number(address?.xCoordinate) || defaultPosition.lng,
-  };
-
   const MapPanner = () => {
     const map = useMap();
     map.panTo(centerPosition);
     return null;
   };
+
+  useEffect(() => {
+    if (defaultAddress) {
+      DEFAULT_POSITION.lat = Number(defaultAddress.yCoordinate);
+      DEFAULT_POSITION.lng = Number(defaultAddress.xCoordinate);
+      setMapAddress(defaultAddress);
+    }
+  }, [defaultAddress, setMapAddress])
 
   return (
     <div
@@ -67,15 +67,14 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
       {...props}
     >
       <AddressInput
-        className="absolute right-1 top-1 z-20 h-10 w-3/4 sm:right-2 sm:top-2 sm:h-12 sm:w-2/5"
+        autoComplete="off"
+        placeholder="Enter address"
         {...addressInputProps}
+        className={cn("absolute right-1 top-1 z-20 h-10 w-3/4 sm:right-2 sm:top-2 sm:h-12 sm:w-2/5", addressInputProps?.className)}
         onRetrieve={(address) => {
           setMapAddress(address);
           addressInputProps?.onRetrieve?.(address);
         }}
-        autoComplete="off"
-        placeholder="Enter address"
-        {...addressInputProps}
       />
       <MapContainer
         center={centerPosition}

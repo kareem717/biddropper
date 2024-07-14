@@ -1,7 +1,7 @@
 "use client"
 
 import { trpc } from "@/lib/trpc/client"
-import { cn, timeSince } from "@/utils"
+import { cn, timeSince } from "@/lib/utils"
 import { ComponentPropsWithoutRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import { titleCase } from "title-case"

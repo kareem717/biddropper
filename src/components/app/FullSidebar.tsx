@@ -1,4 +1,4 @@
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { ComponentPropsWithoutRef } from "react";
 import { Icons } from "../Icons";
 import Link from "next/link";

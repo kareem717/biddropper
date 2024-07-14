@@ -3,7 +3,7 @@
 import { Icons } from "@/components/Icons"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Plan } from "@/config/landing/pricing"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { ComponentPropsWithoutRef } from "react"
 

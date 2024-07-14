@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { ComponentPropsWithoutRef, FC } from "react"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { Icons } from "../Icons"
 import { trpc } from "@/lib/trpc/client"
 import { Card } from "../ui/card"

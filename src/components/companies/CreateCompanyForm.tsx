@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -16,7 +18,7 @@ import { Input } from "@/components/ui/input"
 import { NewCompanySchema } from "@/lib/validations/company"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,

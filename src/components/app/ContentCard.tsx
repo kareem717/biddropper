@@ -4,7 +4,7 @@ import {
   Card
 } from "@/components/ui/card";
 import { ComponentPropsWithoutRef, FC, ReactNode } from "react";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 
 export interface ContentCardProps extends ComponentPropsWithoutRef<typeof Card> {
   href: string;

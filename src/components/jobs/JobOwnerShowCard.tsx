@@ -3,7 +3,7 @@
 import { ReceivedBidIndexShell } from "../bids/BidIndexShell"
 import { FC, ComponentPropsWithoutRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { titleCase } from "title-case";
 import Link from "next/link"
 import { trpc } from "@/lib/trpc/client"

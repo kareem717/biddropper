@@ -4,7 +4,7 @@ import { ComponentPropsWithoutRef, useState } from "react"
 import { PricingCard } from "./PlanCard"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import pricing from "@/config/landing/pricing"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 
 export interface PricingHeroProps extends ComponentPropsWithoutRef<'div'> {}
 

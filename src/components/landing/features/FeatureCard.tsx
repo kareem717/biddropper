@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { ComponentPropsWithoutRef, FC } from "react"
 import { Icons } from "@/components/Icons"

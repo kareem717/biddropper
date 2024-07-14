@@ -1,7 +1,7 @@
 "use client"
 
 import { buttonVariants } from "@/components/ui/button"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { ComponentPropsWithoutRef, FC } from "react"
 import FeatureConfig from "@/config/landing/features"

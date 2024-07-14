@@ -5,7 +5,7 @@ import Link from "next/link"
 import { buttonVariants } from "../ui/button"
 import Image from "next/image"
 import { Icons } from "@/components/Icons"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { CTA, Image as ImageType } from "@/config/types"
 
 export interface LandingHeroProps extends ComponentPropsWithoutRef<'div'> {

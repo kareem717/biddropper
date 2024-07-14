@@ -1,3 +1,5 @@
+"use client";
+
 import { ComponentPropsWithoutRef, useMemo, useState, FC, useEffect } from "react";
 import { env } from "@/lib/env.mjs";
 import {
@@ -10,11 +12,10 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import AddressInput from "./features/AddressInput";
-import useAddressInput from "@/lib/hooks/useAddressInput";
+import AddressInput from "./AddressInput";
 import { useTheme } from "next-themes";
 import { LabelSlider } from "../app/LabelSlider";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import useRadiusMap from "@/lib/hooks/useRadiusMap";
 import { NewAddress } from "@/lib/validations/address";
 
@@ -41,9 +42,13 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
 }) => {
   const { theme } = useTheme();
   const [radius, setRadius] = useState<number>(defaultRadius || 50);
-  const { onRetrieve: onRetrieveAddress } = addressInputProps || {};
   const { onValueChange: onValueChangeLabelSlider } = labelSliderProps || {};
   const { setAddress: setMapAddress, setRadius: setMapRadius, getAddress: getMapAddress, getRadius: getMapRadius } = useRadiusMap();
+  const address = getMapAddress();
+  const centerPosition = {
+    lat: Number(address?.yCoordinate) || defaultPosition.lat,
+    lng: Number(address?.xCoordinate) || defaultPosition.lng,
+  };
 
   const mapStyle = useMemo(
     () =>
@@ -53,6 +58,12 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
     [theme],
   );
 
+  const MapPanner = () => {
+    const map = useMap();
+    map.panTo(centerPosition);
+    return null;
+  };
+
   useEffect(() => {
     if (defaultAddress) {
       defaultPosition.lat = Number(defaultAddress.yCoordinate);
@@ -60,18 +71,6 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
       setMapAddress(defaultAddress);
     }
   }, [defaultAddress, setMapAddress])
-
-  const address = getMapAddress();
-  const centerPosition = {
-    lat: Number(address?.yCoordinate) || defaultPosition.lat,
-    lng: Number(address?.xCoordinate) || defaultPosition.lng,
-  };
-
-  const MapPanner = () => {
-    const map = useMap();
-    map.panTo(centerPosition);
-    return null;
-  };
 
   return (
     <div
@@ -82,15 +81,14 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
       {...props}
     >
       <AddressInput
-        className="absolute right-1 top-1 z-20 h-10 w-3/4 sm:right-2 sm:top-2 sm:h-12 sm:w-2/5"
-        onRetrieve={(address) => {
-          setMapAddress(address);
-          onRetrieveAddress?.(address);
-        }}
         autoComplete="off"
         placeholder="Enter address"
         {...addressInputProps}
-
+        className={cn("absolute right-1 top-1 z-20 h-10 w-3/4 sm:right-2 sm:top-2 sm:h-12 sm:w-2/5", addressInputProps?.className)}
+        onRetrieve={(address) => {
+          setMapAddress(address);
+          addressInputProps?.onRetrieve?.(address);
+        }}
       />
       {address && (
         <div className="absolute bottom-6 z-20 flex w-full items-center justify-center">

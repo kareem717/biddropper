@@ -2,7 +2,7 @@
 
 import { Icons } from "../Icons";
 import { Button } from "../ui/button";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { env } from "@/lib/env.mjs";
 import { ComponentPropsWithoutRef, FC, useState } from "react";

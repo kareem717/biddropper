@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/app/Navbar";
 import { FullSidebar } from "@/components/app/FullSidebar";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/utils/supabase/server";
 import { api } from "@/lib/trpc/api";
 import { redirect } from "next/navigation";
 

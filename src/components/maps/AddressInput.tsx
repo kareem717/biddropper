@@ -6,7 +6,7 @@ import { AddressAutofill } from "@mapbox/search-js-react";
 import { env } from "@/lib/env.mjs";
 import type { AddressAutofillRetrieveResponse } from "@mapbox/search-js-core";
 import useAddressInput from "@/lib/hooks/useAddressInput";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { NewAddressSchema, NewAddress } from "@/lib/validations/address";
 
 interface AddressInputProps extends ComponentPropsWithoutRef<typeof Input> {
@@ -29,29 +29,28 @@ const AddressInput: FC<AddressInputProps> = ({
     }
 
     const parse = NewAddressSchema.safeParse({
-      postal_code: vals.postcode,
-      x_coordinate: String(geo.coordinates[0]),
-      y_coordinate: String(geo.coordinates[1]),
-      line_1: vals.address_line1,
-      line_2: vals.address_line2,
+      postalCode: vals.postcode,
+      xCoordinate: String(geo.coordinates[0]),
+      yCoordinate: String(geo.coordinates[1]),
+      line1: vals.address_line1,
+      line2: vals.address_line2,
       // @ts-ignore
       city: vals.place,
       // @ts-ignore
       region: vals.region,
       // @ts-ignore
-      region_code: vals.region_code,
+      regionCode: vals.region_code,
       country: vals.country,
-      full_address: vals.full_address || vals.place_name,
-      raw_json: res,
+      fullAddress: vals.full_address || vals.place_name,
+      rawJson: res,
       // @ts-ignore
       district: vals.district,
     });
 
+
     if (parse.success) {
       setAddress(parse.data);
-      if (onRetrieve) {
-        onRetrieve(parse.data);
-      }
+      onRetrieve?.(parse.data);
     }
   };
 

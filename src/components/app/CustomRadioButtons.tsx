@@ -1,6 +1,6 @@
 import { ComponentPropsWithoutRef, useState } from "react";
 import { Icons } from "@/components/Icons";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { Label } from "../ui/label";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 

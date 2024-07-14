@@ -7,7 +7,7 @@ import {
   CommandEmpty,
   CommandList,
 } from "@/components/ui/command";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
 import { X as RemoveIcon, Check } from "lucide-react";
 import React, {

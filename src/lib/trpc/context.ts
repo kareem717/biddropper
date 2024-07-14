@@ -1,5 +1,5 @@
 import { db } from "@/lib/db/index";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/utils/supabase/server";
 import { eq, and, isNull } from "drizzle-orm";
 import { accounts, companies } from "@/lib/db/drizzle/schema";
 

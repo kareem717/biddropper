@@ -1,9 +1,9 @@
 "use client"
 
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { ComponentPropsWithoutRef } from "react"
 import { Badge } from "@/components/ui/badge"
-import { timeSince } from "@/utils"
+import { timeSince } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,

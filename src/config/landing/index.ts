@@ -21,7 +21,7 @@ const landing = {
 	},
 	features: [
 		{
-			title: "Prioritize & plan features",
+			title: "Sell",
 			description:
 				"Get a clear understanding of user needs and plan what to build next.",
 			image: {
@@ -30,7 +30,7 @@ const landing = {
 				width: 1080,
 				height: 1920,
 			},
-			learnMoreLink: "/features/analyzing-feedback",
+			learnMoreLink: "/features/sell",
 		},
 		{
 			title: "Announce new releases",
@@ -93,8 +93,8 @@ const landing = {
 			label: "Features",
 			submenu: [
 				{
-					label: "Analyzing feedback",
-					href: "/features/analyzing-feedback",
+					label: "Sell",
+					href: "/features/sell",
 				},
 			],
 		},

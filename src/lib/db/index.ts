@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { env } from "@/lib/env.mjs";
-import { registerService } from "@/utils";
+import { registerService } from "@/lib/utils";
 
 const connectionString = env.DATABASE_URL;
 const client = postgres(connectionString);

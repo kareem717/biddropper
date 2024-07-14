@@ -1,7 +1,7 @@
 "use client"
 
 import { ComponentPropsWithoutRef, FC } from "react"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { ContactForm } from "./ContactForm"
 import {
   Card,

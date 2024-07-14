@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ComponentPropsWithoutRef, FC, useEffect, useState } from "react";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
 

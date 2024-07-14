@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Icons } from "../Icons"
 import { buttonVariants } from "../ui/button"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { Image as ImageType } from "@/config/types"
 
 export type Feature = {

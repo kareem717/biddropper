@@ -24,3 +24,6 @@ db-down:
 
 db-reset:
 	@GOOSE_DRIVER=${GOOSE_DRIVER} GOOSE_DBSTRING=${DATABASE_URL} goose -dir=${GOOSE_MIGRATIONS_PATH} reset
+
+db-seed:
+	@tsx ./src/lib/db/seed.ts

@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { NewJobSchema } from "@/lib/validations/job"
 import { format } from "date-fns"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -52,10 +52,8 @@ import { CustomRadioButtons } from "@/components/app/CustomRadioButtons"
 import { AutoFillMap } from "@/components/maps/AutoFillMap"
 import { IndustrySelect } from "../app/IndustrySelect";
 import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
-import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area"
-const formSchema = NewJobSchema
+
 
 export const CreateJobForm = () => {
   const { account, user } = useAuth()
@@ -77,6 +75,8 @@ export const CreateJobForm = () => {
       });
     },
   })
+
+  const formSchema = NewJobSchema
 
   // @ts-ignore
   const form = useForm<z.infer<typeof formSchema>>({

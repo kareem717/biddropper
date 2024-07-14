@@ -97,7 +97,7 @@ import {
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 
 export type Icon = LucideIcon;
 

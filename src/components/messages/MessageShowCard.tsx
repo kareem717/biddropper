@@ -3,7 +3,7 @@
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { ShowMessage } from "@/lib/validations/message"
 import { ComponentPropsWithoutRef, FC } from "react"
-import { timeSince, truncate, cn } from "@/utils"
+import { timeSince, truncate, cn } from "@/lib/utils"
 import { trpc } from "@/lib/trpc/client"
 import { toast } from "sonner"
 import { Button } from "../ui/button"

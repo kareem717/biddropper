@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { ReceivedBidIndexCard, SentBidIndexCard } from "./BidIndexCard"
 import { trpc } from "@/lib/trpc/client"
 import { ComponentPropsWithoutRef, FC, useState } from "react"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { ShowBid } from "@/lib/validations/bid"
 
 export interface ReceivedBidIndexShellProps extends ComponentPropsWithoutRef<"div"> {

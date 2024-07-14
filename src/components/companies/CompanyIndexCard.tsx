@@ -14,7 +14,7 @@ import { trpc } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { AddressDisplay } from "../app/AddressDisplay";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { titleCase } from "title-case";

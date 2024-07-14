@@ -1,5 +1,5 @@
 "use client"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { ComponentPropsWithoutRef, useState } from "react"
 import Link from "next/link"
 import { LogoDiv } from "../app/LogoDiv"

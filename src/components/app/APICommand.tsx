@@ -9,7 +9,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command"
 import { ComponentPropsWithoutRef, FC, useState, useEffect, useCallback } from "react"
-import { cn } from "@/utils"
+import { cn } from "@/lib/utils"
 import { Icons } from "../Icons"
 
 export interface CommandItem {

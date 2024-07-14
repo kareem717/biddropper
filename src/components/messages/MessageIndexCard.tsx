@@ -3,7 +3,7 @@
 import { Card, CardHeader } from "@/components/ui/card"
 import { ShowMessage } from "@/lib/validations/message"
 import { ComponentPropsWithoutRef, FC } from "react"
-import { timeSince, truncate, cn } from "@/utils"
+import { timeSince, truncate, cn } from "@/lib/utils"
 import { Icons } from "../Icons"
 
 export interface MessageIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {

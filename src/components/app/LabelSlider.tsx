@@ -2,7 +2,7 @@
 
 import { FC, useEffect, type ComponentPropsWithoutRef } from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import useLabelSlider from "@/lib/hooks/useLabelSlider";
 
