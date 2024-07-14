@@ -1,6 +1,6 @@
 
-import { LandingFooter } from "@/components/landing/Footer";
-import { LandingNavBar } from "@/components/landing/NavBar";
+import { LandingFooter } from "@/components/jobs/landing/Footer";
+import { LandingNavBar } from "@/components/jobs/landing/NavBar";
 import LandingConfig from "@/config/landing";
 
 export default async function LandingLayout({

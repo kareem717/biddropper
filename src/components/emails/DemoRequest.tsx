@@ -1,7 +1,7 @@
 import { env } from "@/lib/env.mjs";
 import * as React from "react";
 import { Icons } from "../Icons";
-import { DemoRequestFormValues } from "../landing/demo/RequestForm";
+import { DemoRequestFormValues } from "../jobs/landing/demo/RequestForm";
 
 interface DemoRequestEmailProps extends DemoRequestFormValues { }
 

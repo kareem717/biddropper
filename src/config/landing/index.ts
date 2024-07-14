@@ -1,4 +1,4 @@
-import { CTA, Image } from "../types";
+import redirects from "../redirects";
 
 const landing = {
 	hero: {
@@ -12,11 +12,11 @@ const landing = {
 		},
 		cta: {
 			label: "Get started",
-			href: "https://www.featurebase.app/",
+			href: redirects.dashboard,
 		},
 		secondaryCta: {
 			label: "Contact us",
-			href: "https://www.featurebase.app/",
+			href: redirects.contact,
 		},
 	},
 	features: [
@@ -117,11 +117,11 @@ const landing = {
 	],
 	cta: {
 		label: "Get started",
-		href: "https://www.featurebase.app/",
+		href: redirects.dashboard,
 	},
 	secondaryCta: {
 		label: "Contact us",
-		href: "https://www.featurebase.app/",
+		href: redirects.contact,
 	},
 };
 

@@ -1,5 +1,5 @@
 
-import { FeatureFooter } from "@/components/landing/features/FeatureFooter";
+import { FeatureFooter } from "@/components/jobs/landing/features/FeatureFooter";
 import FeaturesConfig from "@/config/landing/features";
 
 export default async function LandingLayout({

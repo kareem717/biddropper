@@ -5,6 +5,7 @@ const redirects = {
 		sell: "/features/sell",
 		buy: "/features/buy",
 	},
+	dashboard: "/dashboard",
 	pricing: "/pricing",
 	about: "/about",
 	contact: "/contact",

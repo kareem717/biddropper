@@ -1,4 +1,4 @@
-import { PricingHero } from "@/components/landing/pricing/PricingHero";
+import { PricingHero } from "@/components/jobs/landing/pricing/PricingHero";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

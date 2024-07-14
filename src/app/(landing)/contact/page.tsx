@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { ContactCard } from "@/components/landing/contact/ContactCard";
+import { ContactCard } from "@/components/jobs/landing/contact/ContactCard";
 
 export const metadata: Metadata = {
 	title: "Contact",

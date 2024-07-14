@@ -1,7 +1,7 @@
 
-import { FeatureShowcase } from "@/components/landing/FeatureShowcase";
-import { LandingHero } from "@/components/landing/Hero";
-import { CustomerShowcase } from "@/components/landing/CustomerShowcase";
+import { FeatureShowcase } from "@/components/jobs/landing/FeatureShowcase";
+import { LandingHero } from "@/components/jobs/landing/Hero";
+import { CustomerShowcase } from "@/components/jobs/landing/CustomerShowcase";
 import LandingConfig from "@/config/landing";
 
 export default function LandingPage() {

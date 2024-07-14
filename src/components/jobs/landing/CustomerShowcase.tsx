@@ -4,7 +4,7 @@ import { ComponentPropsWithoutRef, FC } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { Icons } from "../Icons"
+import { Icons } from "../../Icons"
 import { Image as ImageType } from "@/config/types"
 
 export type Customer = {

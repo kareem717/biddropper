@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import FeatureConfig from "@/config/landing/features";
-import { FeatureHero } from "@/components/landing/features/FeatureHero";
-import { FeatureCard } from "@/components/landing/features/FeatureCard";
+import { FeatureHero } from "@/components/jobs/landing/features/FeatureHero";
+import { FeatureCard } from "@/components/jobs/landing/features/FeatureCard";
 
 export const metadata: Metadata = {
 	title: "Features",

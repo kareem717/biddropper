@@ -2,15 +2,15 @@
 import { cn } from "@/lib/utils"
 import { ComponentPropsWithoutRef, useState } from "react"
 import Link from "next/link"
-import { LogoDiv } from "../app/LogoDiv"
-import { Button } from "../ui/button"
+import { LogoDiv } from "../../app/LogoDiv"
+import { Button } from "../../ui/button"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { Icons } from "../Icons"
+import { Icons } from "../../Icons"
 import {
   NavigationMenu,
   NavigationMenuContent,
