@@ -25,7 +25,7 @@ export default async function AppLayout({
 	return (
 		<div className="h-full w-full relative">
 			<Navbar className="md:px-8 px-4 py-2 border-b fixed bg-background w-full z-50" />
-			<div className="overflow-y-auto flex-grow w-full h-full pt-16">
+			<div className="flex-grow w-full h-full pt-16">
 				{children}
 			</div>
 		</div>
