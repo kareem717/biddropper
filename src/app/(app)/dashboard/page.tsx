@@ -10,7 +10,33 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { ChartLegend, ChartLegendContent } from "@/components/ui/chart"
+import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { ChartConfig, ChartContainer } from "@/components/ui/chart"
+
+const chartConfig = {
+	desktop: {
+		label: "Desktop",
+		color: "hsl(var(--chart-1))",
+	},
+	mobile: {
+		label: "Mobile",
+		color: "hsl(var(--chart-2	))",
+	},
+} satisfies ChartConfig
+
+const chartData = [
+	{ month: "January", desktop: 186, mobile: 80 },
+	{ month: "February", desktop: 305, mobile: 200 },
+	{ month: "March", desktop: 237, mobile: 120 },
+	{ month: "April", desktop: 73, mobile: 190 },
+	{ month: "May", desktop: 209, mobile: 130 },
+	{ month: "June", desktop: 214, mobile: 140 },
+]
+
 export default function DashboardPage() {
+
 	return (
 		<main className="p-8 flex flex-col gap-8 justify-start items-center h-full w-full mb-12">
 			<div className="flex justify-between items-center w-full">
@@ -35,9 +61,22 @@ export default function DashboardPage() {
 			</div>
 			<div className="w-full">
 				<ChartShell title="Total Bids">
-					<div className="w-full h-96">
-						hello
-					</div>
+					<ChartContainer config={chartConfig} className="h-[600px] w-full">
+						<BarChart accessibilityLayer data={chartData}>
+							<CartesianGrid vertical={false} />
+							<XAxis
+								dataKey="month"
+								tickLine={false}
+								tickMargin={10}
+								axisLine={false}
+								tickFormatter={(value) => value.slice(0, 3)}
+							/>
+							<ChartTooltip content={<ChartTooltipContent />} />
+							<ChartLegend content={<ChartLegendContent />} />
+							<Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+							<Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+						</BarChart>
+					</ChartContainer>
 				</ChartShell>
 			</div>
 			<div className="grid grid-rows-2 md:grid-rows-1 md:grid-cols-3 gap-4 w-full">
