@@ -38,13 +38,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useState } from "react";
+import { useState, FC, ComponentPropsWithoutRef } from "react";
 import { Icons } from "../Icons";
 import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
 
 const formSchema = NewCompanySchema
 
-export const CreateCompanyForm = () => {
+export interface CreateCompanyFormProps extends ComponentPropsWithoutRef<"form"> {
+  onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
+}
+
+export const CreateCompanyForm: FC<CreateCompanyFormProps> = ({ onSubmitProp, className, ...props }) => {
   const { account } = useAuth()
 
   if (!account) {
@@ -87,6 +91,8 @@ export const CreateCompanyForm = () => {
     }
 
     const id = await createCompany(values);
+    onSubmitProp?.(values);
+
     if (!isError) {
       toast.success("Company created!", {
         description: "We've created your company and added it to your dashboard."
@@ -106,7 +112,7 @@ export const CreateCompanyForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form {...props} onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8", className)}>
         <FormField
           control={form.control}
           name="name"

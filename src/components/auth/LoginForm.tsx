@@ -4,7 +4,7 @@ import { Icons } from "../Icons";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { OAuthButtons } from "./OAuthButtons";
-import { useState } from "react";
+import { useState, ComponentPropsWithoutRef, FC } from "react";
 import { createClient } from "@/lib/utils/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -18,6 +18,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form"
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
 	email: z.string({
@@ -30,7 +31,11 @@ const formSchema = z.object({
 	}),
 })
 
-export const LoginForm = () => {
+export interface LoginFormProps extends ComponentPropsWithoutRef<"form"> {
+	onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
+}
+
+export const LoginForm: FC<LoginFormProps> = ({ onSubmitProp, className, ...props }) => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -51,6 +56,8 @@ export const LoginForm = () => {
 			},
 		})
 
+		onSubmitProp?.(values);
+
 		if (error) {
 			toast.error("Uh oh!", {
 				description: "Something went wrong. Please try again.",
@@ -70,11 +77,8 @@ export const LoginForm = () => {
 				<h1 className="text-2xl font-semibold tracking-tight">Login</h1>
 				<p className="text-sm text-muted-foreground">Enter your email below to login</p>
 			</div>
-			<form>
-
-			</form>
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(onSubmit)} >
+				<form {...props} onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8", className)} >
 					<div className="grid gap-2">
 						<div className="grid gap-1">
 							<FormField

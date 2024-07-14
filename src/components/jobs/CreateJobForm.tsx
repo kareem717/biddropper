@@ -53,9 +53,16 @@ import { AutoFillMap } from "@/components/maps/AutoFillMap"
 import { IndustrySelect } from "../app/IndustrySelect";
 import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
 import { Textarea } from "@/components/ui/textarea";
+import { FC, ComponentPropsWithoutRef } from "react";
+
+const formSchema = NewJobSchema
 
 
-export const CreateJobForm = () => {
+export interface CreateJobFormProps extends ComponentPropsWithoutRef<"form"> {
+  onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
+}
+
+export const CreateJobForm: FC<CreateJobFormProps> = ({ onSubmitProp, className, ...props }) => {
   const { account, user } = useAuth()
 
   if (!account || !user) {
@@ -76,8 +83,6 @@ export const CreateJobForm = () => {
     },
   })
 
-  const formSchema = NewJobSchema
-
   // @ts-ignore
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -95,6 +100,8 @@ export const CreateJobForm = () => {
     }
 
     const id = await createJob(values);
+    onSubmitProp?.(values);
+
     if (!isError) {
       toast.success("Job created!", {
         description: "We've created your job and added it to your dashboard."
@@ -102,6 +109,7 @@ export const CreateJobForm = () => {
 
       router.push(`/company/${id}`);
     }
+
   }
 
   const handleConfirmDialog = async () => {
@@ -114,7 +122,7 @@ export const CreateJobForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-h-[50vh] overflow-y-auto">
+      <form {...props} onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8 max-h-[50vh] overflow-y-auto", className)}>
         <FormField
           control={form.control}
           name="title"

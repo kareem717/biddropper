@@ -44,9 +44,10 @@ const formSchema = EditCompanySchema
 
 export interface EditCompanyFormProps extends ComponentPropsWithoutRef<"form"> {
   company: EditCompany
+  onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
 }
 
-export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, ...props }) => {
+export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, onSubmitProp, ...props }) => {
   const { account } = useAuth()
 
   if (!account) {
@@ -88,6 +89,8 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, 
     }
 
     const id = await editCompany(values);
+    onSubmitProp?.(values);
+
     if (!isError) {
       toast.success("Company created!", {
         description: "We've created your company and added it to your dashboard."
@@ -107,7 +110,7 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form {...props} onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8", className)}>
         <FormField
           control={form.control}
           name="name"

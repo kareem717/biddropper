@@ -13,15 +13,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { NewJobSchema } from "@/lib/validations/job"
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import { trpc } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -34,8 +25,6 @@ import {
 } from "@/components/ui/dialog"
 import { ComponentPropsWithoutRef, useState, FC } from "react";
 import { Icons } from "../Icons";
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
@@ -46,27 +35,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { CustomRadioButtons } from "@/components/app/CustomRadioButtons"
-import { AutoFillMap } from "@/components/maps/AutoFillMap"
-import { IndustrySelect } from "../app/IndustrySelect";
-import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
-import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { useCompany } from "../providers/CompanyProvider";
 import { NewMessageSchema } from "@/lib/validations/message";
+import { cn } from "@/lib/utils";
 
+const formSchema = NewMessageSchema
 
 export interface CreateMessageFormProps extends ComponentPropsWithoutRef<"form"> {
   recipients?: {
     accountIds?: string[],
     companyIds?: string[]
   }
+  onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
 }
 
-const formSchema = NewMessageSchema
-
-export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, ...props }) => {
+export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, className, onSubmitProp, ...props }) => {
   const { account, user } = useAuth()
   const { companies: ownedCompanies } = useCompany()
   if (!account || !user) {
@@ -105,6 +89,8 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, ...p
     }
 
     const id = await createMessage(values);
+    onSubmitProp?.(values);
+
     if (!isError) {
       toast.success("Job created!", {
         description: "We've created your job and added it to your dashboard."
@@ -124,7 +110,7 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, ...p
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-h-[50vh] overflow-y-auto">
+      <form {...props} onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8 max-h-[50vh] overflow-y-auto", className)}>
         <FormField
           control={form.control}
           name="title"

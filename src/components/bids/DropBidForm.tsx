@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { trpc } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { ComponentPropsWithoutRef, useState } from "react";
+import { ComponentPropsWithoutRef } from "react";
 import { Icons } from "../Icons";
 import {
   Select,
@@ -25,23 +25,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
 import { NewBidSchema } from "@/lib/validations/bid";
 import { Textarea } from "../ui/textarea";
+import { cn } from "@/lib/utils";
 import { useCompany } from "../providers/CompanyProvider";
 
 const formSchema = NewBidSchema
 
 export interface DropBidFormProps extends ComponentPropsWithoutRef<"form"> {
   jobId: string
+  onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
 }
 
-export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
+export const DropBidForm = ({ jobId, onSubmitProp, className, ...props }: DropBidFormProps) => {
   const { account, user } = useAuth()
   const { companies } = useCompany()
   const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { getSelectedIndustries } = useIndustrySelect();
 
   const { mutateAsync: createBid, isLoading, isError } = trpc.bid.createBid.useMutation({
     onError: () => {
@@ -50,7 +49,6 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
       });
     },
   })
-
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,6 +67,7 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    onSubmitProp?.(values);
     if (isLoading) {
       toast.info("Please wait...", {
         description: "We're creating your bid."
@@ -77,6 +76,7 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
     }
 
     const id = await createBid(values);
+    onSubmitProp?.(values);
     if (!isError) {
       toast.success("Bid created!", {
         description: "We've created your bid and added it to your dashboard."
@@ -88,7 +88,7 @@ export const DropBidForm = ({ jobId, ...props }: DropBidFormProps) => {
 
   return (
     <Form {...form} >
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" {...props}>
+      <form  {...props} onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8", className)}>
         <FormField
           control={form.control}
           name="priceUsd"

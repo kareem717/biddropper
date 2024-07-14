@@ -6,21 +6,14 @@ import { ShowMessage } from "@/lib/validations/message"
 import { FC, useState } from "react"
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
-
 import { MessageShowCard } from "@/components/messages/MessageShowCard"
 import { QuickSearch } from "../app/QuickSearch"
 import { Button } from "../ui/button"
 import { Icons } from "../Icons"
 import { CreateMessageForm } from "./CreateMessageForm"
-import { trpc } from "@/lib/trpc/client"
 
 export interface MessageInboxProps {
   messages: ShowMessage[]

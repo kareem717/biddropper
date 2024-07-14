@@ -49,11 +49,11 @@ const formSchema = EditJobSchema
 
 export interface EditJobFormProps extends ComponentPropsWithoutRef<"form"> {
   job: EditJob
+  onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
 }
 
-export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) => {
+export const EditJobForm: FC<EditJobFormProps> = ({ job, onSubmitProp, className, ...props }) => {
   const { account, user } = useAuth()
-  const { data: ownedCompanies, isLoading: isOwnedCompaniesLoading } = trpc.company.getOwnedCompanies.useQuery();
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { getSelectedIndustries, setSelectedIndustries } = useIndustrySelect();
@@ -92,6 +92,8 @@ export const EditJobForm: FC<EditJobFormProps> = ({ job, className, ...props }) 
     }
 
     const id = await editJob(values);
+    onSubmitProp?.(values);
+
     if (!isError) {
       toast.success("Job updated!", {
         description: "We've updated your job."

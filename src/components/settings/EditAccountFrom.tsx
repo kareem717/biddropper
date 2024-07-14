@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { EditAccountSchema, NewAccountSchema } from "@/lib/validations/account";
+import { EditAccountSchema } from "@/lib/validations/account";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -20,8 +20,17 @@ import { trpc } from "@/lib/trpc/client";
 import { Icons } from "../Icons";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Textarea } from "../ui/textarea";
+import { FC, ComponentPropsWithoutRef, useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export const EditAccountForm = () => {
+const formSchema = EditAccountSchema;
+
+export interface EditAccountFormProps extends ComponentPropsWithoutRef<"form"> {
+  onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
+}
+
+export const EditAccountForm: FC<EditAccountFormProps> = ({ onSubmitProp, ...props }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { account } = useAuth();
 
   if (!account) {
@@ -47,10 +56,20 @@ export const EditAccountForm = () => {
   });
 
   async function onSubmit(values: z.infer<typeof EditAccountSchema>) {
+    onSubmitProp?.(values);
+
     await editAccount({
       ...account,
       ...values,
     });
+  }
+
+  const handleConfirmDialog = async () => {
+    await form.trigger()
+
+    if (form.formState.isValid) {
+      setIsDialogOpen(true);
+    }
   }
 
   return (
@@ -89,10 +108,24 @@ export const EditAccountForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isEditingAccount} className="w-full flex justify-center items-center">
-          {isEditingAccount ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Update account"}
-        </Button>
       </form>
+      <Button className="w-full mt-8" onClick={handleConfirmDialog} disabled={isEditingAccount}>
+        {isEditingAccount ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Update account"}
+      </Button>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently update your account.
+            </DialogDescription>
+          </DialogHeader>
+          {JSON.stringify(form.getValues())}
+          <Button type="button" className="w-full" onClick={form.handleSubmit(onSubmit)} disabled={isEditingAccount}>
+            {isEditingAccount ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Update account"}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </Form>
   );
 };
