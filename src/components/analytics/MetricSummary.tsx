@@ -21,7 +21,7 @@ export const MetricSummary: FC<MetricSummaryProps> = ({ className, children, lab
   const changeColor = percentageChange > 0 ? "bg-green-600 text-green-300" : "bg-red-600 text-red-300"
 
   return (
-    <div className={cn("flex justify-center gap-2 items-center w-full relative", className)} {...props}>
+    <div className={cn("flex justify-center gap-2 items-center w-full relative rounded-lg border p-4 bg-card text-card-foreground shadow-sm", className)} {...props}>
       <span className="flex items-center justify-center rounded-full p-4 bg-accent">
         <Icon className="w-7 h-7 text-primary/70 stroke-[2.5px]" />
       </span>
@@ -36,7 +36,7 @@ export const MetricSummary: FC<MetricSummaryProps> = ({ className, children, lab
         </Badge>
       </span>
       {description && (
-        <div className="absolute -right-3 -top-3">
+        <div className="absolute right-3 top-3">
           <InfoTooltip description={description} />
         </div>
       )}

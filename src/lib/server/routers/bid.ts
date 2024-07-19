@@ -683,4 +683,27 @@ export const bidRouter = router({
 
 			return res;
 		}),
+	getHottestBidsByAccountId: accountProcedure
+		.input(
+			z.object({
+				accountId: z.string().optional(),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const bidIds = await ctx.db
+				.select({
+					id: bids.id,
+				})
+				.from(bids)
+				.innerJoin(jobBids, eq(bids.id, jobBids.bidId));
+
+			if (!bidIds.length) {
+				return [];
+			}
+
+			return await getBidDetails(
+				ctx.db,
+				bidIds.map((b) => b.id)
+			);
+		}),
 });

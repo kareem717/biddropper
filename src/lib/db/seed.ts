@@ -7,10 +7,13 @@ import {
 	jobIndustries,
 	bids,
 	bidStatus,
+	companies,
+	accounts,
 } from "./drizzle/schema";
 import { faker } from "@faker-js/faker";
 import { randomUUID } from "crypto";
 import { env } from "../env.mjs";
+import { eq } from "drizzle-orm";
 
 const main = async () => {
 	const client = new Pool({
@@ -22,8 +25,38 @@ const main = async () => {
 	const jobData: (typeof jobs.$inferInsert)[] = [];
 	const jobIndustryData: (typeof jobIndustries.$inferInsert)[] = [];
 	const bidData: (typeof bids.$inferInsert)[] = [];
+	const companyData: (typeof companies.$inferInsert)[] = [];
 
 	await db.transaction(async (tx) => {
+		let accountId: string | null = "";
+		// prompt user to confirm seeding
+		const confirmed = await confirm(
+			"Are you sure you want to seed the database? This action cannot be undone."
+		);
+		if (!confirmed) {
+			console.log("Seeding cancelled");
+			return;
+		} else {
+			// ask for account id
+			accountId = await prompt("Enter the account id to seed the database:");
+			if (!accountId) {
+				console.log("Account id not found");
+				return;
+			}
+		}
+
+		const accs = await tx
+			.select()
+			.from(accounts)
+			.where(eq(accounts.id, accountId));
+
+		if (accs.length === 0) {
+			console.log("Account not found");
+			return;
+		}
+
+		const account = accs[0];
+
 		for (let i = 0; i < 150; i++) {
 			industryData.push({
 				id: randomUUID(),
@@ -110,11 +143,34 @@ const main = async () => {
 		}
 		console.log("Seed done [job_industries]");
 
+		//seed 3 companies
+		for (let i = 0; i < 3; i++) {
+			companyData.push({
+				id: randomUUID(),
+				name: faker.company.buzzPhrase(),
+				addressId: faker.helpers.arrayElement(
+					addressData.map((address) => address.id)
+				)!,
+				ownerId: account.id,
+				emailAddress: faker.internet.email(),
+				phoneNumber: faker.phone.number(),
+				dateFounded: faker.date.recent().toISOString(),
+			});
+		}
+		console.log("Seed start [companies]");
+		// insert in batches of 1k
+		for (let i = 0; i < companyData.length; i += 1000) {
+			await tx.insert(companies).values(companyData.slice(i, i + 1000));
+		}
+		console.log("Seed done [companies]");
+
 		// add 1-50 bids per job
 		for (let j = 0; j < 5000; j++) {
 			bidData.push({
 				id: randomUUID(),
-				senderCompanyId: "2331d376-3ec5-4691-95c9-f38f1db6dc6b",
+				senderCompanyId: faker.helpers.arrayElement(
+					companyData.map((company) => company.id)
+				)!,
 				note: faker.lorem.sentence({ min: 1, max: 5 }),
 				priceUsd: faker.number.int({ min: 1000, max: 24999999 }).toString(),
 				status: faker.helpers.arrayElement(bidStatus.enumValues),
