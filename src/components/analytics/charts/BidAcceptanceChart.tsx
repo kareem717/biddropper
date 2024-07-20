@@ -9,34 +9,34 @@ import { ChartConfig } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "hsl(var(--chart-1))",
+  sent: {
+    label: "Sent",
+    color: "hsl(var(--muted-foreground))",
   },
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2	))",
+  accepted: {
+    label: "Accepted",
+    color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
 
 const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
+  { month: "January", sent: 186, accepted: 80 },
+  { month: "February", sent: 305, accepted: 200 },
+  { month: "March", sent: 237, accepted: 120 },
+  { month: "April", sent: 73, accepted: 190 },
+  { month: "May", sent: 209, accepted: 130 },
+  { month: "June", sent: 214, accepted: 140 },
 ]
 
-export interface CompanyJobViewComparisonProps extends ComponentPropsWithoutRef<'div'> { }
+export interface BidAcceptanceChartProps extends ComponentPropsWithoutRef<'div'> { }
 
-export const CompanyJobViewComparison: FC<CompanyJobViewComparisonProps> = ({
+export const BidAcceptanceChart: FC<BidAcceptanceChartProps> = ({
   className,
   ...props
 }) => {
 
   return (
-    <ChartShell title="Total Bids" config={chartConfig} className={cn("h-[200px] w-full", className)} {...props}>
+    <ChartShell title="Bids Sent vs Accepted" className={cn("h-[600px] w-full", className)} {...props} config={chartConfig} >
       <BarChart accessibilityLayer data={chartData}>
         <CartesianGrid vertical={false} />
         <XAxis
@@ -48,8 +48,8 @@ export const CompanyJobViewComparison: FC<CompanyJobViewComparisonProps> = ({
         />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-        <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+        <Bar dataKey="sent" fill="var(--color-sent)" radius={4} />
+        <Bar dataKey="accepted" fill="var(--color-accepted)" radius={4} />
       </BarChart>
     </ChartShell>
   )

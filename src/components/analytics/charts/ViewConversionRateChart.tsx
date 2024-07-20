@@ -9,34 +9,34 @@ import { ChartConfig } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "hsl(var(--chart-1))",
+  views: {
+    label: "Views",
+    color: "hsl(var(--muted-foreground))",
   },
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2	))",
+  bids: {
+    label: "Bids",
+    color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
 
 const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
+  { month: "January", views: 186, bids: 80 },
+  { month: "February", views: 305, bids: 200 },
+  { month: "March", views: 237, bids: 120 },
+  { month: "April", views: 73, bids: 190 },
+  { month: "May", views: 209, bids: 130 },
+  { month: "June", views: 214, bids: 140 },
 ]
 
-export interface JobViewConversionRateProps extends ComponentPropsWithoutRef<'div'> { }
+export interface ViewConversionRateChartProps extends ComponentPropsWithoutRef<'div'> { }
 
-export const JobViewConversionRate: FC<JobViewConversionRateProps> = ({
+export const ViewConversionRateChart: FC<ViewConversionRateChartProps> = ({
   className,
   ...props
 }) => {
 
   return (
-    <ChartShell title="Total Bids" config={chartConfig} className={cn("h-[200px] w-full", className)} {...props}>
+    <ChartShell title="Job View Conversion Rate" config={chartConfig} className={cn("h-[200px] w-full", className)} {...props}>
       <BarChart layout="vertical" accessibilityLayer data={chartData}>
         <CartesianGrid horizontal={false} />
         <XAxis
@@ -55,8 +55,8 @@ export const JobViewConversionRate: FC<JobViewConversionRateProps> = ({
         />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-        <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+        <Bar dataKey="views" fill="var(--color-views)" radius={4} />
+        <Bar dataKey="bids" fill="var(--color-bids)" radius={4} />
       </BarChart>
     </ChartShell>
   )

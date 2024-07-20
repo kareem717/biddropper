@@ -6,7 +6,7 @@ import { Icons } from "@/components/Icons"
 import { Badge } from "@/components/ui/badge"
 import { InfoTooltip } from "@/components/app/InfoTooltip"
 
-export interface MetricSummaryProps extends ComponentPropsWithoutRef<"div"> {
+export interface MetricCardProps extends ComponentPropsWithoutRef<"div"> {
   label: string
   icon: keyof typeof Icons
   value: string
@@ -14,7 +14,7 @@ export interface MetricSummaryProps extends ComponentPropsWithoutRef<"div"> {
   description?: string
 }
 
-export const MetricSummary: FC<MetricSummaryProps> = ({ className, children, label, icon, value, percentageChange, description, ...props }) => {
+export const MetricCard: FC<MetricCardProps> = ({ className, children, label, icon, value, percentageChange, description, ...props }) => {
   const Icon = Icons[icon]
 
   const ChangeIcon = percentageChange > 0 ? Icons["arrowUpRight"] : Icons["arrowDownRight"]
@@ -23,7 +23,7 @@ export const MetricSummary: FC<MetricSummaryProps> = ({ className, children, lab
   return (
     <div className={cn("flex justify-center gap-2 items-center w-full relative rounded-lg border p-4 bg-card text-card-foreground shadow-sm", className)} {...props}>
       <span className="flex items-center justify-center rounded-full p-4 bg-accent">
-        <Icon className="w-7 h-7 text-primary/70 stroke-[2.5px]" />
+        <Icon className="w-7 h-7 text-muted-foreground stroke-[2.5px]" />
       </span>
       <div className="flex flex-col gap-1 ml-4">
         <span className="text-sm font-medium text-muted-foreground">{label}</span>

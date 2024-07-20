@@ -1,6 +1,6 @@
 "use client";
 
-import { MetricSummary } from "@/components/analytics/MetricSummary";
+import { MetricSummary } from "@/components/analytics/metrics/MetricSummary";
 import {
 	Select,
 	SelectContent,
@@ -9,11 +9,9 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { HottestBidsCard } from "@/components/analytics/HottestBidsCard";
-import { BidAcceptanceComparison } from "@/components/analytics/charts/BidAcceptanceComparisonBarChart";
-import { CompanyJobViewComparison } from "@/components/analytics/charts/CompanyJobViewComparison";
-import { JobViewConversionRate } from "@/components/analytics/charts/JobViewConversionRate";
-import { RepeatBidAcceptance } from "@/components/analytics/charts/RepeatBidAcceptance";
-import { JobCompanyViewFunnel } from "@/components/analytics/charts/JobCompanyViewFunnel";
+import { BidAcceptanceChart } from "@/components/analytics/charts/BidAcceptanceChart";
+import { ViewComparisonChart } from "@/components/analytics/charts/ViewComparisonChart";
+import { ViewConversionRateChart } from "@/components/analytics/charts/ViewConversionRateChart";
 
 export default function DashboardPage() {
 	return (
@@ -32,23 +30,17 @@ export default function DashboardPage() {
 				</Select>
 			</div>
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mt-4 sm:mt-8">
-				{[...Array(4)].map((_, i) => (
-					<MetricSummary key={i} label="Total Bids" icon="gavel" value="100K" percentageChange={i % 2 === 0 ? 10 : -10} description="This is a description" />
-				))}
+				<MetricSummary />
 			</div>
 			<div className="w-full">
-				<BidAcceptanceComparison />
+				<HottestBidsCard />
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-				<HottestBidsCard />
+				<BidAcceptanceChart />
 				<div className="grid grid-rows-2 grid-cols-1 gap-4 w-full">
-					<JobViewConversionRate />
-					<CompanyJobViewComparison />
+					<ViewConversionRateChart />
+					<ViewComparisonChart />
 				</div>
-			</div>
-			<div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-3 gap-4 w-full">
-				<RepeatBidAcceptance />
-				<JobCompanyViewFunnel />
 			</div>
 		</main>
 	);
