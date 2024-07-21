@@ -1,14 +1,8 @@
-import {
-	addresses,
-	companies,
-	companyIndustries,
-} from "@/lib/db/drizzle/schema";
 import { router, accountProcedure, companyOwnerProcedure } from "../trpc";
-import { EditCompanySchema, NewCompanySchema } from "@/lib/validations/company";
-import { eq, and, isNull, inArray, not, sql, desc } from "drizzle-orm";
+import { EditCompanySchema, NewCompanySchema } from "@/lib/db/queries/company";
 import { z } from "zod";
-import { industries } from "@/lib/db/drizzle/schema";
-import { generateOffsetPaginationResponse, withOffsetPagination } from "./shared";
+import { TRPCError } from "@trpc/server";
+import CompanyQueryClient from "@/lib/db/queries/company";
 
 export const companyRouter = router({
 	getOwnedCompanies: accountProcedure
@@ -18,11 +12,11 @@ export const companyRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { includeDeleted } = input;
-			const companies = includeDeleted
-				? ctx.ownedCompanies
-				: ctx.ownedCompanies?.filter((company) => company.deletedAt === null);
-			return companies;
+			const companyQueryClient = new CompanyQueryClient(ctx.db);
+			return await companyQueryClient.GetDetailedManyByOwnerId(
+				ctx.account.id,
+				input.includeDeleted
+			);
 		}),
 	getCompanyById: accountProcedure
 		.input(
@@ -32,11 +26,9 @@ export const companyRouter = router({
 		)
 		.query(async ({ ctx, input }) => {
 			const { id } = input;
-			const [res] = await ctx.db
-				.select()
-				.from(companies)
-				.where(eq(companies.id, id));
-			return res;
+
+			const companyQueryClient = new CompanyQueryClient(ctx.db);
+			return await companyQueryClient.GetDetailedById(id);
 		}),
 	getCompanyFull: accountProcedure
 		.input(
@@ -46,120 +38,68 @@ export const companyRouter = router({
 		)
 		.query(async ({ ctx, input }) => {
 			const { id } = input;
-			const [company] = await ctx.db
-				.select({
-					company: companies,
-					address: addresses,
-				})
-				.from(companies)
-				.where(eq(companies.id, id))
-				.innerJoin(addresses, eq(companies.addressId, addresses.id));
-
-			const companyIndustriesRes = await ctx.db
-				.select({ industries })
-				.from(companyIndustries)
-				.where(eq(companyIndustries.companyId, id))
-				.innerJoin(
-					industries,
-					and(
-						eq(companyIndustries.industryId, industries.id),
-						isNull(industries.deletedAt)
-					)
-				);
-
-			return {
-				...company.company,
-				address: company.address,
-				industries: companyIndustriesRes.map((industry) => industry.industries),
-			};
+			const companyQueryClient = new CompanyQueryClient(ctx.db);
+			return await companyQueryClient.GetExtendedById(id);
 		}),
 
 	createCompany: accountProcedure
 		.input(NewCompanySchema)
 		.mutation(async ({ ctx, input }) => {
-			const { address, industries, ...company } = input;
-			const newId = await ctx.db.transaction(async (tx) => {
-				const [newAddress] = await tx
-					.insert(addresses)
-					.values(address)
-					.returning({ id: addresses.id });
+			if (input.industries.length === 0) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "industries are required",
+				});
+			}
 
-				const [newCompany] = await tx
-					.insert(companies)
-					.values({
-						...company,
-						addressId: newAddress.id,
-						ownerId: ctx.account.id,
-					})
-					.returning({ id: companies.id });
+			if (input.ownerId !== ctx.account.id) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "owner must be the current account",
+				});
+			}
 
-				const newCompanyIndustries = industries.map((industry) => ({
-					companyId: newCompany.id,
-					industryId: industry,
-				}));
-				await tx
-					.insert(companyIndustries)
-					.values(newCompanyIndustries)
-					.onConflictDoNothing();
-
-				return newCompany.id;
-			});
-
-			return newId;
+			const companyQueryClient = new CompanyQueryClient(ctx.db);
+			return await companyQueryClient.Create(input);
 		}),
 	editCompany: companyOwnerProcedure
 		.input(EditCompanySchema)
 		.mutation(async ({ ctx, input }) => {
-			const { address, industries, id: companyId, ...company } = input;
-			await ctx.db.transaction(async (tx) => {
-				const [currAddress] = await tx
-					.select()
-					.from(addresses)
-					.where(eq(addresses.id, company.addressId));
+			if (!input.id) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "company id is required",
+				});
+			}
 
-				// if the address values have been changed, update the address
-				const addressChanged = Object.entries(address).some(([key, value]) =>
-					Object.entries(currAddress).some(([k, v]) => k === key && v !== value)
-				);
+			const companyQueryClient = new CompanyQueryClient(ctx.db);
 
-				if (addressChanged) {
-					// Since we're reusing address in other places, we don't wanna update the current address, rather create a new one
-					const [newAddress] = await tx
-						.insert(addresses)
-						.values(address)
-						.returning({ id: addresses.id });
+			const company = await companyQueryClient.GetDetailedById(input.id);
 
-					company.addressId = newAddress.id;
-				}
+			if (!company) {
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "company not found",
+				});
+			}
 
-				// update the industries, if they already exist, do nothing, otherwise insert them
-				await tx
-					.insert(companyIndustries)
-					.values(
-						industries.map((industry) => ({
-							companyId: companyId!,
-							industryId: industry.id,
-						}))
-					)
-					.onConflictDoNothing();
+			// verify user owns company
+			if (company.ownerId !== ctx.account.id) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "user not authorized to edit this company",
+				});
+			}
 
-				await tx.delete(companyIndustries).where(
-					and(
-						not(
-							inArray(
-								companyIndustries.industryId,
-								industries.map((industry) => industry.id)
-							)
-						),
-						eq(companyIndustries.companyId, companyId!)
-					)
-				);
+			// verify user is not trying to transfer ownership
+			if (input.ownerId !== company.ownerId) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "cannot transfer ownership",
+				});
+			}
 
-				await tx
-					.update(companies)
-					.set(company)
-					.where(eq(companies.id, companyId!));
-			});
+			return await companyQueryClient.Update(input);
 		}),
 	deleteCompany: companyOwnerProcedure
 		.input(
@@ -169,10 +109,21 @@ export const companyRouter = router({
 		)
 		.mutation(async ({ ctx, input }) => {
 			const { id } = input;
-			await ctx.db
-				.update(companies)
-				.set({ deletedAt: new Date().toISOString() })
-				.where(eq(companies.id, id));
+			const companyQueryClient = new CompanyQueryClient(ctx.db);
+
+			const ownedCompanies = await companyQueryClient.GetDetailedManyByOwnerId(
+				ctx.account.id,
+				false
+			);
+
+			if (!ownedCompanies.some((c) => c.id === id)) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "user not authorized to delete this company",
+				});
+			}
+
+			return await companyQueryClient.Delete(id);
 		}),
 	searchCompaniesByKeyword: accountProcedure
 		.input(
@@ -185,34 +136,15 @@ export const companyRouter = router({
 		)
 		.query(async ({ ctx, input }) => {
 			const { keywordQuery, cursor, pageSize, includeDeleted } = input;
+			const companyQueryClient = new CompanyQueryClient(ctx.db);
 
-			const ownedCompanyIds =
-				ctx.ownedCompanies?.map((company) => company.id) || [];
-
-			const res = await withOffsetPagination(
-				ctx.db
-					.select({
-						id: companies.id,
-						name: companies.name,
-						deletedAt: companies.deletedAt,
-					})
-					.from(companies)
-					.where(
-						and(
-							not(inArray(companies.id, ownedCompanyIds)),
-							includeDeleted ? undefined : isNull(companies.deletedAt),
-							sql`companies.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
-						)
-					)
-					.orderBy(
-						sql`ts_rank(companies.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
-					)
-					.$dynamic(),
+			return await companyQueryClient.GetBasicManyByKeyword(
+				keywordQuery,
 				cursor,
-				pageSize
+				pageSize,
+				includeDeleted,
+				ctx.account.id
 			);
-
-			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 	recommendCompanies: accountProcedure
 		.input(
@@ -225,31 +157,13 @@ export const companyRouter = router({
 		.query(async ({ ctx, input }) => {
 			// TODO: Need to track recommendations per account/company and then which ones they acctually view/select
 			const { cursor, pageSize, includeDeleted } = input;
+			const companyQueryClient = new CompanyQueryClient(ctx.db);
 
-			const ownedCompanyIds =
-				ctx.ownedCompanies?.map((company) => company.id) || [];
-
-			// TODO: implement recommendation logic
-			const res = await withOffsetPagination(
-				ctx.db
-					.select({
-						id: companies.id,
-						name: companies.name,
-						deletedAt: companies.deletedAt,
-					})
-					.from(companies)
-					.where(
-						and(
-							not(inArray(companies.id, ownedCompanyIds)),
-							includeDeleted ? undefined : isNull(companies.deletedAt)
-						)
-					)
-					.orderBy(desc(companies.createdAt))
-					.$dynamic(),
+			return await companyQueryClient.GetBasicManyByUserReccomendation(
+				ctx.account.id,
 				cursor,
-				pageSize
+				pageSize,
+				includeDeleted
 			);
-
-			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 });
