@@ -10,15 +10,16 @@ export interface MetricCardProps extends ComponentPropsWithoutRef<"div"> {
   label: string
   icon: keyof typeof Icons
   value: string
-  percentageChange: number
+  numericChange: number
+  changeSuffix?: string
   description?: string
 }
 
-export const MetricCard: FC<MetricCardProps> = ({ className, children, label, icon, value, percentageChange, description, ...props }) => {
+export const MetricCard: FC<MetricCardProps> = ({ className, children, label, icon, value, numericChange, changeSuffix, description, ...props }) => {
   const Icon = Icons[icon]
 
-  const ChangeIcon = percentageChange > 0 ? Icons["arrowUpRight"] : Icons["arrowDownRight"]
-  const changeColor = percentageChange > 0 ? "bg-green-600 text-green-300" : "bg-red-600 text-red-300"
+  const ChangeIcon = numericChange > 0 ? Icons["arrowUpRight"] : Icons["arrowDownRight"]
+  const changeColor = numericChange > 0 ? "bg-green-600 text-green-300" : "bg-red-600 text-red-300"
 
   return (
     <div className={cn("flex justify-center gap-2 items-center w-full relative rounded-lg border p-4 bg-card text-card-foreground shadow-sm", className)} {...props}>
@@ -31,7 +32,7 @@ export const MetricCard: FC<MetricCardProps> = ({ className, children, label, ic
       </div>
       <span className="ml-2">
         <Badge className={cn("text-sm flex items-center", changeColor)}>
-          {percentageChange}%
+          {numericChange}{changeSuffix}
           <ChangeIcon className="ml-0.5 w-5 h-5" />
         </Badge>
       </span>

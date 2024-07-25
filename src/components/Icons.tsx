@@ -94,6 +94,7 @@ import {
   Map,
   ArrowDownRight,
   Radio,
+  Telescope,
   Heart,
   type LucideIcon,
   type LucideProps,
@@ -105,6 +106,7 @@ export type Icon = LucideIcon;
 export const Icons = {
   home: Home,
   map: Map,
+  telescope: Telescope,
   radio: Radio,
   info: Info,
   minus: Minus,

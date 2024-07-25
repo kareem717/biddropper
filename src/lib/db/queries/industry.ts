@@ -1,12 +1,14 @@
 import QueryClient from ".";
-import { eq, and, isNull } from "drizzle-orm";
-import { companyIndustries } from "@/lib/db/drizzle/schema";
+import { eq, and, isNull, inArray } from "drizzle-orm";
+import { companyIndustries, jobIndustries } from "@/lib/db/drizzle/schema";
 import { z } from "zod";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { industries } from "@/lib/db/drizzle/schema";
+import { registerService } from "@/lib/utils";
+import { db } from "..";
 
-type NewIndustry = z.infer<typeof NewIndustrySchema>;
-const NewIndustrySchema = createInsertSchema(industries, {
+export type NewIndustry = z.infer<typeof NewIndustrySchema>;
+export const NewIndustrySchema = createInsertSchema(industries, {
 	name: z.string().min(3).max(60),
 }).omit({
 	id: true,
@@ -15,8 +17,8 @@ const NewIndustrySchema = createInsertSchema(industries, {
 	deletedAt: true,
 });
 
-type ShowIndustry = z.infer<typeof ShowIndustrySchema>;
-const ShowIndustrySchema = createSelectSchema(industries);
+export type ShowIndustry = z.infer<typeof ShowIndustrySchema>;
+export const ShowIndustrySchema = createSelectSchema(industries);
 
 class IndustryQueryClient extends QueryClient {
 	async GetDetailedMany(includeDeleted = false) {
@@ -42,6 +44,22 @@ class IndustryQueryClient extends QueryClient {
 		return companyIndustriesRes.map((industry) => industry.industries);
 	}
 
+	async GetDetailedManyByJobId(jobId: string, includeDeleted = false) {
+		const jobIndustriesRes = await this.caller
+			.select({ industries })
+			.from(jobIndustries)
+			.where(eq(jobIndustries.jobId, jobId))
+			.innerJoin(
+				industries,
+				and(
+					eq(jobIndustries.industryId, industries.id),
+					includeDeleted ? undefined : isNull(industries.deletedAt)
+				)
+			);
+
+		return jobIndustriesRes.map((industry) => industry.industries);
+	}
+
 	async CreateCompanyIndustries(
 		values: { companyId: string; industryId: string }[]
 	) {
@@ -53,8 +71,42 @@ class IndustryQueryClient extends QueryClient {
 
 		return newCompanyIndustries;
 	}
+
+	async CreateJobIndustries(values: { jobId: string; industryId: string }[]) {
+		const newJobIndustries = await this.caller
+			.insert(jobIndustries)
+			.values(values)
+			.onConflictDoNothing()
+			.returning();
+
+		return newJobIndustries;
+	}
+
+	async DeleteJobIndustries(jobId: string, industryIds: string[]) {
+		await this.caller
+			.delete(jobIndustries)
+			.where(
+				and(
+					eq(jobIndustries.jobId, jobId),
+					inArray(jobIndustries.industryId, industryIds)
+				)
+			);
+	}
+
+	async DeleteCompanyIndustries(companyId: string, industryIds: string[]) {
+		await this.caller
+			.delete(companyIndustries)
+			.where(
+				and(
+					eq(companyIndustries.companyId, companyId),
+					inArray(companyIndustries.industryId, industryIds)
+				)
+			);
+	}
 }
 
-export { NewIndustrySchema, ShowIndustrySchema };
-export type { NewIndustry, ShowIndustry };
-export default IndustryQueryClient;
+// Create global service
+export default registerService(
+	"industryQueryClient",
+	() => new IndustryQueryClient(db)
+);

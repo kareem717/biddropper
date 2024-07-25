@@ -10,10 +10,12 @@ import { z } from "zod";
 import { NewAddressSchema } from "./address";
 import { ShowIndustrySchema } from "./industry";
 import IndustryQueryClient from "./industry";
-import AddressQueryClient from "./address";
+import AddressQC from "./address";
+import { registerService } from "@/lib/utils";
+import { db } from "..";
 
-type NewCompany = z.infer<typeof NewCompanySchema>;
-const NewCompanySchema = createInsertSchema(companies, {
+export type NewCompany = z.infer<typeof NewCompanySchema>;
+export const NewCompanySchema = createInsertSchema(companies, {
 	name: z.string().min(3).max(60),
 })
 	.extend({
@@ -37,8 +39,8 @@ const NewCompanySchema = createInsertSchema(companies, {
 		englishSearchVector: true,
 	});
 
-type EditCompany = z.infer<typeof EditCompanySchema>;
-const EditCompanySchema = createInsertSchema(companies, {
+export type EditCompany = z.infer<typeof EditCompanySchema>;
+export const EditCompanySchema = createInsertSchema(companies, {
 	id: z.string().uuid(),
 	name: z.string().min(3).max(60),
 })
@@ -55,8 +57,8 @@ const EditCompanySchema = createInsertSchema(companies, {
 		englishSearchVector: true,
 	});
 
-type ShowCompany = z.infer<typeof ShowCompanySchema>;
-const ShowCompanySchema = createSelectSchema(companies);
+export type ShowCompany = z.infer<typeof ShowCompanySchema>;
+export const ShowCompanySchema = createSelectSchema(companies);
 
 class CompanyQueryClient extends QueryClient {
 	async GetDetailedById(id: string) {
@@ -93,8 +95,7 @@ class CompanyQueryClient extends QueryClient {
 			.where(eq(companies.id, id))
 			.innerJoin(addresses, eq(companies.addressId, addresses.id));
 
-		const industryQueryClient = new IndustryQueryClient(this.caller);
-		const industries = await industryQueryClient.GetDetailedManyByCompanyId(id);
+		const industries = await IndustryQueryClient.GetDetailedManyByCompanyId(id);
 
 		return {
 			...company.company,
@@ -108,7 +109,7 @@ class CompanyQueryClient extends QueryClient {
 		page: number,
 		pageSize: number,
 		includeDeleted: boolean = false,
-		ownerId: string
+		ownerId: string // querier's id
 	) {
 		const ownedCompanies = await this.GetDetailedManyByOwnerId(ownerId, true);
 		const ownedCompanyIds = ownedCompanies.map((company) => company.id);
@@ -174,10 +175,7 @@ class CompanyQueryClient extends QueryClient {
 
 	async Create(values: NewCompany) {
 		return await this.caller.transaction(async (tx) => {
-			const addressQueryClient = new AddressQueryClient(tx);
-			const industryQueryClient = new IndustryQueryClient(tx);
-
-			const newAddress = await addressQueryClient.Create(values.address);
+			const newAddress = await AddressQC.withCaller(tx).Create(values.address);
 
 			const [newCompany] = await tx
 				.insert(companies)
@@ -187,7 +185,7 @@ class CompanyQueryClient extends QueryClient {
 				})
 				.returning();
 
-			await industryQueryClient.CreateCompanyIndustries(
+			await IndustryQueryClient.withCaller(tx).CreateCompanyIndustries(
 				values.industries.map((industry) => ({
 					companyId: newCompany.id,
 					industryId: industry,
@@ -206,10 +204,7 @@ class CompanyQueryClient extends QueryClient {
 		}
 
 		await this.caller.transaction(async (tx) => {
-			const addressQueryClient = new AddressQueryClient(tx);
-			const industryQueryClient = new IndustryQueryClient(tx);
-
-			const currAddress = await addressQueryClient.GetDetailedById(
+			const currAddress = await AddressQC.withCaller(tx).GetDetailedById(
 				company.addressId
 			);
 
@@ -220,29 +215,30 @@ class CompanyQueryClient extends QueryClient {
 
 			if (addressChanged) {
 				// Since we're reusing address in other places, we don't wanna update the current address, rather create a new one
-				const newAddress = await addressQueryClient.Create(address);
+				const newAddress = await AddressQC.Create(address);
 				company.addressId = newAddress.id;
 			}
 
 			// update the industries, if they already exist, do nothing, otherwise insert them
-			const addedIndustries = await industryQueryClient.CreateCompanyIndustries(
+			const newIndustries = await IndustryQueryClient.withCaller(
+				tx
+			).CreateCompanyIndustries(
 				industries.map((industry) => ({
 					companyId: companyId,
 					industryId: industry.id,
 				}))
 			);
 
-			// I dont see another use case for this functionality, so no need to include it on the industryQueryClient
-			await tx.delete(companyIndustries).where(
-				and(
-					not(
-						inArray(
-							companyIndustries.industryId,
-							addedIndustries.map((industry) => industry.industryId)
-						)
-					),
-					eq(companyIndustries.companyId, companyId)
-				)
+			const newIndustriesIds = newIndustries.map(
+				(industry) => industry.industryId
+			);
+			const industriesToDelete = industries.filter(
+				(industry) => !newIndustriesIds.includes(industry.id)
+			);
+
+			await IndustryQueryClient.withCaller(tx).DeleteCompanyIndustries(
+				companyId,
+				industriesToDelete.map((industry) => industry.id)
 			);
 
 			await tx
@@ -260,6 +256,8 @@ class CompanyQueryClient extends QueryClient {
 	}
 }
 
-export { NewCompanySchema, EditCompanySchema, ShowCompanySchema };
-export type { NewCompany, EditCompany, ShowCompany };
-export default CompanyQueryClient;
+// Create global service
+export default registerService(
+	"companyQueryClient",
+	() => new CompanyQueryClient(db)
+);

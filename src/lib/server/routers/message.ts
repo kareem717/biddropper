@@ -1,9 +1,4 @@
 import { router, accountProcedure } from "../trpc";
-import {
-	messageAccountRecipients,
-	messageCompanyRecipients,
-} from "@/lib/db/drizzle/schema";
-import { eq, and, isNull } from "drizzle-orm";
 import { NewMessageSchema } from "@/lib/db/queries/message";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -14,9 +9,8 @@ import CompanyQueryClient from "@/lib/db/queries/company";
 export const messageRouter = router({
 	createMessage: accountProcedure
 		.input(NewMessageSchema)
-		.mutation(async ({ ctx, input }) => {
-			const mqc = new MessageQueryClient(ctx.db);
-			return mqc.Create(input);
+		.mutation(async ({ input }) => {
+			return await MessageQueryClient.Create(input);
 		}),
 	getReceivedMessagesByAccountId: accountProcedure
 		.input(
@@ -46,8 +40,7 @@ export const messageRouter = router({
 				});
 			}
 
-			const mqc = new MessageQueryClient(ctx.db);
-			return await mqc.GetExtendedManyRecipientsByAccountId(
+			return await MessageQueryClient.GetExtendedManyReceivedByAccountId(
 				accountId,
 				keywordQuery,
 				page,
@@ -77,10 +70,9 @@ export const messageRouter = router({
 				includeDeleted,
 			} = input;
 
-			const cqc = new CompanyQueryClient(ctx.db);
-			const mqc = new MessageQueryClient(ctx.db);
-
-			const ownedCompanies = await cqc.GetDetailedManyByOwnerId(ctx.account.id);
+			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
+				ctx.account.id
+			);
 			if (!ownedCompanies.some((company) => company.id === companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
@@ -88,7 +80,7 @@ export const messageRouter = router({
 				});
 			}
 
-			return await mqc.GetExtendedManyRecipientsByCompanyId(
+			return await MessageQueryClient.GetExtendedManyReceivedByCompanyId(
 				companyId,
 				keywordQuery,
 				page,
@@ -113,8 +105,7 @@ export const messageRouter = router({
 				});
 			}
 
-			const mqc = new MessageQueryClient(ctx.db);
-			return await mqc.GetUnreadCountByAccountId(accountId);
+			return await MessageQueryClient.GetUnreadCountByAccountId(accountId);
 		}),
 	getUnreadMessageCountByCompanyId: accountProcedure
 		.input(
@@ -125,8 +116,9 @@ export const messageRouter = router({
 		.query(async ({ ctx, input }) => {
 			const { companyId } = input;
 
-			const cqc = new CompanyQueryClient(ctx.db);
-			const ownedCompanies = await cqc.GetDetailedManyByOwnerId(ctx.account.id);
+			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
+				ctx.account.id
+			);
 			if (!ownedCompanies.some((company) => company.id === companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
@@ -134,14 +126,12 @@ export const messageRouter = router({
 				});
 			}
 
-			const mqc = new MessageQueryClient(ctx.db);
-			return await mqc.GetUnreadCountByCompanyId(companyId);
+			return await MessageQueryClient.GetUnreadCountByCompanyId(companyId);
 		}),
 	readMessage: accountProcedure
 		.input(UpdateRecipientSchema)
 		.mutation(async ({ ctx, input }) => {
 			const { recipient } = input;
-			const mqc = new MessageQueryClient(ctx.db);
 
 			if ("accountId" in recipient) {
 				if (ctx.account.id !== recipient.accountId) {
@@ -151,10 +141,8 @@ export const messageRouter = router({
 					});
 				}
 			} else if ("companyId" in recipient) {
-				const cqc = new CompanyQueryClient(ctx.db);
-				const ownedCompanies = await cqc.GetDetailedManyByOwnerId(
-					ctx.account.id
-				);
+				const ownedCompanies =
+					await CompanyQueryClient.GetDetailedManyByOwnerId(ctx.account.id);
 				if (
 					!ownedCompanies.some((company) => company.id === recipient.companyId)
 				) {
@@ -165,7 +153,7 @@ export const messageRouter = router({
 				}
 			}
 
-			return await mqc.UpdateRecipient({
+			return await MessageQueryClient.UpdateRecipient({
 				messageId: input.messageId,
 				recipient: input.recipient,
 				readAt: new Date().toISOString(),
@@ -175,7 +163,6 @@ export const messageRouter = router({
 		.input(UpdateRecipientSchema)
 		.mutation(async ({ ctx, input }) => {
 			const { recipient } = input;
-			const mqc = new MessageQueryClient(ctx.db);
 
 			if ("accountId" in recipient) {
 				if (ctx.account.id !== recipient.accountId) {
@@ -185,10 +172,8 @@ export const messageRouter = router({
 					});
 				}
 			} else if ("companyId" in recipient) {
-				const cqc = new CompanyQueryClient(ctx.db);
-				const ownedCompanies = await cqc.GetDetailedManyByOwnerId(
-					ctx.account.id
-				);
+				const ownedCompanies =
+					await CompanyQueryClient.GetDetailedManyByOwnerId(ctx.account.id);
 				if (
 					!ownedCompanies.some((company) => company.id === recipient.companyId)
 				) {
@@ -199,7 +184,7 @@ export const messageRouter = router({
 				}
 			}
 
-			return await mqc.UpdateRecipient({
+			return await MessageQueryClient.UpdateRecipient({
 				messageId: input.messageId,
 				recipient: input.recipient,
 				deletedAt: new Date().toISOString(),
@@ -209,8 +194,6 @@ export const messageRouter = router({
 		.input(UpdateRecipientSchema)
 		.mutation(async ({ ctx, input }) => {
 			const { recipient } = input;
-			const mqc = new MessageQueryClient(ctx.db);
-
 			if ("accountId" in recipient) {
 				if (ctx.account.id !== recipient.accountId) {
 					throw new TRPCError({
@@ -219,10 +202,8 @@ export const messageRouter = router({
 					});
 				}
 			} else if ("companyId" in recipient) {
-				const cqc = new CompanyQueryClient(ctx.db);
-				const ownedCompanies = await cqc.GetDetailedManyByOwnerId(
-					ctx.account.id
-				);
+				const ownedCompanies =
+					await CompanyQueryClient.GetDetailedManyByOwnerId(ctx.account.id);
 				if (
 					!ownedCompanies.some((company) => company.id === recipient.companyId)
 				) {
@@ -233,7 +214,7 @@ export const messageRouter = router({
 				}
 			}
 
-			return await mqc.UpdateRecipient({
+			return await MessageQueryClient.UpdateRecipient({
 				messageId: input.messageId,
 				recipient: input.recipient,
 				readAt: null,

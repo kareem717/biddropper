@@ -3,8 +3,6 @@ import {
 	addresses,
 	companyJobs,
 	jobs,
-	companies,
-	accounts,
 	jobRecommendationHistory,
 	jobViewHistory,
 	accountJobFavourites,
@@ -12,14 +10,11 @@ import {
 import { router, accountProcedure } from "../trpc";
 import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { industries, jobIndustries } from "@/lib/db/drizzle/schema";
-import { EditJobSchema, NewJobSchema } from "@/lib/validations/job";
+import { jobIndustries } from "@/lib/db/drizzle/schema";
+import { EditJobSchema, NewJobSchema } from "@/lib/db/queries/job";
 import { and, isNull, inArray, not } from "drizzle-orm";
-import {
-	withOffsetPagination,
-	generateOffsetPaginationResponse,
-	getOwnedJobs,
-} from "./shared";
+import JobQueryClient from "@/lib/db/queries/job";
+import AnalyticQueryClient from "@/lib/db/queries/analytics";
 
 export const jobRouter = router({
 	getJobFull: accountProcedure
@@ -29,165 +24,17 @@ export const jobRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { id } = input;
-			const [res] = await ctx.db
-				.select({
-					job: jobs,
-					address: addresses,
-					ownerCompany: {
-						id: companies.id,
-						name: companies.name,
-						emailAddress: companies.emailAddress,
-					},
-					ownerAccount: {
-						id: accounts.id,
-						username: accounts.username,
-					},
-				})
-				.from(jobs)
-				.where(eq(jobs.id, id))
-				.innerJoin(addresses, eq(jobs.addressId, addresses.id))
-				.leftJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
-				.leftJoin(accountJobs, eq(jobs.id, accountJobs.jobId))
-				.leftJoin(companies, eq(companyJobs.companyId, companies.id))
-				.leftJoin(accounts, eq(accountJobs.accountId, accounts.id));
-
-			const jobIndustriesRes = await ctx.db
-				.select({ industries })
-				.from(jobIndustries)
-				.where(eq(jobIndustries.jobId, id))
-				.innerJoin(
-					industries,
-					and(
-						eq(jobIndustries.industryId, industries.id),
-						isNull(industries.deletedAt)
-					)
-				);
-
-			return {
-				...res,
-				industries: jobIndustriesRes.map((industry) => industry.industries),
-			};
+			return await JobQueryClient.GetExtendedById(input.id);
 		}),
 	createJob: accountProcedure
 		.input(NewJobSchema)
 		.mutation(async ({ ctx, input }) => {
-			const {
-				address,
-				industries: industryIds,
-				companyId,
-				accountId,
-				...job
-			} = input;
-			const newId = await ctx.db.transaction(async (tx) => {
-				if (!companyId && !accountId) {
-					throw new Error("Company or account ID is required");
-				}
-
-				const [newAddress] = await tx
-					.insert(addresses)
-					.values(address)
-					.returning({ id: addresses.id });
-
-				const [newJob] = await tx
-					.insert(jobs)
-					.values({
-						...job,
-						addressId: newAddress.id,
-					})
-					.returning({ id: jobs.id });
-
-				const newJobIndustries = industryIds.map((id) => ({
-					jobId: newJob.id,
-					industryId: id,
-				}));
-
-				await tx
-					.insert(jobIndustries)
-					.values(newJobIndustries)
-					.onConflictDoNothing();
-
-				if (companyId) {
-					await tx
-						.insert(companyJobs)
-						.values({
-							companyId,
-							jobId: newJob.id,
-						})
-						.onConflictDoNothing();
-				} else if (accountId) {
-					await tx
-						.insert(accountJobs)
-						.values({
-							accountId,
-							jobId: newJob.id,
-						})
-						.onConflictDoNothing();
-				}
-
-				return newJob.id;
-			});
-
-			return newId;
+			return await JobQueryClient.Create(input);
 		}),
 	editJob: accountProcedure
 		.input(EditJobSchema)
 		.mutation(async ({ ctx, input }) => {
-			const { address, industries: inputIndustries, id: jobId, ...job } = input;
-			console.log(address, inputIndustries, job);
-			try {
-				await ctx.db.transaction(async (tx) => {
-					const [currAddress] = await tx
-						.select()
-						.from(addresses)
-						.where(eq(addresses.id, job.addressId));
-
-					// if the address values have been changed, update the address
-					const addressChanged = Object.entries(address).some(([key, value]) =>
-						Object.entries(currAddress).some(
-							([k, v]) => k === key && v !== value
-						)
-					);
-
-					if (addressChanged) {
-						// Since we're reusing address in other places, we don't wanna update the current address, rather create a new one
-						const [newAddress] = await tx
-							.insert(addresses)
-							.values(address)
-							.returning({ id: addresses.id });
-
-						job.addressId = newAddress.id;
-					}
-
-					// update the industries, if they already exist, do nothing, otherwise insert them
-					await tx
-						.insert(jobIndustries)
-						.values(
-							inputIndustries.map((industry) => ({
-								jobId: jobId!,
-								industryId: industry.id,
-							}))
-						)
-						.onConflictDoNothing();
-
-					await tx.delete(jobIndustries).where(
-						and(
-							not(
-								inArray(
-									jobIndustries.industryId,
-									inputIndustries.map((industry) => industry.id)
-								)
-							),
-							eq(jobIndustries.jobId, jobId!)
-						)
-					);
-
-					await tx.update(jobs).set(job).where(eq(jobs.id, jobId!));
-				});
-			} catch (e) {
-				console.log(e);
-				throw e;
-			}
+			return await JobQueryClient.Update(input);
 		}),
 	deleteJob: accountProcedure
 		.input(
@@ -196,11 +43,8 @@ export const jobRouter = router({
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const { id } = input;
-			await ctx.db
-				.update(jobs)
-				.set({ deletedAt: new Date().toISOString() })
-				.where(eq(jobs.id, id));
+			//TODO: verify user owns job before deleteion
+			return await JobQueryClient.Delete(input.id);
 		}),
 	searchJobsByKeyword: accountProcedure
 		.input(
@@ -214,37 +58,13 @@ export const jobRouter = router({
 		.query(async ({ ctx, input }) => {
 			const { keywordQuery, cursor, pageSize, includeDeleted } = input;
 
-			const ownedJobs = await getOwnedJobs(ctx, ctx.db, ctx.account.id);
-
-			const res = await withOffsetPagination(
-				ctx.db
-					.select({
-						id: jobs.id,
-						title: jobs.title,
-						deletedAt: jobs.deletedAt,
-					})
-					.from(jobs)
-					.where(
-						and(
-							not(
-								inArray(
-									jobs.id,
-									ownedJobs.map((job) => job.id)
-								)
-							),
-							includeDeleted ? undefined : isNull(jobs.deletedAt),
-							sql`jobs.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
-						)
-					)
-					.orderBy(
-						sql`ts_rank(jobs.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
-					)
-					.$dynamic(),
+			return await JobQueryClient.GetBasicManyByKeyword(
+				keywordQuery,
 				cursor,
-				pageSize
+				pageSize,
+				includeDeleted,
+				ctx.account.id
 			);
-
-			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 	recommendJobs: accountProcedure
 		.input(
@@ -257,74 +77,47 @@ export const jobRouter = router({
 		.query(async ({ ctx, input }) => {
 			// TODO: Need to track recommendations per account/company and then which ones they acctually view/bid on
 			const { cursor, pageSize, includeDeleted } = input;
+			const jqc = JobQueryClient;
 
-			const ownedJobs = await getOwnedJobs(ctx, ctx.db, ctx.account.id);
+			return await jqc.caller.transaction(async (tx) => {
+				const recommendedJobs = await jqc
+					.withCaller(tx)
+					.GetBasicManyByUserReccomendation(
+						ctx.account.id,
+						cursor,
+						pageSize,
+						includeDeleted
+					);
 
-			// TODO: implement recommendation logic
-			const res = await withOffsetPagination(
-				ctx.db
-					.select()
-					.from(jobs)
-					.where(
-						and(
-							ownedJobs.length > 0
-								? not(
-										inArray(
-											jobs.id,
-											ownedJobs.map((job) => job.id)
-										)
-								  )
-								: undefined,
-							includeDeleted ? undefined : isNull(jobs.deletedAt)
-						)
-					)
-					.orderBy(desc(jobs.createdAt))
-					.$dynamic(),
-				cursor,
-				pageSize
-			);
-
-			const output = generateOffsetPaginationResponse(res, cursor, pageSize);
-
-			// Use output since it slices and removes a job for pagination
-			const recommendedJobs = output.data.map((job) => ({
-				jobId: job.id,
-				accountId: ctx.account.id,
-			}));
-
-			// Track job recommendation
-			await ctx.db.insert(jobRecommendationHistory).values(recommendedJobs);
-
-			return output;
+				// Track job recommendation
+				await AnalyticQueryClient.withCaller(tx).TrackJobReccomendation(
+					recommendedJobs.data.map((job) => ({
+						jobId: job.id,
+						accountId: ctx.account.id,
+					}))
+				);
+			});
 		}),
 	favouriteJob: accountProcedure
 		.input(z.object({ jobId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			const ownedJobIds = await getOwnedJobs(ctx, ctx.db, ctx.account.id);
+			const jqc = JobQueryClient;
+			return await jqc.caller.transaction(async (tx) => {
+				const ownedJobs = await jqc
+					.withCaller(tx)
+					.GetDetailedManyOwnedByAccountId(ctx.account.id);
 
-			if (ownedJobIds.some((job) => job.id === input.jobId)) {
-				throw new Error("You cannot favourite a job you own");
-			}
+				if (ownedJobs.some((job) => job.id === input.jobId)) {
+					throw new Error("You cannot favourite a job you own");
+				}
 
-			await ctx.db.insert(accountJobFavourites).values({
-				accountId: ctx.account.id,
-				jobId: input.jobId,
+				await jqc.withCaller(tx).Favorite(ctx.account.id, input.jobId);
 			});
 		}),
 	unfavouriteJob: accountProcedure
 		.input(z.object({ jobId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			await ctx.db
-				.update(accountJobFavourites)
-				.set({
-					deletedAt: new Date().toISOString(),
-				})
-				.where(
-					and(
-						eq(accountJobFavourites.accountId, ctx.account.id),
-						eq(accountJobFavourites.jobId, input.jobId)
-					)
-				);
+			return await JobQueryClient.Unfavorite(ctx.account.id, input.jobId);
 		}),
 	getFavouritedJobs: accountProcedure
 		.input(
@@ -337,38 +130,19 @@ export const jobRouter = router({
 		.query(async ({ ctx, input }) => {
 			const { cursor, pageSize, includeDeleted } = input;
 
-			const res = await withOffsetPagination(
-				ctx.db
-					.select({
-						id: jobs.id,
-						title: jobs.title,
-						deletedAt: jobs.deletedAt,
-					})
-					.from(jobs)
-					.innerJoin(
-						accountJobFavourites,
-						eq(jobs.id, accountJobFavourites.jobId)
-					)
-					.where(
-						and(
-							includeDeleted ? undefined : isNull(jobs.deletedAt),
-							eq(accountJobFavourites.accountId, ctx.account.id)
-						)
-					)
-					.orderBy(desc(accountJobFavourites.createdAt))
-					.$dynamic(),
+			return await JobQueryClient.GetBasicManyByFavouriterAccountId(
+				ctx.account.id,
 				cursor,
-				pageSize
+				pageSize,
+				includeDeleted
 			);
-
-			return generateOffsetPaginationResponse(res, cursor, pageSize);
 		}),
 	trackJobView: accountProcedure
 		.input(z.object({ jobId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			await ctx.db.insert(jobViewHistory).values({
-				jobId: input.jobId,
-				accountId: ctx.account.id,
-			});
+			return await AnalyticQueryClient.TrackJobView(
+				ctx.account.id,
+				input.jobId
+			);
 		}),
 });

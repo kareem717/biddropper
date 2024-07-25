@@ -3,17 +3,19 @@ import { addresses } from "@/lib/db/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { registerService } from "@/lib/utils";
+import { db } from "..";
 
-type NewAddress = z.infer<typeof NewAddressSchema>;
-const NewAddressSchema = createInsertSchema(addresses).omit({
+export type NewAddress = z.infer<typeof NewAddressSchema>;
+export const NewAddressSchema = createInsertSchema(addresses).omit({
 	id: true,
 	createdAt: true,
 	updatedAt: true,
 	deletedAt: true,
 });
 
-type ShowAddress = z.infer<typeof ShowAddressSchema>;
-const ShowAddressSchema = createSelectSchema(addresses);
+export type ShowAddress = z.infer<typeof ShowAddressSchema>;
+export const ShowAddressSchema = createSelectSchema(addresses);
 
 class AddressQueryClient extends QueryClient {
 	async Create(values: NewAddress) {
@@ -35,6 +37,8 @@ class AddressQueryClient extends QueryClient {
 	}
 }
 
-export { NewAddressSchema, ShowAddressSchema };
-export type { NewAddress, ShowAddress };
-export default AddressQueryClient;
+// Create  global service
+export default registerService(
+	"addressQueryClient",
+	() => new AddressQueryClient(db)
+);

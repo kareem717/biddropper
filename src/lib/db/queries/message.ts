@@ -9,10 +9,11 @@ import {
 	messages,
 } from "@/lib/db/drizzle/schema";
 import { eq, and, isNull, desc, sql, count } from "drizzle-orm";
-import { PgColumn, PgTableWithColumns } from "drizzle-orm/pg-core";
+import { registerService } from "@/lib/utils";
+import { db } from "..";
 
-type NewMessage = z.infer<typeof NewMessageSchema>;
-const NewMessageSchema = createInsertSchema(messages)
+export type NewMessage = z.infer<typeof NewMessageSchema>;
+export const NewMessageSchema = createInsertSchema(messages)
 	.extend({
 		recipients: z.object({
 			accountIds: z.array(z.string()).optional().default([]),
@@ -27,8 +28,8 @@ const NewMessageSchema = createInsertSchema(messages)
 		englishSearchVector: true,
 	});
 
-type UpdateRecipient = z.infer<typeof UpdateRecipientSchema>;
-const UpdateRecipientSchema = z.object({
+export type UpdateRecipient = z.infer<typeof UpdateRecipientSchema>;
+export const UpdateRecipientSchema = z.object({
 	messageId: z.string(),
 	readAt: z.string().datetime().nullable().optional(),
 	deletedAt: z.string().datetime().nullable().optional(),
@@ -42,8 +43,8 @@ const UpdateRecipientSchema = z.object({
 	]),
 });
 
-type ShowMessage = z.infer<typeof ShowMessageSchema>;
-const ShowMessageSchema = createSelectSchema(messages).extend({
+export type ShowMessage = z.infer<typeof ShowMessageSchema>;
+export const ShowMessageSchema = createSelectSchema(messages).extend({
 	readAt: z.string().datetime().nullable(),
 	deletedAt: z.string().datetime().nullable(),
 	sender: z.object({
@@ -90,7 +91,7 @@ class MessageQueryClient extends QueryClient {
 		});
 	}
 
-	async GetExtendedManyRecipientsByAccountId(
+	async GetExtendedManyReceivedByAccountId(
 		accountId: string,
 		keywordQuery: string | undefined,
 		page: number,
@@ -148,7 +149,7 @@ class MessageQueryClient extends QueryClient {
 		return this.GenerateOffsetPaginationResponse(res, page, pageSize);
 	}
 
-	async GetExtendedManyRecipientsByCompanyId(
+	async GetExtendedManyReceivedByCompanyId(
 		companyId: string,
 		keywordQuery: string | undefined,
 		page: number,
@@ -273,6 +274,8 @@ class MessageQueryClient extends QueryClient {
 	}
 }
 
-export { NewMessageSchema, ShowMessageSchema, UpdateRecipientSchema };
-export type { NewMessage, ShowMessage, UpdateRecipient };
-export default MessageQueryClient;
+// Create global service
+export default registerService(
+	"messageQueryClient",
+	() => new MessageQueryClient(db)
+);

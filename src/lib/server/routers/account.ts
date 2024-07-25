@@ -1,9 +1,8 @@
-import { accounts } from "@/lib/db/drizzle/schema";
-import { eq, and, isNull, sql, not } from "drizzle-orm";
 import { accountProcedure, router, userProcedure } from "../trpc";
-import { NewAccountSchema, EditAccountSchema } from "@/lib/validations/account";
+import { NewAccountSchema, EditAccountSchema } from "@/lib/db/queries/account";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import AccountQueryClient from "@/lib/db/queries/account";
 
 export const accountRouter = router({
 	createAccount: userProcedure
@@ -16,18 +15,10 @@ export const accountRouter = router({
 				});
 			}
 
-			await ctx.db.insert(accounts).values({
-				...input,
-				userId: ctx.user.id,
-			});
+			return await AccountQueryClient.Create(input);
 		}),
 	getAccount: userProcedure.query(async ({ ctx }) => {
-		const [account] = await ctx.db
-			.select()
-			.from(accounts)
-			.where(and(eq(accounts.userId, ctx.user.id), isNull(accounts.deletedAt)));
-
-		return account;
+		return await AccountQueryClient.GetDetailedByUserId(ctx.user.id);
 	}),
 	editAccount: accountProcedure
 		.input(EditAccountSchema)
@@ -48,10 +39,7 @@ export const accountRouter = router({
 				});
 			}
 
-			await ctx.db
-				.update(accounts)
-				.set(input)
-				.where(eq(accounts.id, accountId));
+			return await AccountQueryClient.Update(input);
 		}),
 	searhAccountsByKeyword: accountProcedure
 		.input(
@@ -63,36 +51,14 @@ export const accountRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { keywordQuery, cursor: page, pageSize, includeDeleted } = input;
+			const { keywordQuery, cursor, pageSize, includeDeleted } = input;
 
-			const res = await ctx.db
-				.select({
-					id: accounts.id,
-					username: accounts.username,
-					deletedAt: accounts.deletedAt,
-				})
-				.from(accounts)
-				.where(
-					and(
-						not(eq(accounts.id, ctx.account.id)),
-						includeDeleted ? undefined : isNull(accounts.deletedAt),
-						sql`accounts.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
-					)
-				)
-				.orderBy(
-					sql`ts_rank(accounts.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
-				)
-				.offset((page - 1) * pageSize)
-				.limit(pageSize + 1);
-
-			const hasNext = res.length > pageSize;
-			const hasPrevious = page > 1;
-			return {
-				data: res.slice(0, pageSize),
-				hasNext,
-				hasPrevious,
-				nextPage: hasNext ? page + 1 : null,
-				previousPage: hasPrevious ? page - 1 : null,
-			};
+			return await AccountQueryClient.GetBasicManyByKeyword(
+				ctx.account.id,
+				keywordQuery,
+				cursor,
+				pageSize,
+				includeDeleted
+			);
 		}),
 });

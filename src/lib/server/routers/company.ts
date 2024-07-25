@@ -12,8 +12,7 @@ export const companyRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const companyQueryClient = new CompanyQueryClient(ctx.db);
-			return await companyQueryClient.GetDetailedManyByOwnerId(
+			return await CompanyQueryClient.GetDetailedManyByOwnerId(
 				ctx.account.id,
 				input.includeDeleted
 			);
@@ -25,10 +24,7 @@ export const companyRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { id } = input;
-
-			const companyQueryClient = new CompanyQueryClient(ctx.db);
-			return await companyQueryClient.GetDetailedById(id);
+			return await CompanyQueryClient.GetDetailedById(input.id);
 		}),
 	getCompanyFull: accountProcedure
 		.input(
@@ -37,9 +33,7 @@ export const companyRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { id } = input;
-			const companyQueryClient = new CompanyQueryClient(ctx.db);
-			return await companyQueryClient.GetExtendedById(id);
+			return await CompanyQueryClient.GetExtendedById(input.id);
 		}),
 
 	createCompany: accountProcedure
@@ -59,8 +53,7 @@ export const companyRouter = router({
 				});
 			}
 
-			const companyQueryClient = new CompanyQueryClient(ctx.db);
-			return await companyQueryClient.Create(input);
+			return await CompanyQueryClient.Create(input);
 		}),
 	editCompany: companyOwnerProcedure
 		.input(EditCompanySchema)
@@ -72,9 +65,7 @@ export const companyRouter = router({
 				});
 			}
 
-			const companyQueryClient = new CompanyQueryClient(ctx.db);
-
-			const company = await companyQueryClient.GetDetailedById(input.id);
+			const company = await CompanyQueryClient.GetDetailedById(input.id);
 
 			if (!company) {
 				throw new TRPCError({
@@ -99,7 +90,7 @@ export const companyRouter = router({
 				});
 			}
 
-			return await companyQueryClient.Update(input);
+			return await CompanyQueryClient.Update(input);
 		}),
 	deleteCompany: companyOwnerProcedure
 		.input(
@@ -109,9 +100,8 @@ export const companyRouter = router({
 		)
 		.mutation(async ({ ctx, input }) => {
 			const { id } = input;
-			const companyQueryClient = new CompanyQueryClient(ctx.db);
 
-			const ownedCompanies = await companyQueryClient.GetDetailedManyByOwnerId(
+			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
 				ctx.account.id,
 				false
 			);
@@ -123,7 +113,7 @@ export const companyRouter = router({
 				});
 			}
 
-			return await companyQueryClient.Delete(id);
+			return await CompanyQueryClient.Delete(id);
 		}),
 	searchCompaniesByKeyword: accountProcedure
 		.input(
@@ -136,9 +126,8 @@ export const companyRouter = router({
 		)
 		.query(async ({ ctx, input }) => {
 			const { keywordQuery, cursor, pageSize, includeDeleted } = input;
-			const companyQueryClient = new CompanyQueryClient(ctx.db);
 
-			return await companyQueryClient.GetBasicManyByKeyword(
+			return await CompanyQueryClient.GetBasicManyByKeyword(
 				keywordQuery,
 				cursor,
 				pageSize,
@@ -157,9 +146,8 @@ export const companyRouter = router({
 		.query(async ({ ctx, input }) => {
 			// TODO: Need to track recommendations per account/company and then which ones they acctually view/select
 			const { cursor, pageSize, includeDeleted } = input;
-			const companyQueryClient = new CompanyQueryClient(ctx.db);
 
-			return await companyQueryClient.GetBasicManyByUserReccomendation(
+			return await CompanyQueryClient.GetBasicManyByUserReccomendation(
 				ctx.account.id,
 				cursor,
 				pageSize,
