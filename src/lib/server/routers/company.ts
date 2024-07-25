@@ -3,6 +3,7 @@ import { EditCompanySchema, NewCompanySchema } from "@/lib/db/queries/company";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import CompanyQueryClient from "@/lib/db/queries/company";
+import AnalyticQueryClient from "@/lib/db/queries/analytics";
 
 export const companyRouter = router({
 	getOwnedCompanies: accountProcedure
@@ -147,11 +148,26 @@ export const companyRouter = router({
 			// TODO: Need to track recommendations per account/company and then which ones they acctually view/select
 			const { cursor, pageSize, includeDeleted } = input;
 
-			return await CompanyQueryClient.GetBasicManyByUserReccomendation(
-				ctx.account.id,
-				cursor,
-				pageSize,
-				includeDeleted
-			);
+			return await CompanyQueryClient.caller.transaction(async (tx) => {
+				const companies =
+					await CompanyQueryClient.GetBasicManyByUserReccomendation(
+						ctx.account.id,
+						cursor,
+						pageSize,
+						includeDeleted
+					);
+
+				// Track job recommendation
+				await AnalyticQueryClient.withCaller(
+					tx
+				).TrackAccountCompanyRecommendation(
+					companies.data.map((company) => ({
+						companyId: company.id,
+						accountId: ctx.account.id,
+					}))
+				);
+
+				return companies;
+			});
 		}),
 });

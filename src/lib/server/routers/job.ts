@@ -78,7 +78,7 @@ export const jobRouter = router({
 					);
 
 				// Track job recommendation
-				await AnalyticQueryClient.withCaller(tx).TrackJobReccomendation(
+				await AnalyticQueryClient.withCaller(tx).TrackAccountJobRecommendation(
 					recommendedJobs.data.map((job) => ({
 						jobId: job.id,
 						accountId: ctx.account.id,
@@ -128,7 +128,7 @@ export const jobRouter = router({
 	trackJobView: accountProcedure
 		.input(z.object({ jobId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			return await AnalyticQueryClient.TrackJobView(
+			return await AnalyticQueryClient.TrackAccountJobView(
 				ctx.account.id,
 				input.jobId
 			);

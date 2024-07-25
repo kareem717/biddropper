@@ -17,6 +17,7 @@ import { NewAddressSchema } from "./address";
 import { ShowIndustrySchema } from "./industry";
 import IndustryQueryClient from "./industry";
 import AddressQueryClient from "./address";
+import AnalyticsQueryClient from "./analytics";
 
 export type NewJob = z.infer<typeof NewJobSchema>;
 export const NewJobSchema = createInsertSchema(jobs, {
@@ -216,7 +217,9 @@ class JobQueryClient extends QueryClient {
 					...job,
 					addressId: newAddress.id,
 				})
-				.returning({ id: jobs.id });
+				.returning();
+
+			await AnalyticsQueryClient.withCaller(tx).CreateJobAnalytics(newJob.id);
 
 			await IndustryQueryClient.withCaller(tx).CreateJobIndustries(
 				industryIds.map((id) => ({

@@ -1,10 +1,8 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE EXTENSION pg_cron;
-
 CREATE TABLE
-    company_analytics (
-        company_id UUID PRIMARY KEY REFERENCES companies (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    job_analytics (
+        job_id UUID PRIMARY KEY REFERENCES jobs (id) ON DELETE RESTRICT ON UPDATE CASCADE,
         weekly_views BIGINT NOT NULL DEFAULT 0,
         monthly_views BIGINT NOT NULL DEFAULT 0,
         weekly_bids_received BIGINT NOT NULL DEFAULT 0,
@@ -16,17 +14,17 @@ CREATE TABLE
         deleted_at timestamptz
     );
 
-CREATE TRIGGER sync_company_analytics_updated_at BEFORE
-UPDATE ON company_analytics FOR EACH ROW
+CREATE TRIGGER sync_job_analytics_updated_at BEFORE
+UPDATE ON job_analytics FOR EACH ROW
 EXECUTE FUNCTION sync_updated_at_column ();
 
 SELECT
     cron.schedule (
-        'reset-company-weekly-analytics',
+        'reset-job-weekly-analytics',
         '0 4 * * 1',
         $$
         UPDATE
-            company_analytics
+            job_analytics
         SET
             weekly_views = 0,
             weekly_bids_received = 0,
@@ -38,11 +36,11 @@ SELECT
 
 SELECT
     cron.schedule (
-        'reset-company-monthly-analytics',
+        'reset-job-monthly-analytics',
         '0 4 * * 1',
         $$
         UPDATE
-            company_analytics
+            job_analytics
         SET
             monthly_views = 0,
             monthly_bids_received = 0,
@@ -56,15 +54,13 @@ SELECT
 -- +goose Down
 -- +goose StatementBegin
 SELECT
-    cron.unschedule ('reset-company-monthly-analytics');
+    cron.unschedule ('reset-job-monthly-analytics');
 
 SELECT
-    cron.unschedule ('reset-company-weekly-analytics');
+    cron.unschedule ('reset-job-weekly-analytics');
 
-DROP EXTENSION pg_cron;
+DROP TRIGGER sync_job_analytics_updated_at ON job_analytics;
 
-DROP TRIGGER sync_company_analytics_updated_at ON company_analytics;
-
-DROP TABLE company_analytics;
+DROP TABLE job_analytics;
 
 -- +goose StatementEnd
