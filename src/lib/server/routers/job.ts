@@ -1,18 +1,6 @@
-import {
-	accountJobs,
-	addresses,
-	companyJobs,
-	jobs,
-	jobRecommendationHistory,
-	jobViewHistory,
-	accountJobFavourites,
-} from "@/lib/db/drizzle/schema";
 import { router, accountProcedure } from "../trpc";
-import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { jobIndustries } from "@/lib/db/drizzle/schema";
 import { EditJobSchema, NewJobSchema } from "@/lib/db/queries/job";
-import { and, isNull, inArray, not } from "drizzle-orm";
 import JobQueryClient from "@/lib/db/queries/job";
 import AnalyticQueryClient from "@/lib/db/queries/analytics";
 

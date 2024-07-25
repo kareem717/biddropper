@@ -1,10 +1,12 @@
 import QueryClient from ".";
 import {
 	jobRecommendationHistory,
-	jobViewHistory,
+	accountViewHistories,
+	companyAnalytics,
 } from "@/lib/db/drizzle/schema";
 import { registerService } from "@/lib/utils";
 import { db } from "..";
+import { eq, sql } from "drizzle-orm";
 
 export type JobRecommendation = {
 	jobId: string;
@@ -19,8 +21,24 @@ class AnalyticQueryClient extends QueryClient {
 			.returning();
 	}
 
-	async TrackJobView(accountId: string, jobId: string) {
-		return await this.caller.insert(jobViewHistory).values({
+	async IncrementCompanyProfileViews(companyId: string) {
+		return await this.caller
+			.update(companyAnalytics)
+			.set({
+				monthlyProfileViews: sql`${companyAnalytics.monthlyProfileViews} + 1`,
+			})
+			.where(eq(companyAnalytics.companyId, companyId));
+	}
+
+	async TrackAccountJobView(accountId: string, jobId: string) {
+		return await this.caller.insert(accountViewHistories).values({
+			jobId: jobId,
+			accountId: accountId,
+		});
+	}
+
+	async TrackAccountCompanyView(accountId: string, jobId: string) {
+		return await this.caller.insert(accountViewHistories).values({
 			jobId: jobId,
 			accountId: accountId,
 		});

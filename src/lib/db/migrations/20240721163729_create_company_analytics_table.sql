@@ -12,7 +12,7 @@ CREATE TABLE
         deleted_at timestamptz
     );
 
-CREATE TRIGGER sync_messages_updated_at BEFORE
+CREATE TRIGGER sync_company_analytics_updated_at BEFORE
 UPDATE ON company_analytics FOR EACH ROW
 EXECUTE FUNCTION sync_updated_at_column ();
 
@@ -31,7 +31,7 @@ SELECT
 
 DROP EXTENSION pg_cron;
 
-DROP TRIGGER sync_messages_updated_at ON company_analytics;
+DROP TRIGGER sync_company_analytics_updated_at ON company_analytics;
 
 DROP TABLE company_analytics;
 

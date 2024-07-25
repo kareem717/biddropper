@@ -10,14 +10,16 @@ CREATE TABLE
         deleted_at timestamptz
     );
 
-CREATE TRIGGER sync_messages_updated_at BEFORE
+CREATE INDEX account_job_favourites_account_id_idx ON account_job_favourites (account_id);
+
+CREATE TRIGGER sync_account_job_favourites_updated_at BEFORE
 UPDATE ON account_job_favourites FOR EACH ROW
 EXECUTE FUNCTION sync_updated_at_column ();
 
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
-DROP TRIGGER sync_messages_updated_at ON account_job_favourites;
+DROP TRIGGER sync_account_job_favourites_updated_at ON account_job_favourites;
 
 DROP TABLE account_job_favourites;
 
