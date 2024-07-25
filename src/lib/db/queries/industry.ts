@@ -7,19 +7,6 @@ import { industries } from "@/lib/db/drizzle/schema";
 import { registerService } from "@/lib/utils";
 import { db } from "..";
 
-export type NewIndustry = z.infer<typeof NewIndustrySchema>;
-export const NewIndustrySchema = createInsertSchema(industries, {
-	name: z.string().min(3).max(60),
-}).omit({
-	id: true,
-	createdAt: true,
-	updatedAt: true,
-	deletedAt: true,
-});
-
-export type ShowIndustry = z.infer<typeof ShowIndustrySchema>;
-export const ShowIndustrySchema = createSelectSchema(industries);
-
 class IndustryQueryClient extends QueryClient {
 	async GetDetailedMany(includeDeleted = false) {
 		return await this.caller

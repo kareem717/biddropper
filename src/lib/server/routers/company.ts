@@ -1,5 +1,5 @@
 import { router, accountProcedure, companyOwnerProcedure } from "../trpc";
-import { EditCompanySchema, NewCompanySchema } from "@/lib/db/queries/company";
+import { EditCompanySchema, NewCompanySchema } from "@/lib/db/queries/validation";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import CompanyQueryClient from "@/lib/db/queries/company";

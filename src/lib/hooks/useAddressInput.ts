@@ -1,23 +1,23 @@
 import { create } from "zustand";
-import { NewAddress } from "@/lib//validations/address";
+import { NewAddress } from "@/lib/db/queries/validation";
 
 interface useAddressInputProps {
-  address: NewAddress | undefined;
-  setAddress: (address: NewAddress | undefined) => void;
-  getAddress: () => NewAddress | undefined;
+	address: NewAddress | undefined;
+	setAddress: (address: NewAddress | undefined) => void;
+	getAddress: () => NewAddress | undefined;
 }
 
 const useAddressInput = create<useAddressInputProps>((set, get) => ({
-  address: undefined,
-  setAddress: (address: NewAddress | undefined) => {
-    set((state) => ({
-      ...state,
-      address,
-    }));
-  },
-  getAddress: () => {
-    return get().address;
-  },
+	address: undefined,
+	setAddress: (address: NewAddress | undefined) => {
+		set((state) => ({
+			...state,
+			address,
+		}));
+	},
+	getAddress: () => {
+		return get().address;
+	},
 }));
 
 export default useAddressInput;

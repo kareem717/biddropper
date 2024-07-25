@@ -5,7 +5,7 @@ import { ReceivedBidIndexCard, SentBidIndexCard } from "./BidIndexCard"
 import { trpc } from "@/lib/trpc/client"
 import { ComponentPropsWithoutRef, FC, useState } from "react"
 import { cn } from "@/lib/utils"
-import { ShowBid } from "@/lib/validations/bid"
+import { ShowBid } from "@/lib/db/queries/validation"
 
 export interface ReceivedBidIndexShellProps extends ComponentPropsWithoutRef<"div"> {
   bids: ShowBid[]

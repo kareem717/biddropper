@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { createContext, useContext } from 'react';
-import { ShowCompany } from '@/lib/validations/company';
+import { ShowCompany } from '@/lib/db/queries/validation';
 
 export type CompanyContextType = {
   companies: ShowCompany[]

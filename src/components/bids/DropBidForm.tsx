@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { NewBidSchema } from "@/lib/validations/bid";
+import { NewBidSchema } from "@/lib/db/queries/validation";
 import { Textarea } from "../ui/textarea";
 import { cn } from "@/lib/utils";
 import { useCompany } from "../providers/CompanyProvider";

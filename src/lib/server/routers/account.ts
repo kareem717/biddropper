@@ -1,5 +1,5 @@
 import { accountProcedure, router, userProcedure } from "../trpc";
-import { NewAccountSchema, EditAccountSchema } from "@/lib/db/queries/account";
+import { NewAccountSchema, EditAccountSchema } from "@/lib/db/queries/validation";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import AccountQueryClient from "@/lib/db/queries/account";

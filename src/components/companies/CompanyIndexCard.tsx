@@ -1,6 +1,5 @@
 "use client";
 
-import { Icons } from "@/components/Icons";
 import Link from "next/link";
 import {
   Card,
@@ -18,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { AddressDisplay } from "../app/AddressDisplay";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { titleCase } from "title-case";
-import { ShowAddress } from "@/lib/validations/address";
+import { ShowAddress } from "@/lib/db/queries/validation";
 
 export interface CompanyIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {
   companyId: string;

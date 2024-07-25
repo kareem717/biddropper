@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 import TrpcProvider from "@/components/providers/TRPCProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import { cn } from "@/lib/utils";
-import { ShowCompany } from "@/lib/validations/company";
+import { ShowCompany } from "@/lib/db/queries/validation";
 import CompanyProvider from "@/components/providers/CompanyProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 

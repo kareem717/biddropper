@@ -1,7 +1,7 @@
 "use client˝"
 
 import { Card, CardHeader } from "@/components/ui/card"
-import { ShowMessage } from "@/lib/validations/message"
+import { ShowMessage } from "@/lib/db/queries/validation"
 import { ComponentPropsWithoutRef, FC } from "react"
 import { timeSince, truncate, cn } from "@/lib/utils"
 import { Icons } from "../Icons"

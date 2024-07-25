@@ -1,27 +1,9 @@
 import QueryClient from ".";
 import { eq, and, isNull, not, sql } from "drizzle-orm";
-import { z } from "zod";
-import { createInsertSchema } from "drizzle-zod";
 import { accounts } from "@/lib/db/drizzle/schema";
 import { registerService } from "@/lib/utils";
 import { db } from "..";
-
-export type NewAccount = z.infer<typeof NewAccountSchema>;
-export const NewAccountSchema = createInsertSchema(accounts).omit({
-	id: true,
-	createdAt: true,
-	updatedAt: true,
-	deletedAt: true,
-	englishSearchVector: true,
-});
-
-export type EditAccount = z.infer<typeof EditAccountSchema>;
-export const EditAccountSchema = createInsertSchema(accounts).omit({
-	createdAt: true,
-	updatedAt: true,
-	deletedAt: true,
-	englishSearchVector: true,
-});
+import { NewAccount, EditAccount } from "./validation";
 
 class AccountQueryClient extends QueryClient {
 	async Create(values: NewAccount) {

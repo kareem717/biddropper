@@ -7,7 +7,7 @@ import { titleCase } from "title-case";
 import Link from "next/link"
 import { trpc } from "@/lib/trpc/client"
 import { AddressDisplay } from "@/components/app/AddressDisplay"
-import { ShowAddress } from "@/lib/validations/address"
+import { ShowAddress } from "@/lib/db/queries/validation"
 import { useAuth } from "../providers/AuthProvider"
 import { useCompany } from "../providers/CompanyProvider"
 import { DropBidForm } from "../bids/DropBidForm"

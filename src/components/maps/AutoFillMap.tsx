@@ -10,7 +10,7 @@ import useAddressInput from "@/lib/hooks/useAddressInput";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
-import { NewAddress } from "@/lib/validations/address";
+import { NewAddress } from "@/lib/db/queries/validation";
 
 const DEFAULT_POSITION = { lat: 43.6532, lng: -79.3832 };
 

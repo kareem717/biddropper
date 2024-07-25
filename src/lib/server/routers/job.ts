@@ -1,6 +1,6 @@
 import { router, accountProcedure } from "../trpc";
 import { z } from "zod";
-import { EditJobSchema, NewJobSchema } from "@/lib/db/queries/job";
+import { EditJobSchema, NewJobSchema } from "@/lib/db/queries/validation";
 import JobQueryClient from "@/lib/db/queries/job";
 import AnalyticQueryClient from "@/lib/db/queries/analytics";
 
@@ -84,6 +84,8 @@ export const jobRouter = router({
 						accountId: ctx.account.id,
 					}))
 				);
+
+				return recommendedJobs;
 			});
 		}),
 	favouriteJob: accountProcedure

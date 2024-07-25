@@ -1,7 +1,7 @@
 "use client˝"
 
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
-import { ShowMessage } from "@/lib/validations/message"
+import { ShowMessage } from "@/lib/db/queries/validation"
 import { ComponentPropsWithoutRef, FC } from "react"
 import { timeSince, truncate, cn } from "@/lib/utils"
 import { trpc } from "@/lib/trpc/client"
@@ -54,15 +54,15 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({ message, recipient, 
   })
 
   const handleReadMessage = () => {
-    readMessage({ id: message.id, recipient })
+    readMessage({ messageId: message.id, recipient })
     onMarkAsRead?.()
   }
   const handleUnreadMessage = () => {
-    unreadMessage({ id: message.id, recipient })
+    unreadMessage({ messageId: message.id, recipient })
     onMarkAsUnread?.()
   }
   const handleDeleteMessage = () => {
-    deleteMessage({ id: message.id, recipient })
+    deleteMessage({ messageId: message.id, recipient })
     onDelete?.()
   }
 

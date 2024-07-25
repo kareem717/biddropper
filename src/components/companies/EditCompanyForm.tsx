@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { EditCompany, EditCompanySchema, NewCompanySchema } from "@/lib/validations/company"
+import { EditCompany, EditCompanySchema, NewCompanySchema } from "@/lib/db/queries/validation"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"

@@ -1,9 +1,11 @@
 import { router, accountProcedure } from "../trpc";
-import { NewMessageSchema } from "@/lib/db/queries/message";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import MessageQueryClient from "@/lib/db/queries/message";
-import { UpdateRecipientSchema } from "@/lib/db/queries/message";
+import {
+	UpdateRecipientSchema,
+	NewMessageSchema,
+} from "@/lib/db/queries/validation";
 import CompanyQueryClient from "@/lib/db/queries/company";
 
 export const messageRouter = router({

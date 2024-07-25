@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea";
 import { useCompany } from "../providers/CompanyProvider";
-import { NewMessageSchema } from "@/lib/validations/message";
+import { NewMessageSchema } from "@/lib/db/queries/validation";
 import { cn } from "@/lib/utils";
 
 const formSchema = NewMessageSchema

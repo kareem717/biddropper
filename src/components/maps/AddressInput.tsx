@@ -7,7 +7,7 @@ import { env } from "@/lib/env.mjs";
 import type { AddressAutofillRetrieveResponse } from "@mapbox/search-js-core";
 import useAddressInput from "@/lib/hooks/useAddressInput";
 import { cn } from "@/lib/utils";
-import { NewAddressSchema, NewAddress } from "@/lib/validations/address";
+import { NewAddressSchema, NewAddress } from "@/lib/db/queries/validation";
 
 interface AddressInputProps extends ComponentPropsWithoutRef<typeof Input> {
   onRetrieve?: (val: NewAddress) => void;

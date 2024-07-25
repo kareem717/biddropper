@@ -11,49 +11,7 @@ import {
 import { eq, and, isNull, desc, sql, count } from "drizzle-orm";
 import { registerService } from "@/lib/utils";
 import { db } from "..";
-
-export type NewMessage = z.infer<typeof NewMessageSchema>;
-export const NewMessageSchema = createInsertSchema(messages)
-	.extend({
-		recipients: z.object({
-			accountIds: z.array(z.string()).optional().default([]),
-			companyIds: z.array(z.string()).optional().default([]),
-		}),
-	})
-	.omit({
-		id: true,
-		createdAt: true,
-		updatedAt: true,
-		deletedAt: true,
-		englishSearchVector: true,
-	});
-
-export type UpdateRecipient = z.infer<typeof UpdateRecipientSchema>;
-export const UpdateRecipientSchema = z.object({
-	messageId: z.string(),
-	readAt: z.string().datetime().nullable().optional(),
-	deletedAt: z.string().datetime().nullable().optional(),
-	recipient: z.union([
-		z.object({
-			accountId: z.string(),
-		}),
-		z.object({
-			companyId: z.string(),
-		}),
-	]),
-});
-
-export type ShowMessage = z.infer<typeof ShowMessageSchema>;
-export const ShowMessageSchema = createSelectSchema(messages).extend({
-	readAt: z.string().datetime().nullable(),
-	deletedAt: z.string().datetime().nullable(),
-	sender: z.object({
-		id: z.string(),
-		name: z.string(),
-		deletedAt: z.string().datetime().nullable(),
-		type: z.enum(["account", "company"]),
-	}),
-});
+import { NewMessage, UpdateRecipient } from "./validation";
 
 class MessageQueryClient extends QueryClient {
 	async Create(values: NewMessage) {
@@ -208,7 +166,7 @@ class MessageQueryClient extends QueryClient {
 	}
 
 	async GetUnreadCountByAccountId(accountId: string) {
-		return await this.caller
+		const [cnt] = await this.caller
 			.select({ count: count() })
 			.from(messages)
 			.innerJoin(
@@ -223,6 +181,8 @@ class MessageQueryClient extends QueryClient {
 				)
 			)
 			.groupBy(messageAccountRecipients.accountId);
+
+		return cnt;
 	}
 
 	async GetUnreadCountByCompanyId(companyId: string) {

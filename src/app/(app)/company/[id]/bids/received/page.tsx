@@ -3,13 +3,12 @@
 import { ReceivedBidIndexShell } from "@/components/bids/BidIndexShell"
 import { trpc } from "@/lib/trpc/client"
 import { useSearchParams } from "next/navigation"
-import { useState } from "react"
 
 export default function CompanyReceivedBidsPage({ params }: { params: { id: string } }) {
   const page = useSearchParams().get("page")
   const { data, isLoading, isError, error } = trpc.bid.getReceivedBidsByCompanyId.useQuery({
     companyId: params.id,
-    cursor: page ? parseInt(page) : undefined,
+    pagination: { page: page ? parseInt(page) : undefined, pageSize: 10 },
     filter: {}
   })
 

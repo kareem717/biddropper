@@ -2,7 +2,6 @@
 
 import { MessageInbox } from "@/components/messages/MessageInbox"
 import { trpc } from "@/lib/trpc/client"
-import { ShowMessage } from "@/lib/validations/message"
 import { useState } from "react"
 
 export default function CompanyInboxPage({ params }: { params: { id: string } }) {
@@ -27,7 +26,7 @@ export default function CompanyInboxPage({ params }: { params: { id: string } })
   const messages = data?.pages
     .map(page => page.data)
     .flat()
-    .filter(message => message.sender?.id) // Filter out messages with undefined sender.id
+    .filter(message => message.messages.senderCompanyId || message.messages.senderAccountId) // Filter out messages with undefined sender.id
     .map(message => ({
       ...message,
     }))

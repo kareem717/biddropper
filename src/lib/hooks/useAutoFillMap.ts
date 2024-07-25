@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type NewAddress } from "@/lib/validations/address";
+import { type NewAddress } from "@/lib/db/queries/validation";
 
 interface useAutoFillMapProps {
 	address: NewAddress | undefined;

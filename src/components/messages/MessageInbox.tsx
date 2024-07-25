@@ -2,7 +2,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageIndexCard } from "@/components/messages/MessageIndexCard"
-import { ShowMessage } from "@/lib/validations/message"
+import { ShowMessage } from "@/lib/db/queries/validation"
 import { FC, useState } from "react"
 import {
   Drawer,

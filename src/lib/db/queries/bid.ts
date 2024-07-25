@@ -16,80 +16,7 @@ import { eq, and, isNull, inArray, lte, gte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import CompanyQueryClient from "./company";
 import MessageQueryClient from "./message";
-
-export type NewBid = z.infer<typeof NewBidSchema>;
-export const NewBidSchema = createInsertSchema(bids, {
-	priceUsd: z.coerce.number().min(0).max(25000000),
-})
-	.extend({
-		jobId: z.string().uuid(),
-	})
-	.omit({
-		id: true,
-		createdAt: true,
-		updatedAt: true,
-		deletedAt: true,
-		isActive: true,
-	});
-
-export type EditBid = z.infer<typeof EditBidSchema>;
-export const EditBidSchema = createInsertSchema(bids, {
-	priceUsd: z.coerce.number().min(0).max(25000000),
-}).omit({
-	createdAt: true,
-	updatedAt: true,
-	deletedAt: true,
-	isActive: true,
-});
-
-export type ShowBid = z.infer<typeof ShowBidSchema>;
-export const ShowBidSchema = z.object({
-	bids: createSelectSchema(bids),
-	job: z.object({
-		id: z.string().uuid(),
-		title: z.string(),
-		description: z.string(),
-		createdAt: z.string(),
-		deletedAt: z.string().nullable(),
-	}),
-});
-
-export type DetailedBid = z.infer<typeof DetailedBidSchema>;
-export const DetailedBidSchema = ShowBidSchema.extend({
-	senderCompany: z.object({
-		id: z.string().uuid(),
-		name: z.string(),
-		ownerAccountId: z.string().uuid(),
-	}),
-	job: z.object({
-		id: z.string().uuid(),
-		title: z.string(),
-		owner: z.union([
-			z.object({
-				companyId: z.string().uuid(),
-				companyName: z.string(),
-				ownerAccountId: z.string().uuid(),
-			}),
-			z.object({
-				accountId: z.string().uuid(),
-				accountUsername: z.string(),
-			}),
-		]),
-	}),
-});
-
-export type BidFilter = z.infer<typeof BidFilterSchema>;
-export const BidFilterSchema = z.object({
-	statuses: z
-		.array(z.enum(bidStatus.enumValues))
-		.optional()
-		.default([bidStatus.enumValues[0]]), // default to pending
-	jobIdFilter: z.string().uuid().optional(),
-	senderCompanyIdFilter: z.string().uuid().optional(),
-	includeDeleted: z.boolean().optional().default(false),
-	minPriceUsd: z.coerce.number().optional(),
-	maxPriceUsd: z.coerce.number().optional(),
-});
+import { BidFilter, NewBid, EditBid } from "./validation";
 
 class BidsQueryClient extends QueryClient {
 	async GetExtendedManyById(ids: string[]) {
@@ -313,58 +240,45 @@ class BidsQueryClient extends QueryClient {
 	}
 
 	async GetExtendedManyReceivedByJobId(
-		filter: BidFilter,
-		pagination: OffsetPaginationOptions,
+		filter: Omit<BidFilter, "jobIdFilter">,
 		jobId: string
 	) {
-		const { page, pageSize } = pagination;
 		const {
 			statuses,
-			jobIdFilter,
 			senderCompanyIdFilter,
 			includeDeleted,
 			minPriceUsd,
 			maxPriceUsd,
 		} = filter;
 
-		const res = await this.WithOffsetPagination(
-			this.caller
-				.select({
-					bids,
-					job: {
-						id: jobs.id,
-						title: jobs.title,
-						description: jobs.description,
-						createdAt: jobs.createdAt,
-						deletedAt: jobs.deletedAt,
-					},
-				})
-				.from(bids)
-				.innerJoin(jobs, eq(jobBids.jobId, jobs.id))
-				.innerJoin(
-					jobBids,
-					and(eq(jobBids.jobId, jobId), eq(bids.id, jobBids.bidId))
+		return this.caller
+			.select({
+				bids,
+				job: {
+					id: jobs.id,
+					title: jobs.title,
+					description: jobs.description,
+					createdAt: jobs.createdAt,
+					deletedAt: jobs.deletedAt,
+				},
+			})
+			.from(bids)
+			.innerJoin(jobs, eq(jobBids.jobId, jobs.id))
+			.innerJoin(
+				jobBids,
+				and(eq(jobBids.jobId, jobId), eq(bids.id, jobBids.bidId))
+			)
+			.where(
+				and(
+					inArray(bids.status, statuses),
+					senderCompanyIdFilter
+						? eq(bids.senderCompanyId, senderCompanyIdFilter)
+						: undefined,
+					includeDeleted ? undefined : isNull(bids.deletedAt),
+					minPriceUsd ? gte(bids.priceUsd, minPriceUsd.toString()) : undefined,
+					maxPriceUsd ? lte(bids.priceUsd, maxPriceUsd.toString()) : undefined
 				)
-				.where(
-					and(
-						inArray(bids.status, statuses),
-						senderCompanyIdFilter
-							? eq(bids.senderCompanyId, senderCompanyIdFilter)
-							: undefined,
-						jobIdFilter ? eq(jobBids.jobId, jobIdFilter) : undefined,
-						includeDeleted ? undefined : isNull(bids.deletedAt),
-						minPriceUsd
-							? gte(bids.priceUsd, minPriceUsd.toString())
-							: undefined,
-						maxPriceUsd ? lte(bids.priceUsd, maxPriceUsd.toString()) : undefined
-					)
-				)
-				.$dynamic(),
-			page,
-			pageSize
-		);
-
-		return this.GenerateOffsetPaginationResponse(res, page, pageSize);
+			);
 	}
 
 	async GetHottestManyByAccountId(accountId: string) {

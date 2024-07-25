@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { ShowBid } from "@/lib/validations/bid"
+import { ShowBid } from "@/lib/db/queries/validation"
 import { titleCase } from "title-case"
 
 export interface ReceivedBidIndexCardProps extends ComponentPropsWithoutRef<typeof Dialog> {

@@ -8,7 +8,7 @@ import { titleCase } from "title-case";
 import Link from "next/link"
 import { trpc } from "@/lib/trpc/client"
 import { AddressDisplay } from "@/components/app/AddressDisplay"
-import { ShowAddress } from "@/lib/validations/address"
+import { ShowAddress } from "@/lib/db/queries/validation"
 import { buttonVariants } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -26,6 +26,7 @@ import { Icons } from "../Icons"
 
 export interface JobOwnerShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
+
 }
 
 export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, ...props }) => {
@@ -45,7 +46,10 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
     }
   })
 
-  const { data: bids, isLoading: isBidsLoading } = trpc.bid.getRecievedBidsByJobId.useQuery({ jobId })
+  const { data: bidsData, isLoading: isBidsLoading } = trpc.bid.getRecievedBidsByJobId.useQuery({
+    jobId,
+    filter: {},
+  })
 
   if (isLoading || isBidsLoading) return <div>Loading...</div>
   if (!data) return <div>Job not found</div>
@@ -139,7 +143,7 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
         </div>
       </div>
       <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
-        <ReceivedBidIndexShell bids={bids || []} />
+        <ReceivedBidIndexShell bids={bidsData || []} />
       </div>
     </div>
   )

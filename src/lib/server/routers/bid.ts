@@ -9,13 +9,13 @@ import { router, companyOwnerProcedure } from "../trpc";
 import {
 	NewBidSchema,
 	EditBidSchema,
-} from "@/lib/db/queries/bid";
+	BidFilterSchema,
+} from "@/lib/db/queries/validation";
 import { TRPCError } from "@trpc/server";
 import { eq, and, not } from "drizzle-orm";
 import { accountProcedure } from "../trpc";
 import { z } from "zod";
-import { BidFilterSchema } from "@/lib/db/queries/bid";
-import { OffsetPaginationOptionsSchema } from "@/lib/db/queries/index";
+import { OffsetPaginationOptionsSchema } from "@/lib/db/queries";
 import BidQueryClient from "@/lib/db/queries/bid";
 import MessageQueryClient from "@/lib/db/queries/message";
 
@@ -99,19 +99,14 @@ export const bidRouter = router({
 	getRecievedBidsByJobId: accountProcedure
 		.input(
 			z.object({
-				filter: BidFilterSchema,
-				pagination: OffsetPaginationOptionsSchema,
+				filter: BidFilterSchema.omit({ jobIdFilter: true }),
 				jobId: z.string(),
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { filter, pagination, jobId } = input;
+			const { filter, jobId } = input;
 
-			return await BidQueryClient.GetExtendedManyReceivedByJobId(
-				filter,
-				pagination,
-				jobId
-			);
+			return await BidQueryClient.GetExtendedManyReceivedByJobId(filter, jobId);
 		}),
 	getBidFull: accountProcedure
 		.input(z.object({ bidId: z.string() }))

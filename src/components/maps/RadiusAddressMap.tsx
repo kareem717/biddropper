@@ -17,7 +17,7 @@ import { useTheme } from "next-themes";
 import { LabelSlider } from "../app/LabelSlider";
 import { cn } from "@/lib/utils";
 import useRadiusMap from "@/lib/hooks/useRadiusMap";
-import { NewAddress } from "@/lib/validations/address";
+import { NewAddress } from "@/lib/db/queries/validation";
 
 interface RadiusAddressMapProps extends ComponentPropsWithoutRef<"div"> {
   addressInputProps?: ComponentPropsWithoutRef<typeof AddressInput>;

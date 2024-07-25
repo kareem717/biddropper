@@ -9,16 +9,7 @@ import {
 import { registerService } from "@/lib/utils";
 import { db } from "..";
 import { eq, sql } from "drizzle-orm";
-
-export type JobRecommendation = {
-	jobId: string;
-	accountId: string;
-};
-
-export type CompanyRecommendation = {
-	companyId: string;
-	accountId: string;
-};
+import { JobRecommendation, CompanyRecommendation } from "./validation";
 
 class AnalyticQueryClient extends QueryClient {
 	async TrackAccountJobRecommendation(values: JobRecommendation[]) {
