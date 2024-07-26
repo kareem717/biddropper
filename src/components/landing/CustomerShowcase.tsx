@@ -4,7 +4,7 @@ import { ComponentPropsWithoutRef, FC } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { Icons } from "../../Icons"
+import { Icons } from "../Icons"
 import { Image as ImageType } from "@/config/types"
 
 export type Customer = {
@@ -29,7 +29,7 @@ export const CustomerShowcaseCard: FC<ShowcaseCardProps> = ({ customer }) => {
             width={customer.image.width}
             height={customer.image.height}
             data-nimg="fill"
-            className="mx-auto absolute h-full w-full inset-0"
+            className="mx-auto absolute h-full w-full inset-0 fill-current text-primary"
             loading="lazy"
           />
         </Link>
@@ -41,7 +41,7 @@ export const CustomerShowcaseCard: FC<ShowcaseCardProps> = ({ customer }) => {
             width={customer.image.width}
             height={customer.image.height}
             data-nimg="fill"
-            className="mx-auto absolute h-full w-full inset-0"
+            className="mx-auto absolute h-full w-full inset-0 fill-current text-primary"
             loading="lazy"
           />
         )}

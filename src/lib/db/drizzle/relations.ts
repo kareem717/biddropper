@@ -1,22 +1,21 @@
 import { relations } from "drizzle-orm/relations";
-import { accounts, accountCompanyReccomendationHistories, companies, accountViewHistories, jobs, jobAnalytics, accountJobReccomendationHistories, accountJobFavourites, bids, addresses, messageCompanyRecipients, messages, messageAccountRecipients, messageThread, usersInAuth, companyAnalytics, companyJobs, accountJobs, jobBids, companyIndustries, industries, jobIndustries } from "./schema";
+import { accounts, accountJobViewHistories, jobs, accountCompanyViewHistories, companies, accountCompanyReccomendationHistories, bids, addresses, messageCompanyRecipients, messages, messageAccountRecipients, messageThread, usersInAuth, accountJobReccomendationHistories, accountJobFavourites, jobBids, accountJobs, companyJobs, companyIndustries, industries, jobIndustries, accountCompanyFavourites, dailyCompanyAggregateAnalytics, dailyJobAggregateAnalytics } from "./schema";
 
-export const accountCompanyReccomendationHistoriesRelations = relations(accountCompanyReccomendationHistories, ({one}) => ({
+export const accountJobViewHistoriesRelations = relations(accountJobViewHistories, ({one}) => ({
 	account: one(accounts, {
-		fields: [accountCompanyReccomendationHistories.accountId],
+		fields: [accountJobViewHistories.accountId],
 		references: [accounts.id]
 	}),
-	company: one(companies, {
-		fields: [accountCompanyReccomendationHistories.companyId],
-		references: [companies.id]
+	job: one(jobs, {
+		fields: [accountJobViewHistories.jobId],
+		references: [jobs.id]
 	}),
 }));
 
 export const accountsRelations = relations(accounts, ({one, many}) => ({
+	accountJobViewHistories: many(accountJobViewHistories),
+	accountCompanyViewHistories: many(accountCompanyViewHistories),
 	accountCompanyReccomendationHistories: many(accountCompanyReccomendationHistories),
-	accountViewHistories: many(accountViewHistories),
-	accountJobReccomendationHistories: many(accountJobReccomendationHistories),
-	accountJobFavourites: many(accountJobFavourites),
 	messageAccountRecipients: many(messageAccountRecipients),
 	messages: many(messages),
 	companies: many(companies),
@@ -24,12 +23,40 @@ export const accountsRelations = relations(accounts, ({one, many}) => ({
 		fields: [accounts.userId],
 		references: [usersInAuth.id]
 	}),
+	accountJobReccomendationHistories: many(accountJobReccomendationHistories),
+	accountJobFavourites: many(accountJobFavourites),
 	accountJobs: many(accountJobs),
+	accountCompanyFavourites: many(accountCompanyFavourites),
+}));
+
+export const jobsRelations = relations(jobs, ({one, many}) => ({
+	accountJobViewHistories: many(accountJobViewHistories),
+	address: one(addresses, {
+		fields: [jobs.addressId],
+		references: [addresses.id]
+	}),
+	accountJobReccomendationHistories: many(accountJobReccomendationHistories),
+	accountJobFavourites: many(accountJobFavourites),
+	jobBids: many(jobBids),
+	accountJobs: many(accountJobs),
+	companyJobs: many(companyJobs),
+	jobIndustries: many(jobIndustries),
+}));
+
+export const accountCompanyViewHistoriesRelations = relations(accountCompanyViewHistories, ({one}) => ({
+	account: one(accounts, {
+		fields: [accountCompanyViewHistories.accountId],
+		references: [accounts.id]
+	}),
+	company: one(companies, {
+		fields: [accountCompanyViewHistories.companyId],
+		references: [companies.id]
+	}),
 }));
 
 export const companiesRelations = relations(companies, ({one, many}) => ({
+	accountCompanyViewHistories: many(accountCompanyViewHistories),
 	accountCompanyReccomendationHistories: many(accountCompanyReccomendationHistories),
-	accountViewHistories: many(accountViewHistories),
 	bids: many(bids),
 	messageCompanyRecipients: many(messageCompanyRecipients),
 	messages: many(messages),
@@ -41,67 +68,21 @@ export const companiesRelations = relations(companies, ({one, many}) => ({
 		fields: [companies.ownerId],
 		references: [accounts.id]
 	}),
-	companyAnalytics: many(companyAnalytics),
 	companyJobs: many(companyJobs),
 	companyIndustries: many(companyIndustries),
+	accountCompanyFavourites: many(accountCompanyFavourites),
+	dailyCompanyAggregateAnalytics: many(dailyCompanyAggregateAnalytics),
+	dailyJobAggregateAnalytics: many(dailyJobAggregateAnalytics),
 }));
 
-export const accountViewHistoriesRelations = relations(accountViewHistories, ({one}) => ({
+export const accountCompanyReccomendationHistoriesRelations = relations(accountCompanyReccomendationHistories, ({one}) => ({
 	account: one(accounts, {
-		fields: [accountViewHistories.accountId],
+		fields: [accountCompanyReccomendationHistories.accountId],
 		references: [accounts.id]
 	}),
 	company: one(companies, {
-		fields: [accountViewHistories.companyId],
+		fields: [accountCompanyReccomendationHistories.companyId],
 		references: [companies.id]
-	}),
-	job: one(jobs, {
-		fields: [accountViewHistories.jobId],
-		references: [jobs.id]
-	}),
-}));
-
-export const jobsRelations = relations(jobs, ({one, many}) => ({
-	accountViewHistories: many(accountViewHistories),
-	jobAnalytics: many(jobAnalytics),
-	accountJobReccomendationHistories: many(accountJobReccomendationHistories),
-	accountJobFavourites: many(accountJobFavourites),
-	address: one(addresses, {
-		fields: [jobs.addressId],
-		references: [addresses.id]
-	}),
-	companyJobs: many(companyJobs),
-	accountJobs: many(accountJobs),
-	jobBids: many(jobBids),
-	jobIndustries: many(jobIndustries),
-}));
-
-export const jobAnalyticsRelations = relations(jobAnalytics, ({one}) => ({
-	job: one(jobs, {
-		fields: [jobAnalytics.jobId],
-		references: [jobs.id]
-	}),
-}));
-
-export const accountJobReccomendationHistoriesRelations = relations(accountJobReccomendationHistories, ({one}) => ({
-	account: one(accounts, {
-		fields: [accountJobReccomendationHistories.accountId],
-		references: [accounts.id]
-	}),
-	job: one(jobs, {
-		fields: [accountJobReccomendationHistories.jobId],
-		references: [jobs.id]
-	}),
-}));
-
-export const accountJobFavouritesRelations = relations(accountJobFavourites, ({one}) => ({
-	account: one(accounts, {
-		fields: [accountJobFavourites.accountId],
-		references: [accounts.id]
-	}),
-	job: one(jobs, {
-		fields: [accountJobFavourites.jobId],
-		references: [jobs.id]
 	}),
 }));
 
@@ -165,20 +146,35 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	accounts: many(accounts),
 }));
 
-export const companyAnalyticsRelations = relations(companyAnalytics, ({one}) => ({
-	company: one(companies, {
-		fields: [companyAnalytics.companyId],
-		references: [companies.id]
+export const accountJobReccomendationHistoriesRelations = relations(accountJobReccomendationHistories, ({one}) => ({
+	account: one(accounts, {
+		fields: [accountJobReccomendationHistories.accountId],
+		references: [accounts.id]
+	}),
+	job: one(jobs, {
+		fields: [accountJobReccomendationHistories.jobId],
+		references: [jobs.id]
 	}),
 }));
 
-export const companyJobsRelations = relations(companyJobs, ({one}) => ({
-	company: one(companies, {
-		fields: [companyJobs.companyId],
-		references: [companies.id]
+export const accountJobFavouritesRelations = relations(accountJobFavourites, ({one}) => ({
+	account: one(accounts, {
+		fields: [accountJobFavourites.accountId],
+		references: [accounts.id]
 	}),
 	job: one(jobs, {
-		fields: [companyJobs.jobId],
+		fields: [accountJobFavourites.jobId],
+		references: [jobs.id]
+	}),
+}));
+
+export const jobBidsRelations = relations(jobBids, ({one}) => ({
+	bid: one(bids, {
+		fields: [jobBids.bidId],
+		references: [bids.id]
+	}),
+	job: one(jobs, {
+		fields: [jobBids.jobId],
 		references: [jobs.id]
 	}),
 }));
@@ -194,13 +190,13 @@ export const accountJobsRelations = relations(accountJobs, ({one}) => ({
 	}),
 }));
 
-export const jobBidsRelations = relations(jobBids, ({one}) => ({
-	bid: one(bids, {
-		fields: [jobBids.bidId],
-		references: [bids.id]
+export const companyJobsRelations = relations(companyJobs, ({one}) => ({
+	company: one(companies, {
+		fields: [companyJobs.companyId],
+		references: [companies.id]
 	}),
 	job: one(jobs, {
-		fields: [jobBids.jobId],
+		fields: [companyJobs.jobId],
 		references: [jobs.id]
 	}),
 }));
@@ -229,5 +225,30 @@ export const jobIndustriesRelations = relations(jobIndustries, ({one}) => ({
 	job: one(jobs, {
 		fields: [jobIndustries.jobId],
 		references: [jobs.id]
+	}),
+}));
+
+export const accountCompanyFavouritesRelations = relations(accountCompanyFavourites, ({one}) => ({
+	account: one(accounts, {
+		fields: [accountCompanyFavourites.accountId],
+		references: [accounts.id]
+	}),
+	company: one(companies, {
+		fields: [accountCompanyFavourites.companyId],
+		references: [companies.id]
+	}),
+}));
+
+export const dailyCompanyAggregateAnalyticsRelations = relations(dailyCompanyAggregateAnalytics, ({one}) => ({
+	company: one(companies, {
+		fields: [dailyCompanyAggregateAnalytics.companyId],
+		references: [companies.id]
+	}),
+}));
+
+export const dailyJobAggregateAnalyticsRelations = relations(dailyJobAggregateAnalytics, ({one}) => ({
+	company: one(companies, {
+		fields: [dailyJobAggregateAnalytics.jobId],
+		references: [companies.id]
 	}),
 }));

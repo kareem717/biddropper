@@ -2,7 +2,7 @@
 
 import { ComponentPropsWithoutRef, FC } from "react"
 import Link from "next/link"
-import { buttonVariants } from "../../ui/button"
+import { buttonVariants } from "../ui/button"
 import Image from "next/image"
 import { Icons } from "@/components/Icons"
 import { cn } from "@/lib/utils"

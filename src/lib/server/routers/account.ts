@@ -1,5 +1,8 @@
 import { accountProcedure, router, userProcedure } from "../trpc";
-import { NewAccountSchema, EditAccountSchema } from "@/lib/db/queries/validation";
+import {
+	NewAccountSchema,
+	EditAccountSchema,
+} from "@/lib/db/queries/validation";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import AccountQueryClient from "@/lib/db/queries/account";
@@ -17,9 +20,15 @@ export const accountRouter = router({
 
 			return await AccountQueryClient.Create(input);
 		}),
-	getAccount: userProcedure.query(async ({ ctx }) => {
-		return await AccountQueryClient.GetDetailedByUserId(ctx.user.id);
-	}),
+	getAccountByUserId: userProcedure
+		.input(
+			z.object({
+				userId: z.string().uuid(),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			return await AccountQueryClient.GetDetailedByUserId(input.userId);
+		}),
 	editAccount: accountProcedure
 		.input(EditAccountSchema)
 		.mutation(async ({ ctx, input }) => {

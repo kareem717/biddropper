@@ -17,7 +17,9 @@ export default async function AppLayout({
 		redirect("/login");
 	}
 
-	const account = await api.account.getAccount.query();
+	const account = await api.account.getAccountByUserId.query({
+		userId: user.id,
+	});
 	if (!account) {
 		redirect("/create-account");
 	}

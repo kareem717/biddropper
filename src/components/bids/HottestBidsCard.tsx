@@ -1,6 +1,6 @@
 "use client"
 
-import { ComponentPropsWithoutRef, FC, ReactNode } from "react"
+import { ComponentPropsWithoutRef, FC } from "react"
 import {
   Card,
   CardContent,
@@ -25,7 +25,7 @@ export const HottestBidsCard: FC<HottestBidsCardProps> = ({
   })
 
   if (isLoading) {
-    return <div>Loading...</div>
+
   }
 
   if (isError) {
@@ -41,7 +41,7 @@ export const HottestBidsCard: FC<HottestBidsCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 p-4 overflow-y-auto">
-        {bids.map((bid, i) => (
+        {isLoading ? <div>Loading...</div> : bids?.map((bid, i) => (
           <ReceivedBidIndexCard key={i} bid={bid} />
         ))}
       </CardContent>

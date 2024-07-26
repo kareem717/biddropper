@@ -171,8 +171,6 @@ class JobQueryClient extends QueryClient {
 				})
 				.returning();
 
-			await AnalyticsQueryClient.withCaller(tx).CreateJobAnalytics(newJob.id);
-
 			await IndustryQueryClient.withCaller(tx).CreateJobIndustries(
 				industryIds.map((id) => ({
 					jobId: newJob.id,

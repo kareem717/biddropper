@@ -9,11 +9,22 @@ import {
 	bidStatus,
 	companies,
 	accounts,
+	jobBids,
 } from "./drizzle/schema";
 import { faker } from "@faker-js/faker";
 import { randomUUID } from "crypto";
 import { env } from "../env.mjs";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
+import readline from "readline";
+
+const rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout,
+});
+
+const askQuestion = (query: string): Promise<string> => {
+	return new Promise((resolve) => rl.question(query, resolve));
+};
 
 const main = async () => {
 	const client = new Pool({
@@ -30,17 +41,21 @@ const main = async () => {
 	await db.transaction(async (tx) => {
 		let accountId: string | null = "";
 		// prompt user to confirm seeding
-		const confirmed = await confirm(
-			"Are you sure you want to seed the database? This action cannot be undone."
+		const confirmed = await askQuestion(
+			"Are you sure you want to seed the database? This action cannot be undone. (yes/no): "
 		);
-		if (!confirmed) {
+		if (confirmed.toLowerCase() !== "yes") {
 			console.log("Seeding cancelled");
+			rl.close();
 			return;
 		} else {
 			// ask for account id
-			accountId = await prompt("Enter the account id to seed the database:");
+			accountId = await askQuestion(
+				"Enter the account id to seed the database: "
+			);
 			if (!accountId) {
 				console.log("Account id not found");
+				rl.close();
 				return;
 			}
 		}
@@ -120,6 +135,7 @@ const main = async () => {
 		for (let i = 0; i < jobData.length; i += 1000) {
 			await tx.insert(jobs).values(jobData.slice(i, i + 1000));
 		}
+
 		console.log("Seed done [jobs]");
 
 		// add 1-5 industries per job
@@ -182,7 +198,24 @@ const main = async () => {
 			await tx.insert(bids).values(bidData.slice(i, i + 1000));
 		}
 		console.log("Seed done [bids]");
+
+		console.log("Seed start [job_bids]");
+
+		// create job bids
+		const jobBidData = bidData.map((bid) => ({
+			jobId: faker.helpers.arrayElement(jobData.map((job) => job.id))!,
+			bidId: bid.id!,
+		}));
+
+		for (let i = 0; i < jobBidData.length; i += 1000) {
+			await tx.insert(jobBids).values(jobBidData.slice(i, i + 1000));
+		}
+		console.log("Seed done [job_bids]");
 	});
+
+	console.log("Seeding complete");
+	rl.close();
+	process.exit(0);
 };
 
 main();

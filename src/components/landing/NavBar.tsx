@@ -2,15 +2,15 @@
 import { cn } from "@/lib/utils"
 import { ComponentPropsWithoutRef, useState } from "react"
 import Link from "next/link"
-import { LogoDiv } from "../../app/LogoDiv"
-import { Button } from "../../ui/button"
+import { LogoDiv } from "../app/LogoDiv"
+import { Button } from "../ui/button"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { Icons } from "../../Icons"
+import { Icons } from "../Icons"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -50,7 +50,7 @@ export const LandingNavBar = ({ className, items, cta, secondaryCta, ...props }:
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <div className={cn("flex items-center justify-between sm:backdrop-blur-md bg-card sm:bg-transparent border-b fixed top-0 z-50 w-full px-4 sm:px-6 lg:px-8", className)} {...props}>
+    <div className={cn("flex items-center justify-between sm:backdrop-blur-md bg-card sm:bg-transparent border-b border-foreground/20 fixed top-0 z-50 w-full px-4 sm:px-6 lg:px-8", className)} {...props}>
       <LogoDiv />
       <NavigationMenu className="hidden lg:block">
         <NavigationMenuList>

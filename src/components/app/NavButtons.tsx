@@ -284,6 +284,7 @@ export const FeedbackButton = () => {
 
 export const InboxButton = () => {
   const { account } = useAuth()
+  //TODO: this creates a bug on user signup, it throws a "account not found error"
   if (!account) throw new Error("Account not found")
   const { data } = trpc.message.getUnreadMessageCountByAccountId.useQuery({
     accountId: account.id,

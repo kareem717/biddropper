@@ -35,7 +35,9 @@ export default async function RootLayout({
 	user = data.user;
 
 	if (user) {
-		account = await api.account.getAccount.query();
+		account = await api.account.getAccountByUserId.query({
+			userId: user.id,
+		});
 	}
 
 	if (account) {

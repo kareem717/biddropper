@@ -8,7 +8,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
-import { HottestBidsCard } from "@/components/analytics/HottestBidsCard";
+import { HottestBidsCard } from "@/components/bids/HottestBidsCard";
 import { BidAcceptanceChart } from "@/components/analytics/charts/BidAcceptanceChart";
 import { ViewComparisonChart } from "@/components/analytics/charts/ViewComparisonChart";
 import { ViewConversionRateChart } from "@/components/analytics/charts/ViewConversionRateChart";

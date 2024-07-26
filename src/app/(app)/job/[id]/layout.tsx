@@ -1,3 +1,4 @@
+import { useAuth } from "@/components/providers/AuthProvider";
 import { api } from "@/lib/trpc/api";
 
 export default async function JobLayout({
@@ -9,6 +10,7 @@ export default async function JobLayout({
   }
   children: React.ReactNode;
 }) {
+  const { user } = useAuth()
   const job = await api.job.getJobFull.query({
     id: params.id
   })
@@ -18,7 +20,10 @@ export default async function JobLayout({
   }
 
   if (job.ownerAccount) {
-    const account = await api.account.getAccount.query();
+    const account = await api.account.getAccountByUserId.query({
+      // root layout should provide user
+      userId: user!.id,
+    });
     if (account?.id !== job.ownerAccount.id) {
       throw new Error("Forbidden");
     }

@@ -29,7 +29,7 @@ interface RadiusAddressMapProps extends ComponentPropsWithoutRef<"div"> {
 }
 
 const defaultPosition = { lat: 43.6532, lng: -79.3832 };
-
+//TODO: causes a "window is not defined" error
 const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
   addressInputProps,
   labelSliderProps,

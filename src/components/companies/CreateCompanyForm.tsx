@@ -90,7 +90,7 @@ export const CreateCompanyForm: FC<CreateCompanyFormProps> = ({ onSubmitProp, cl
       return;
     }
 
-    const id = await createCompany(values);
+    const company = await createCompany(values);
     onSubmitProp?.(values);
 
     if (!isError) {
@@ -98,13 +98,12 @@ export const CreateCompanyForm: FC<CreateCompanyFormProps> = ({ onSubmitProp, cl
         description: "We've created your company and added it to your dashboard."
       });
 
-      router.push(`/company/${id}`);
+      router.push(`/company/${company.id}`);
     }
   }
 
   const handleConfirmDialog = async () => {
     await form.trigger()
-    console.log(form.formState.isValid)
     if (form.formState.isValid) {
       setIsDialogOpen(true);
     }
@@ -180,18 +179,24 @@ export const CreateCompanyForm: FC<CreateCompanyFormProps> = ({ onSubmitProp, cl
           )}
         />
         <div className="flex flex-col md:flex-row gap-8">
-          <FormItem className="flex flex-col w-full">
-            <FormLabel>Industries</FormLabel>
-            <FormControl>
-              <IndustrySelect onIndustriesSelect={(_industries) => {
-                form.setValue("industries", getSelectedIndustries().map((industry) => industry.id));
-              }} />
-            </FormControl>
-            <FormDescription>
-              Select all industries that your company operates in.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
+          <FormField
+            control={form.control}
+            name="industries"
+            render={({ field }) => (
+              <FormItem className="flex flex-col w-full">
+                <FormLabel>Industries</FormLabel>
+                <FormControl>
+                  <IndustrySelect onIndustriesSelect={(_industries) => {
+                    form.setValue("industries", getSelectedIndustries().map((industry) => industry.id));
+                  }} />
+                </FormControl>
+                <FormDescription>
+                  Select all industries that your company operates in.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="dateFounded"

@@ -3,7 +3,6 @@ import { eq, and, isNull, sql, inArray, not, desc } from "drizzle-orm";
 import { companies, addresses } from "@/lib/db/drizzle/schema";
 import IndustryQueryClient from "./industry";
 import AddressQC from "./address";
-import AnalyticsQC from "./analytics";
 import { registerService } from "@/lib/utils";
 import { db } from "..";
 import { NewCompany, EditCompany } from "./validation";
@@ -124,7 +123,6 @@ class CompanyQueryClient extends QueryClient {
 	async Create(values: NewCompany) {
 		return await this.caller.transaction(async (tx) => {
 			const newAddress = await AddressQC.withCaller(tx).Create(values.address);
-			await AnalyticsQC.withCaller(tx).CreateCompanyAnalytics(values.ownerId);
 
 			const [newCompany] = await tx
 				.insert(companies)

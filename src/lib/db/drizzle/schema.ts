@@ -14,6 +14,7 @@ import {
 	date,
 	primaryKey,
 	pgSchema,
+	integer,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { tsvector } from "./customTypes";
@@ -91,6 +92,56 @@ export const usersInAuth = authSchema.table("users", {
 	id: uuid("id").primaryKey(),
 });
 
+export const accountJobViewHistories = pgTable(
+	"account_job_view_histories",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		jobId: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxAccountJobViewHistoriesJobIdCreatedAt: index(
+				"idx_account_job_view_histories_job_id_created_at"
+			).using("btree", table.jobId, table.createdAt),
+		};
+	}
+);
+
+export const accountCompanyViewHistories = pgTable(
+	"account_company_view_histories",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		companyId: uuid("company_id")
+			.notNull()
+			.references(() => companies.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxAccountCompanyViewHistoriesCompanyIdCreatedAt: index(
+				"idx_account_company_view_histories_company_id_created_at"
+			).using("btree", table.companyId, table.createdAt),
+		};
+	}
+);
+
 export const accountCompanyReccomendationHistories = pgTable(
 	"account_company_reccomendation_histories",
 	{
@@ -106,38 +157,12 @@ export const accountCompanyReccomendationHistories = pgTable(
 			.notNull(),
 		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	}
-);
-
-export const accountViewHistories = pgTable(
-	"account_view_histories",
-	{
-		id: uuid("id").defaultRandom().primaryKey().notNull(),
-		accountId: uuid("account_id")
-			.notNull()
-			.references(() => accounts.id),
-		jobId: uuid("job_id").references(() => jobs.id),
-		companyId: uuid("company_id").references(() => companies.id),
-		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-			.default(sql`clock_timestamp()`)
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 	},
 	(table) => {
 		return {
-			accountIdIdx: index("account_view_histories_account_id_idx").using(
-				"btree",
-				table.accountId
-			),
-			companyIdIdx: index("account_view_histories_company_id_idx").using(
-				"btree",
-				table.companyId
-			),
-			jobIdIdx: index("account_view_histories_job_id_idx").using(
-				"btree",
-				table.jobId
-			),
+			idxAccountCompanyReccomendationHistoriesCompanyIdCreated: index(
+				"idx_account_company_reccomendation_histories_company_id_created"
+			).using("btree", table.companyId, table.createdAt),
 		};
 	}
 );
@@ -150,65 +175,6 @@ export const gooseDbVersion = pgTable("goose_db_version", {
 	tstamp: timestamp("tstamp", { mode: "string" }).defaultNow(),
 });
 
-export const jobAnalytics = pgTable("job_analytics", {
-	jobId: uuid("job_id")
-		.primaryKey()
-		.notNull()
-		.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	weeklyViews: bigint("weekly_views", { mode: "number" }).default(0).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	monthlyViews: bigint("monthly_views", { mode: "number" })
-		.default(0)
-		.notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	weeklyBidsReceived: bigint("weekly_bids_received", { mode: "number" })
-		.default(0)
-		.notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	monthlyBidsReceived: bigint("monthly_bids_received", { mode: "number" })
-		.default(0)
-		.notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	weeklyFavourites: bigint("weekly_favourites", { mode: "number" })
-		.default(0)
-		.notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	monthlyFavourites: bigint("monthly_favourites", { mode: "number" })
-		.default(0)
-		.notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
-export const accountJobReccomendationHistories = pgTable(
-	"account_job_reccomendation_histories",
-	{
-		id: uuid("id").defaultRandom().primaryKey().notNull(),
-		accountId: uuid("account_id")
-			.notNull()
-			.references(() => accounts.id),
-		jobId: uuid("job_id")
-			.notNull()
-			.references(() => jobs.id),
-		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-			.default(sql`clock_timestamp()`)
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	},
-	(table) => {
-		return {
-			jobRecommendationHistoryAccountIdIdx: index(
-				"job_recommendation_history_account_id_idx"
-			).using("btree", table.accountId),
-		};
-	}
-);
-
 export const industries = pgTable("industries", {
 	id: uuid("id").defaultRandom().primaryKey().notNull(),
 	name: varchar("name", { length: 255 }).notNull(),
@@ -219,16 +185,41 @@ export const industries = pgTable("industries", {
 	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
-export const accountJobFavourites = pgTable(
-	"account_job_favourites",
+export const addresses = pgTable("addresses", {
+	id: uuid("id").defaultRandom().primaryKey().notNull(),
+	xCoordinate: numeric("x_coordinate").notNull(),
+	yCoordinate: numeric("y_coordinate").notNull(),
+	line1: varchar("line_1", { length: 70 }),
+	line2: varchar("line_2", { length: 70 }),
+	city: varchar("city", { length: 50 }),
+	region: varchar("region", { length: 50 }),
+	postalCode: varchar("postal_code", { length: 10 }).notNull(),
+	country: varchar("country", { length: 60 }).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+		.default(sql`clock_timestamp()`)
+		.notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	rawJson: jsonb("raw_json"),
+	district: text("district"),
+	regionCode: text("region_code"),
+	fullAddress: text("full_address").notNull(),
+});
+
+export const bids = pgTable(
+	"bids",
 	{
 		id: uuid("id").defaultRandom().primaryKey().notNull(),
-		accountId: uuid("account_id")
+		priceUsd: numeric("price_usd", { precision: 10, scale: 2 }).notNull(),
+		senderCompanyId: uuid("sender_company_id")
 			.notNull()
-			.references(() => accounts.id),
-		jobId: uuid("job_id")
-			.notNull()
-			.references(() => jobs.id),
+			.references(() => companies.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		isActive: boolean("is_active").default(true).notNull(),
+		status: bidStatus("status").default("pending").notNull(),
+		note: varchar("note", { length: 100 }),
 		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
 			.default(sql`clock_timestamp()`)
 			.notNull(),
@@ -237,32 +228,13 @@ export const accountJobFavourites = pgTable(
 	},
 	(table) => {
 		return {
-			accountIdIdx: index("account_job_favourites_account_id_idx").using(
+			idxBidsCreatedAt: index("idx_bids_created_at").using(
 				"btree",
-				table.accountId
+				table.createdAt
 			),
 		};
 	}
 );
-
-export const bids = pgTable("bids", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	priceUsd: numeric("price_usd", { precision: 10, scale: 2 }).notNull(),
-	senderCompanyId: uuid("sender_company_id")
-		.notNull()
-		.references(() => companies.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	isActive: boolean("is_active").default(true).notNull(),
-	status: bidStatus("status").default("pending").notNull(),
-	note: varchar("note", { length: 100 }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
 
 export const jobs = pgTable(
 	"jobs",
@@ -320,27 +292,6 @@ export const messageCompanyRecipients = pgTable("message_company_recipients", {
 		}),
 	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
 	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
-export const addresses = pgTable("addresses", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	xCoordinate: numeric("x_coordinate").notNull(),
-	yCoordinate: numeric("y_coordinate").notNull(),
-	line1: varchar("line_1", { length: 70 }),
-	line2: varchar("line_2", { length: 70 }),
-	city: varchar("city", { length: 50 }),
-	region: varchar("region", { length: 50 }),
-	postalCode: varchar("postal_code", { length: 10 }).notNull(),
-	country: varchar("country", { length: 60 }).notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	rawJson: jsonb("raw_json"),
-	district: text("district"),
-	regionCode: text("region_code"),
-	fullAddress: text("full_address").notNull(),
 });
 
 export const messageAccountRecipients = pgTable("message_account_recipients", {
@@ -475,61 +426,79 @@ export const accounts = pgTable(
 	}
 );
 
-export const companyAnalytics = pgTable("company_analytics", {
-	companyId: uuid("company_id")
-		.primaryKey()
-		.notNull()
-		.references(() => companies.id, {
-			onDelete: "restrict",
-			onUpdate: "cascade",
-		}),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	weeklyViews: bigint("weekly_views", { mode: "number" }).default(0).notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	monthlyViews: bigint("monthly_views", { mode: "number" })
-		.default(0)
-		.notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	weeklyBidsReceived: bigint("weekly_bids_received", { mode: "number" })
-		.default(0)
-		.notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	monthlyBidsReceived: bigint("monthly_bids_received", { mode: "number" })
-		.default(0)
-		.notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	weeklyFavourites: bigint("weekly_favourites", { mode: "number" })
-		.default(0)
-		.notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	monthlyFavourites: bigint("monthly_favourites", { mode: "number" })
-		.default(0)
-		.notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`clock_timestamp()`)
-		.notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
+export const accountJobReccomendationHistories = pgTable(
+	"account_job_reccomendation_histories",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		jobId: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxAccountJobReccomendationHistoriesJobIdCreatedAt: index(
+				"idx_account_job_reccomendation_histories_job_id_created_at"
+			).using("btree", table.jobId, table.createdAt),
+			jobRecommendationHistoryAccountIdIdx: index(
+				"job_recommendation_history_account_id_idx"
+			).using("btree", table.accountId),
+		};
+	}
+);
 
-export const companyJobs = pgTable(
-	"company_jobs",
+export const accountJobFavourites = pgTable(
+	"account_job_favourites",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		jobId: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			accountIdIdx: index("account_job_favourites_account_id_idx").using(
+				"btree",
+				table.accountId
+			),
+			idxAccountJobFavouritesJobIdCreatedAt: index(
+				"idx_account_job_favourites_job_id_created_at"
+			).using("btree", table.jobId, table.createdAt),
+		};
+	}
+);
+
+export const jobBids = pgTable(
+	"job_bids",
 	{
 		jobId: uuid("job_id")
 			.notNull()
 			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
-		companyId: uuid("company_id")
+		bidId: uuid("bid_id")
 			.notNull()
-			.references(() => companies.id, {
-				onDelete: "restrict",
-				onUpdate: "cascade",
-			}),
+			.references(() => bids.id, { onDelete: "restrict", onUpdate: "cascade" }),
 	},
 	(table) => {
 		return {
-			companyJobsPkey: primaryKey({
-				columns: [table.jobId, table.companyId],
-				name: "company_jobs_pkey",
+			idxJobBidsBidId: index("idx_job_bids_bid_id").using("btree", table.bidId),
+			jobBidsPkey: primaryKey({
+				columns: [table.jobId, table.bidId],
+				name: "job_bids_pkey",
 			}),
 		};
 	}
@@ -558,21 +527,28 @@ export const accountJobs = pgTable(
 	}
 );
 
-export const jobBids = pgTable(
-	"job_bids",
+export const companyJobs = pgTable(
+	"company_jobs",
 	{
 		jobId: uuid("job_id")
 			.notNull()
 			.references(() => jobs.id, { onDelete: "restrict", onUpdate: "cascade" }),
-		bidId: uuid("bid_id")
+		companyId: uuid("company_id")
 			.notNull()
-			.references(() => bids.id, { onDelete: "restrict", onUpdate: "cascade" }),
+			.references(() => companies.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
 	},
 	(table) => {
 		return {
-			jobBidsPkey: primaryKey({
-				columns: [table.jobId, table.bidId],
-				name: "job_bids_pkey",
+			idxCompanyJobsJobId: index("idx_company_jobs_job_id").using(
+				"btree",
+				table.jobId
+			),
+			companyJobsPkey: primaryKey({
+				columns: [table.jobId, table.companyId],
+				name: "company_jobs_pkey",
 			}),
 		};
 	}
@@ -622,6 +598,94 @@ export const jobIndustries = pgTable(
 			jobIndustriesPkey: primaryKey({
 				columns: [table.jobId, table.industryId],
 				name: "job_industries_pkey",
+			}),
+		};
+	}
+);
+
+export const accountCompanyFavourites = pgTable(
+	"account_company_favourites",
+	{
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		companyId: uuid("company_id")
+			.notNull()
+			.references(() => companies.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxAccountCompanyFavouritesCompanyIdCreatedAt: index(
+				"idx_account_company_favourites_company_id_created_at"
+			).using("btree", table.companyId, table.createdAt),
+			accountCompanyFavouritesPkey: primaryKey({
+				columns: [table.accountId, table.companyId],
+				name: "account_company_favourites_pkey",
+			}),
+		};
+	}
+);
+
+export const dailyCompanyAggregateAnalytics = pgTable(
+	"daily_company_aggregate_analytics",
+	{
+		companyId: uuid("company_id")
+			.notNull()
+			.references(() => companies.id),
+		dayNumber: integer("day_number").notNull(),
+		viewCount: integer("view_count").default(0).notNull(),
+		bidsRecievedCount: integer("bids_recieved_count").default(0).notNull(),
+		favouritedCount: integer("favourited_count").default(0).notNull(),
+		reccomendedCount: integer("reccomended_count").default(0).notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxDailyCompanyAggregateAnalyticsCreatedAt: index(
+				"idx_daily_company_aggregate_analytics_created_at"
+			).using("btree", table.createdAt),
+			dailyCompanyAggregateAnalyticsPkey: primaryKey({
+				columns: [table.companyId, table.dayNumber],
+				name: "daily_company_aggregate_analytics_pkey",
+			}),
+		};
+	}
+);
+
+export const dailyJobAggregateAnalytics = pgTable(
+	"daily_job_aggregate_analytics",
+	{
+		jobId: uuid("job_id")
+			.notNull()
+			.references(() => companies.id),
+		dayNumber: integer("day_number").notNull(),
+		viewCount: integer("view_count").default(0).notNull(),
+		bidsRecievedCount: integer("bids_recieved_count").default(0).notNull(),
+		favouritedCount: integer("favourited_count").default(0).notNull(),
+		reccomendedCount: integer("reccomended_count").default(0).notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxDailyJobAggregateAnalyticsCreatedAt: index(
+				"idx_daily_job_aggregate_analytics_created_at"
+			).using("btree", table.createdAt),
+			dailyJobAggregateAnalyticsPkey: primaryKey({
+				columns: [table.jobId, table.dayNumber],
+				name: "daily_job_aggregate_analytics_pkey",
 			}),
 		};
 	}

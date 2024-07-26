@@ -1,4 +1,4 @@
-import { DemoRequestDialog } from "@/components/jobs/landing/demo/RequestDialog";
+import { DemoRequestDialog } from "@/components/landing/demo/RequestDialog";
 import DemoConfig from "@/config/landing/demo";
 import { Metadata } from "next";
 
