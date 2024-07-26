@@ -4,10 +4,16 @@ import {
 	accountCompanyReccomendationHistories,
 	accountJobViewHistories,
 	accountCompanyViewHistories,
+	dailyJobAggregateAnalytics,
+	dailyCompanyAggregateAnalytics,
+	bids,
+	bidStatus,
 } from "@/lib/db/drizzle/schema";
 import { registerService } from "@/lib/utils";
 import { db } from "..";
 import { JobRecommendation, CompanyRecommendation } from "./validation";
+import JobQueryClient from "./job";
+import { and, count, eq, inArray, sql, sum } from "drizzle-orm";
 
 class AnalyticQueryClient extends QueryClient {
 	async TrackAccountJobRecommendation(values: JobRecommendation[]) {
@@ -38,23 +44,99 @@ class AnalyticQueryClient extends QueryClient {
 		});
 	}
 
-	// async GetMonthlyBidsSentVersusAcceptedByCompanyId(companyId: string) {
-	// 	return await this.caller.query.bids.findMany({
-	// 		where: eq(bids.companyId, companyId),
-	// 	});
-	// }
+	async GetJobViewVersusJobBidWeeklyByCompanyId(companyId: string) {
+		const companyJobs = await JobQueryClient.GetBasicManyByCompanyId(companyId);
 
-	// async GetJobViewVersusJobBidByCompanyId(companyId: string) {
-	// 	return await this.caller.query.bids.findMany({
-	// 		where: eq(bids.companyId, companyId),
-	// 	});
-	// }
+		const res = await this.caller
+			.select({
+				week: sql<string>`DATE_TRUNC('week', ${dailyJobAggregateAnalytics.createdAt})`,
+				bids: sum(dailyJobAggregateAnalytics.bidsRecievedCount),
+				views: sum(dailyJobAggregateAnalytics.viewCount),
+			})
+			.from(dailyJobAggregateAnalytics)
+			.where(
+				inArray(
+					dailyJobAggregateAnalytics.jobId,
+					companyJobs.map((job) => job.id)
+				)
+			)
+			.groupBy(
+				sql<string>`DATE_TRUNC('week', ${dailyJobAggregateAnalytics.createdAt})`
+			);
 
-	// async GetCompanyViewsVersusJobViewsByCompanyId(companyId: string) {
-	// 	return await this.caller.query.bids.findMany({
-	// 		where: eq(bids.companyId, companyId),
-	// 	});
-	// }
+		return res;
+	}
+
+	async GetCompanyViewsVersusJobViewsWeeklyByCompanyId(companyId: string) {
+		const companyJobs = await JobQueryClient.GetBasicManyByCompanyId(companyId);
+
+		const jobStats = await this.caller
+			.select({
+				week: sql<string>`DATE_TRUNC('week', ${dailyJobAggregateAnalytics.createdAt})`,
+				views: sum(dailyJobAggregateAnalytics.viewCount),
+			})
+			.from(dailyJobAggregateAnalytics)
+			.where(
+				inArray(
+					dailyJobAggregateAnalytics.jobId,
+					companyJobs.map((job) => job.id)
+				)
+			)
+			.groupBy(
+				sql<string>`DATE_TRUNC('week', ${dailyJobAggregateAnalytics.createdAt})`
+			);
+
+		const companyStats = await this.caller
+			.select({
+				week: sql<string>`DATE_TRUNC('week', ${dailyCompanyAggregateAnalytics.createdAt})`,
+				views: sum(dailyCompanyAggregateAnalytics.viewCount),
+			})
+			.from(dailyCompanyAggregateAnalytics)
+			.where(eq(dailyCompanyAggregateAnalytics.companyId, companyId))
+			.groupBy(
+				sql<string>`DATE_TRUNC('week', ${dailyCompanyAggregateAnalytics.createdAt})`
+			);
+
+		return {
+			company: companyStats,
+			job: jobStats,
+		};
+	}
+
+	async GetBidsSentVersusAcceptedWeeklyByCompanyId(companyId: string) {
+		const sent = await this.caller
+			.select({
+				week: sql<string>`DATE_TRUNC('week', ${bids.createdAt})`,
+				sent: count(bids.id),
+			})
+			.from(bids)
+			.where(
+				and(
+					eq(bids.senderCompanyId, companyId),
+					eq(bids.status, bidStatus.enumValues[0])
+				)
+			)
+			.groupBy(sql<string>`DATE_TRUNC('week', ${bids.createdAt})`);
+
+		const accepted = await this.caller
+			.select({
+				week: sql<string>`DATE_TRUNC('week', ${bids.createdAt})`,
+				accepted: count(bids.id),
+			})
+			.from(bids)
+			.where(
+				and(
+					eq(bids.senderCompanyId, companyId),
+					eq(bids.status, bidStatus.enumValues[1])
+				)
+			)
+			.groupBy(sql<string>`DATE_TRUNC('week', ${bids.createdAt})`);
+
+		return {
+			sent,
+			accepted,
+		};
+	}
 }
 
 // Create  global service

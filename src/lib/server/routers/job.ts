@@ -120,7 +120,7 @@ export const jobRouter = router({
 		.query(async ({ ctx, input }) => {
 			const { cursor, pageSize, includeDeleted } = input;
 
-			return await JobQueryClient.GetBasicManyByFavouriterAccountId(
+			return await JobQueryClient.GetBasicManyByFavouritedAccountId(
 				ctx.account.id,
 				cursor,
 				pageSize,

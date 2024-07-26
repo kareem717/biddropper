@@ -58,6 +58,19 @@ class JobQueryClient extends QueryClient {
 		return res.map((job) => job.jobs);
 	}
 
+	async GetBasicManyByCompanyId(companyId: string) {
+		return await this.caller
+			.select({
+				id: jobs.id,
+				title: jobs.title,
+				deletedAt: jobs.deletedAt,
+				createdAt: jobs.createdAt,
+			})
+			.from(jobs)
+			.innerJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
+			.where(eq(companyJobs.companyId, companyId));
+	}
+
 	async GetBasicManyByKeyword(
 		keyword: string,
 		page: number,
@@ -284,7 +297,7 @@ class JobQueryClient extends QueryClient {
 			.returning();
 	}
 
-	async GetBasicManyByFavouriterAccountId(
+	async GetBasicManyByFavouritedAccountId(
 		favouriterId: string,
 		page: number,
 		pageSize: number,

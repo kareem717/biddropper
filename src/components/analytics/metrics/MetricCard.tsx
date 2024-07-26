@@ -30,18 +30,18 @@ export const MetricCard: FC<MetricCardProps> = ({ className, children, label, ic
 
 
   return (
-    <div className={cn("flex justify-center gap-2 items-center w-full relative rounded-lg border p-4 bg-card text-card-foreground shadow-sm", className)} {...props}>
+    <div className={cn("flex justify-between gap-2 items-center w-full relative rounded-lg border p-4 pr-10 bg-card text-card-foreground shadow-sm", className)} {...props}>
       {Icon && (
         <span className="flex items-center justify-center rounded-full p-4 bg-accent">
           <Icon className="w-7 h-7 text-muted-foreground stroke-[2.5px]" />
         </span>
       )}
       {href ? (
-        <Link href={href}>
-          <div className="flex flex-col gap-1 ml-4">
+        <Link href={href} className="w-full">
+          <div className="flex flex-col gap-1 w-full items-start">
             <span className="text-sm font-medium text-muted-foreground">{label}</span>
             {typeof metric === "string" ? (
-              <span className="text-2xl font-semibold overflow-hidden text-ellipsis whitespace-nowrap hover:overflow-visible hover:whitespace-normal max-w-xs">
+              <span className="text-lg font-semibold overflow-hidden text-ellipsis whitespace-nowrap hover:overflow-visible hover:whitespace-normal max-w-[290px]">
                 {metric}
               </span>
             ) : (

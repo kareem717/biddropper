@@ -666,7 +666,7 @@ export const dailyJobAggregateAnalytics = pgTable(
 	{
 		jobId: uuid("job_id")
 			.notNull()
-			.references(() => companies.id),
+			.references(() => jobs.id),
 		dayNumber: integer("day_number").notNull(),
 		viewCount: integer("view_count").default(0).notNull(),
 		bidsRecievedCount: integer("bids_recieved_count").default(0).notNull(),

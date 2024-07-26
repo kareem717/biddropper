@@ -30,15 +30,15 @@ export default function DashboardPage() {
 				</Select>
 			</div>
 			<MetricSummary />
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+				<BidAcceptanceChart companyId="3cf805b6-da72-46a9-a6bb-c1d134f2a072" />
+				<div className="grid grid-rows-2 grid-cols-1 gap-4 w-full">
+					<ViewConversionRateChart companyId="3cf805b6-da72-46a9-a6bb-c1d134f2a072" />
+					<ViewComparisonChart companyId="3cf805b6-da72-46a9-a6bb-c1d134f2a072" />
+				</div>
+			</div>
 			<div className="w-full">
 				<HottestBidsCard />
-			</div>
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-				<BidAcceptanceChart />
-				<div className="grid grid-rows-2 grid-cols-1 gap-4 w-full">
-					<ViewConversionRateChart />
-					<ViewComparisonChart />
-				</div>
 			</div>
 		</main>
 	);

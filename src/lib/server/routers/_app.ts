@@ -7,6 +7,7 @@ import { jobRouter } from "./job";
 import { bidRouter } from "./bid";
 import { messageRouter } from "./message";
 import { emailRouter } from "./email";
+import { analyticsRouter } from "./analytics";
 
 export const appRouter = router({
 	auth: authRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
 	bid: bidRouter,
 	message: messageRouter,
 	email: emailRouter,
+	analytics: analyticsRouter,
 });
 
 export type AppRouter = typeof appRouter;

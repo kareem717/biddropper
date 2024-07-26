@@ -24,10 +24,6 @@ export const HottestBidsCard: FC<HottestBidsCardProps> = ({
     accountId: account?.id ?? ""
   })
 
-  if (isLoading) {
-
-  }
-
   if (isError) {
     return <div>Error: {error.message}</div>
   }
@@ -41,7 +37,7 @@ export const HottestBidsCard: FC<HottestBidsCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 p-4 overflow-y-auto">
-        {isLoading ? <div>Loading...</div> : bids?.map((bid, i) => (
+        {isLoading ? <div>Loading...</div> : bids?.slice(0, 10).map((bid, i) => (
           <ReceivedBidIndexCard key={i} bid={bid} />
         ))}
       </CardContent>

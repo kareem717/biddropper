@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE
     daily_job_aggregate_analytics (
-        job_id UUID NOT NULL REFERENCES companies,
+        job_id UUID NOT NULL REFERENCES jobs,
         day_number INT NOT NULL,
         view_count INT NOT NULL DEFAULT 0,
         bids_recieved_count INT NOT NULL DEFAULT 0,

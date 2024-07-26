@@ -1,12 +1,13 @@
 "use client"
 
 import { ChartShell } from "@/components/analytics/charts/ChartShell";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { CartesianGrid, XAxis, YAxis, LineChart, Line } from "recharts"
 import { ChartLegend, ChartLegendContent } from "@/components/ui/chart"
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ComponentPropsWithoutRef, FC, ReactNode } from "react"
 import { ChartConfig } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
+import { trpc } from "@/lib/trpc/client";
 
 const chartConfig = {
   sent: {
@@ -19,38 +20,35 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-const chartData = [
-  { month: "January", sent: 186, accepted: 80 },
-  { month: "February", sent: 305, accepted: 200 },
-  { month: "March", sent: 237, accepted: 120 },
-  { month: "April", sent: 73, accepted: 190 },
-  { month: "May", sent: 209, accepted: 130 },
-  { month: "June", sent: 214, accepted: 140 },
-]
-
-export interface BidAcceptanceChartProps extends ComponentPropsWithoutRef<'div'> { }
+export interface BidAcceptanceChartProps extends ComponentPropsWithoutRef<'div'> {
+  companyId: string;
+}
 
 export const BidAcceptanceChart: FC<BidAcceptanceChartProps> = ({
+  companyId,
   className,
   ...props
 }) => {
+  const { data, isLoading } = trpc.analytics.GetBidsSentVersusAccepted.useQuery({
+    companyId,
+  });
+
+  if (!isLoading && !data) throw new Error("No data");
 
   return (
-    <ChartShell title="Bids Sent vs Accepted" className={cn("h-[600px] w-full", className)} {...props} config={chartConfig} >
-      <BarChart accessibilityLayer data={chartData}>
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="month"
-          tickLine={false}
-          tickMargin={10}
-          axisLine={false}
-          tickFormatter={(value) => value.slice(0, 3)}
-        />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="sent" fill="var(--color-sent)" radius={4} />
-        <Bar dataKey="accepted" fill="var(--color-accepted)" radius={4} />
-      </BarChart>
-    </ChartShell>
+    <ChartShell title="Bids Sent vs Accepted" className={cn("h-[200px] md:h-[600px] w-full", className)} {...props} config={chartConfig} >
+      {isLoading ? <div>Loading...</div> : (
+        <LineChart data={data} margin={{ top: 5, right: 30, bottom: 5 }} accessibilityLayer>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="weekNumber" />
+          <YAxis />
+          <ChartTooltip content={<ChartTooltipContent labelKey="week" />} />
+          <ChartLegend content={<ChartLegendContent />} />
+          <Line type="monotone" dataKey="sent" stroke={chartConfig.sent.color} />
+          <Line type="monotone" dataKey="accepted" stroke={chartConfig.accepted.color} />
+        </LineChart>
+      )
+      }
+    </ChartShell >
   )
 }
