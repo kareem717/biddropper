@@ -100,7 +100,7 @@ class CompanyQueryClient extends QueryClient {
 	) {
 		const ownedCompanies = await this.GetDetailedManyByOwnerId(userId, true);
 		const ownedCompanyIds = ownedCompanies.map((company) => company.id);
-	
+
 		const dailyAnalytics = this.caller.$with("daily_analytics").as(
 			this.caller
 				.select({
@@ -125,7 +125,7 @@ class CompanyQueryClient extends QueryClient {
 					sql`${dailyCompanyAggregateAnalytics.createdAt} >= NOW() - INTERVAL '1 day'`
 				)
 		);
-	
+
 		const weeklyAnalytics = this.caller.$with("weekly_analytics").as(
 			this.caller
 				.select({
@@ -163,7 +163,7 @@ class CompanyQueryClient extends QueryClient {
 				)
 				.groupBy(dailyCompanyAggregateAnalytics.companyId)
 		);
-	
+
 		const res = await this.WithOffsetPagination(
 			this.caller
 				.with(weeklyAnalytics, dailyAnalytics)
@@ -195,7 +195,7 @@ class CompanyQueryClient extends QueryClient {
 			page,
 			pageSize
 		);
-	
+
 		return this.GenerateOffsetPaginationResponse(res, page, pageSize);
 	}
 
@@ -305,7 +305,10 @@ class CompanyQueryClient extends QueryClient {
 			)
 			.returning();
 	}
-	async GetIsCompanyFavouritedByAccountId(accountId: string, companyId: string) {
+	async GetIsCompanyFavouritedByAccountId(
+		accountId: string,
+		companyId: string
+	) {
 		const [res] = await this.caller
 			.select()
 			.from(accountCompanyFavourites)
@@ -319,6 +322,40 @@ class CompanyQueryClient extends QueryClient {
 
 		console.log(res);
 		return res !== undefined;
+	}
+
+	async GetBasicManyFavouritedByAccountId(
+		favouriterId: string,
+		page: number,
+		pageSize: number,
+		includeDeleted: boolean = false
+	) {
+		
+		const res = await this.WithOffsetPagination(
+			this.caller
+				.select({
+					id: companies.id,
+					name: companies.name,
+					deletedAt: companies.deletedAt,
+				})
+				.from(companies)
+				.innerJoin(
+					accountCompanyFavourites,
+					eq(companies.id, accountCompanyFavourites.companyId)
+				)
+				.where(
+					and(
+						includeDeleted ? undefined : isNull(accountCompanyFavourites.deletedAt),
+						eq(accountCompanyFavourites.accountId, favouriterId)
+					)
+				)
+				.orderBy(desc(accountCompanyFavourites.createdAt))
+				.$dynamic(),
+			page,
+			pageSize
+		);
+
+		return this.GenerateOffsetPaginationResponse(res, page, pageSize);
 	}
 }
 

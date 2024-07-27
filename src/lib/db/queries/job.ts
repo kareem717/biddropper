@@ -408,7 +408,7 @@ class JobQueryClient extends QueryClient {
 		return res;
 	}
 
-	async GetBasicManyByFavouritedAccountId(
+	async GetBasicManyFavouritedByAccountId(
 		favouriterId: string,
 		page: number,
 		pageSize: number,
@@ -419,6 +419,7 @@ class JobQueryClient extends QueryClient {
 				.select({
 					id: jobs.id,
 					title: jobs.title,
+					description: jobs.description,
 					deletedAt: jobs.deletedAt,
 				})
 				.from(jobs)
@@ -428,7 +429,7 @@ class JobQueryClient extends QueryClient {
 				)
 				.where(
 					and(
-						includeDeleted ? undefined : isNull(jobs.deletedAt),
+						includeDeleted ? undefined : isNull(accountJobFavourites.deletedAt),
 						eq(accountJobFavourites.accountId, favouriterId)
 					)
 				)
@@ -440,8 +441,6 @@ class JobQueryClient extends QueryClient {
 
 		return this.GenerateOffsetPaginationResponse(res, page, pageSize);
 	}
-
-	
 }
 
 // Create  global service

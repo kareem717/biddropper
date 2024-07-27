@@ -135,15 +135,22 @@ export const jobRouter = router({
 	getFavouritedJobs: accountProcedure
 		.input(
 			z.object({
+				accountId: z.string().uuid(),
 				cursor: z.number().optional().default(1),
 				pageSize: z.number().optional().default(10),
 				includeDeleted: z.boolean().optional().default(false),
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			const { cursor, pageSize, includeDeleted } = input;
+			const { accountId, cursor, pageSize, includeDeleted } = input;
 
-			return await JobQueryClient.GetBasicManyByFavouritedAccountId(
+			if (accountId !== ctx.account.id) {
+				throw new Error(
+					"you cannot check if a job is favourited for another account"
+				);
+			}
+
+			return await JobQueryClient.GetBasicManyFavouritedByAccountId(
 				ctx.account.id,
 				cursor,
 				pageSize,
