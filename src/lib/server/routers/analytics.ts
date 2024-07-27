@@ -119,8 +119,40 @@ export const analyticsRouter = router({
 				});
 			}
 
-			return await AnalyticsQueryClient.GetInteractionSummaryByCompanyId(
-				input.companyId
-			);
+			const rawData =
+				await AnalyticsQueryClient.GetInteractionSummaryByCompanyId(
+					input.companyId
+				);
+
+			const calcData = (curr: string | null, prev: string | null) => {
+				const numCurr = Number(curr);
+				const numPrev = Number(prev);
+
+				let percentageChange = 100;
+				if (numPrev !== 0) {
+					percentageChange = (numCurr / numPrev - 1) * 100;
+				}
+
+				return {
+					current: numCurr,
+					previous: numPrev,
+					change: numCurr - numPrev,
+					percentageChange: Math.round(percentageChange),
+				};
+			};
+
+			const calculatedData = {
+				views: calcData(
+					rawData.currentMonth.views,
+					rawData.previousMonth.views
+				),
+				bids: calcData(rawData.currentMonth.bids, rawData.previousMonth.bids),
+				favorites: calcData(
+					rawData.currentMonth.favorites,
+					rawData.previousMonth.favorites
+				),
+			};
+
+			return calculatedData;
 		}),
 });

@@ -19,14 +19,13 @@ export const MetricSummary: FC<MetricSummaryProps> = ({ className, ...props }) =
     return <div>loading</div>
   }
 
-  //TODO: calculate the change in the metrics
   return (
     <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mt-4 sm:mt-8", className)} {...props}>
       {analytics && mostPopularJob && (
         <>
-          <MetricCard label="MCV" icon="telescope" metric={{ value: String(analytics.views), numericChange: -10, changeSuffix: "%" }} description="Monthly view count of your company profile" />
-          <MetricCard label="MBR" icon="gavel" metric={{ value: String(analytics.bids), numericChange: 80, changeSuffix: " today" }} description="Monthly bids received by your company" />
-          <MetricCard label="MCF" icon="gavel" metric={{ value: String(analytics.favorites), numericChange: 0, changeSuffix: " today" }} description="The total number of accounts/companies that addded your company to their favourites." />
+          <MetricCard label="MCV" icon="telescope" metric={{ value: String(analytics.views.current), numericChange: analytics.views.percentageChange > 100 ? analytics.views.change : analytics.views.percentageChange, changeSuffix: "%" }} description="Monthly view count of your company profile" />
+          <MetricCard label="MBR" icon="gavel" metric={{ value: String(analytics.bids.current), numericChange: analytics.bids.change, changeSuffix: "" }} description="Monthly bids received by your company" />
+          <MetricCard label="MCF" icon="gavel" metric={{ value: String(analytics.favorites.current), numericChange: analytics.favorites.change, changeSuffix: "" }} description="The total number of accounts/companies that addded your company to their favourites." />
           <MetricCard
             label="Most Popular Job"
             metric={mostPopularJob.title}
