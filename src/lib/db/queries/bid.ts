@@ -12,7 +12,17 @@ import {
 	companies,
 	accounts,
 } from "@/lib/db/drizzle/schema";
-import { eq, and, isNull, inArray, lte, gte } from "drizzle-orm";
+import {
+	eq,
+	and,
+	isNull,
+	sql,
+	inArray,
+	lte,
+	gte,
+	desc,
+	max,
+} from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import CompanyQueryClient from "./company";
 import MessageQueryClient from "./message";
@@ -282,19 +292,79 @@ class BidsQueryClient extends QueryClient {
 	}
 
 	async GetHottestManyByAccountId(accountId: string) {
-		//TODO: implement properly
-		const bidIds = await this.caller
+		const stdDevJobs = this.caller.$with("std_dev_jobs").as(
+			this.caller
+				.select({
+					jobId: jobBids.jobId,
+					stddev: sql<number>`STDDEV(${bids.priceUsd})`.as("price_stddev"),
+				})
+				.from(bids)
+				.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+				.innerJoin(accountJobs, eq(jobBids.jobId, accountJobs.jobId))
+				.where(eq(accountJobs.accountId, accountId))
+				.groupBy(jobBids.jobId)
+				.orderBy(desc(sql`price_stddev`))
+				.limit(10)
+		);
+
+		const sq = this.caller
 			.select({
-				id: bids.id,
+				maxPrice: sql<number>`MAX(${bids.priceUsd})`.as("max_price"),
 			})
 			.from(bids)
-			.innerJoin(jobBids, eq(bids.id, jobBids.bidId));
+			.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+			.where(eq(jobBids.jobId, stdDevJobs.jobId));
 
-		if (!bidIds.length) {
-			return [];
-		}
+		const bidIds = await this.caller
+			.with(stdDevJobs)
+			.select({
+				bidId: bids.id,
+			})
+			.from(bids)
+			.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+			.innerJoin(stdDevJobs, eq(jobBids.jobId, stdDevJobs.jobId))
+			.where(eq(bids.priceUsd, sql`${sq}`))
+			.limit(10);
 
-		return await this.GetExtendedManyById(bidIds.map((b) => b.id));
+		return await this.GetExtendedManyById(bidIds.map((b) => b.bidId));
+	}
+
+	async GetHottestManyByCompanyId(companyId: string) {
+		const stdDevJobs = this.caller.$with("std_dev_jobs").as(
+			this.caller
+				.select({
+					jobId: jobBids.jobId,
+					stddev: sql<number>`STDDEV(${bids.priceUsd})`.as("price_stddev"),
+				})
+				.from(bids)
+				.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+				.innerJoin(companyJobs, eq(jobBids.jobId, companyJobs.jobId))
+				.where(eq(companyJobs.companyId, companyId))
+				.groupBy(jobBids.jobId)
+				.orderBy(desc(sql`price_stddev`))
+				.limit(10)
+		);
+
+		const sq = this.caller
+			.select({
+				maxPrice: sql<number>`MAX(${bids.priceUsd})`.as("max_price"),
+			})
+			.from(bids)
+			.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+			.where(eq(jobBids.jobId, stdDevJobs.jobId));
+
+		const bidIds = await this.caller
+			.with(stdDevJobs)
+			.select({
+				bidId: bids.id,
+			})
+			.from(bids)
+			.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+			.innerJoin(stdDevJobs, eq(jobBids.jobId, stdDevJobs.jobId))
+			.where(eq(bids.priceUsd, sql`${sq}`))
+			.limit(10);
+
+		return await this.GetExtendedManyById(bidIds.map((b) => b.bidId));
 	}
 
 	async Create(values: NewBid, querierAccountId: string) {
