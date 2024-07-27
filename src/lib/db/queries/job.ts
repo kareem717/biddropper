@@ -8,12 +8,12 @@ import {
 	accounts,
 	addresses,
 	companies,
+	dailyJobAggregateAnalytics,
 	companyJobs,
 	jobs,
 } from "@/lib/db/drizzle/schema";
 import IndustryQueryClient from "./industry";
 import AddressQueryClient from "./address";
-import AnalyticsQueryClient from "./analytics";
 import { NewJob, EditJob } from "./validation";
 
 class JobQueryClient extends QueryClient {
@@ -120,11 +120,82 @@ class JobQueryClient extends QueryClient {
 		const ownedJobs = await this.GetDetailedManyOwnedByAccountId(userId);
 		const ownedJobIds = ownedJobs.map((job) => job.id);
 
-		// TODO: implement recommendation logic
+		const dailyAnalytics = this.caller.$with("daily_analytics").as(
+			this.caller
+				.select({
+					jobId: dailyJobAggregateAnalytics.jobId,
+					viewCount: dailyJobAggregateAnalytics.viewCount,
+					bidsReceivedCount: dailyJobAggregateAnalytics.bidsRecievedCount,
+					favouritedCount: dailyJobAggregateAnalytics.favouritedCount,
+					reccomendedCount: dailyJobAggregateAnalytics.reccomendedCount,
+					dailyPopularity: sql<number>`
+						((
+							${dailyJobAggregateAnalytics.viewCount} +
+							(0.8 * ${dailyJobAggregateAnalytics.bidsRecievedCount}) +
+							(3 * ${dailyJobAggregateAnalytics.favouritedCount})
+						) /
+						CASE WHEN ${dailyJobAggregateAnalytics.reccomendedCount} = 0 
+						THEN 1 ELSE ${dailyJobAggregateAnalytics.reccomendedCount} END
+					) * 1000
+					`.as("daily_popularity"),
+				})
+				.from(dailyJobAggregateAnalytics)
+				.where(
+					sql`${dailyJobAggregateAnalytics.createdAt} >= NOW() - INTERVAL '1 day'`
+				)
+		);
+
+		const weeklyAnalytics = this.caller.$with("weekly_analytics").as(
+			this.caller
+				.select({
+					jobId: dailyJobAggregateAnalytics.jobId,
+					totalViewCount:
+						sql<number>`SUM(${dailyJobAggregateAnalytics.viewCount})`.as(
+							"total_view_count"
+						),
+					totalBidsReceivedCount:
+						sql<number>`SUM(${dailyJobAggregateAnalytics.bidsRecievedCount})`.as(
+							"total_bids_recieved_count"
+						),
+					totalFavouritedCount:
+						sql<number>`SUM(${dailyJobAggregateAnalytics.favouritedCount})`.as(
+							"total_favourited_count"
+						),
+					totalRecommendedCount:
+						sql<number>`SUM(${dailyJobAggregateAnalytics.reccomendedCount})`.as(
+							"total_reccomended_count"
+						),
+					weeklyPopularity: sql<number>`
+						((
+							SUM(${dailyJobAggregateAnalytics.viewCount}) + 
+							(0.8 * SUM(${dailyJobAggregateAnalytics.bidsRecievedCount})) + 
+							(3 * SUM(${dailyJobAggregateAnalytics.favouritedCount}))
+						) /
+						CASE WHEN SUM(${dailyJobAggregateAnalytics.reccomendedCount}) = 0 
+						THEN 1 ELSE SUM(${dailyJobAggregateAnalytics.reccomendedCount}) END
+					) * 1000
+					`.as("weekly_popularity"),
+				})
+				.from(dailyJobAggregateAnalytics)
+				.where(
+					sql`${dailyJobAggregateAnalytics.createdAt} >= NOW() - INTERVAL '7 days'`
+				)
+				.groupBy(dailyJobAggregateAnalytics.jobId)
+		);
+
 		const res = await this.WithOffsetPagination(
 			this.caller
-				.select()
+				.with(weeklyAnalytics, dailyAnalytics)
+				.select({
+					id: jobs.id,
+					title: jobs.title,
+					deletedAt: jobs.deletedAt,
+					dailyPopularity: dailyAnalytics.dailyPopularity,
+					weeklyPopularity: weeklyAnalytics.weeklyPopularity,
+				})
 				.from(jobs)
+				.innerJoin(dailyAnalytics, eq(jobs.id, dailyAnalytics.jobId))
+				.innerJoin(weeklyAnalytics, eq(jobs.id, weeklyAnalytics.jobId))
 				.where(
 					and(
 						ownedJobs.length > 0
@@ -133,7 +204,14 @@ class JobQueryClient extends QueryClient {
 						includeDeleted ? undefined : isNull(jobs.deletedAt)
 					)
 				)
-				.orderBy(desc(jobs.createdAt))
+				.groupBy(
+					jobs.id,
+					jobs.title,
+					jobs.deletedAt,
+					dailyAnalytics.dailyPopularity,
+					weeklyAnalytics.weeklyPopularity
+				)
+				.orderBy(desc(dailyAnalytics.dailyPopularity))
 				.$dynamic(),
 			page,
 			pageSize

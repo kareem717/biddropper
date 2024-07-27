@@ -1,6 +1,11 @@
 import QueryClient from ".";
 import { eq, and, isNull, sql, inArray, not, desc } from "drizzle-orm";
-import { companies, addresses } from "@/lib/db/drizzle/schema";
+import {
+	companies,
+	addresses,
+	dailyCompanyAggregateAnalytics,
+	companyIndustries,
+} from "@/lib/db/drizzle/schema";
 import IndustryQueryClient from "./industry";
 import AddressQC from "./address";
 import { registerService } from "@/lib/utils";
@@ -95,28 +100,102 @@ class CompanyQueryClient extends QueryClient {
 	) {
 		const ownedCompanies = await this.GetDetailedManyByOwnerId(userId, true);
 		const ownedCompanyIds = ownedCompanies.map((company) => company.id);
-
-		// TODO: implement recommendation logic
+	
+		const dailyAnalytics = this.caller.$with("daily_analytics").as(
+			this.caller
+				.select({
+					companyId: dailyCompanyAggregateAnalytics.companyId,
+					viewCount: dailyCompanyAggregateAnalytics.viewCount,
+					bidsReceivedCount: dailyCompanyAggregateAnalytics.bidsRecievedCount,
+					favouritedCount: dailyCompanyAggregateAnalytics.favouritedCount,
+					reccomendedCount: dailyCompanyAggregateAnalytics.reccomendedCount,
+					dailyPopularity: sql<number>`
+						((
+							${dailyCompanyAggregateAnalytics.viewCount} +
+							(0.8 * ${dailyCompanyAggregateAnalytics.bidsRecievedCount}) +
+							(3 * ${dailyCompanyAggregateAnalytics.favouritedCount})
+						) /
+						CASE WHEN ${dailyCompanyAggregateAnalytics.reccomendedCount} = 0 
+						THEN 1 ELSE ${dailyCompanyAggregateAnalytics.reccomendedCount} END
+					) * 1000
+					`.as("daily_popularity"),
+				})
+				.from(dailyCompanyAggregateAnalytics)
+				.where(
+					sql`${dailyCompanyAggregateAnalytics.createdAt} >= NOW() - INTERVAL '1 day'`
+				)
+		);
+	
+		const weeklyAnalytics = this.caller.$with("weekly_analytics").as(
+			this.caller
+				.select({
+					companyId: dailyCompanyAggregateAnalytics.companyId,
+					totalViewCount:
+						sql<number>`SUM(${dailyCompanyAggregateAnalytics.viewCount})`.as(
+							"total_view_count"
+						),
+					totalBidsReceivedCount:
+						sql<number>`SUM(${dailyCompanyAggregateAnalytics.bidsRecievedCount})`.as(
+							"total_bids_recieved_count"
+						),
+					totalFavouritedCount:
+						sql<number>`SUM(${dailyCompanyAggregateAnalytics.favouritedCount})`.as(
+							"total_favourited_count"
+						),
+					totalRecommendedCount:
+						sql<number>`SUM(${dailyCompanyAggregateAnalytics.reccomendedCount})`.as(
+							"total_reccomended_count"
+						),
+					weeklyPopularity: sql<number>`
+						((
+							SUM(${dailyCompanyAggregateAnalytics.viewCount}) + 
+							(0.8 * SUM(${dailyCompanyAggregateAnalytics.bidsRecievedCount})) + 
+							(3 * SUM(${dailyCompanyAggregateAnalytics.favouritedCount}))
+						) /
+						CASE WHEN SUM(${dailyCompanyAggregateAnalytics.reccomendedCount}) = 0 
+						THEN 1 ELSE SUM(${dailyCompanyAggregateAnalytics.reccomendedCount}) END
+					) * 1000
+					`.as("weekly_popularity"),
+				})
+				.from(dailyCompanyAggregateAnalytics)
+				.where(
+					sql`${dailyCompanyAggregateAnalytics.createdAt} >= NOW() - INTERVAL '7 days'`
+				)
+				.groupBy(dailyCompanyAggregateAnalytics.companyId)
+		);
+	
 		const res = await this.WithOffsetPagination(
 			this.caller
+				.with(weeklyAnalytics, dailyAnalytics)
 				.select({
 					id: companies.id,
 					name: companies.name,
 					deletedAt: companies.deletedAt,
+					dailyPopularity: dailyAnalytics.dailyPopularity,
+					weeklyPopularity: weeklyAnalytics.weeklyPopularity,
 				})
 				.from(companies)
+				.innerJoin(dailyAnalytics, eq(companies.id, dailyAnalytics.companyId))
+				.innerJoin(weeklyAnalytics, eq(companies.id, weeklyAnalytics.companyId))
 				.where(
 					and(
 						not(inArray(companies.id, ownedCompanyIds)),
 						includeDeleted ? undefined : isNull(companies.deletedAt)
 					)
 				)
-				.orderBy(desc(companies.createdAt))
+				.groupBy(
+					companies.id,
+					companies.name,
+					companies.deletedAt,
+					dailyAnalytics.dailyPopularity,
+					weeklyAnalytics.weeklyPopularity
+				)
+				.orderBy(desc(dailyAnalytics.dailyPopularity))
 				.$dynamic(),
 			page,
 			pageSize
 		);
-
+	
 		return this.GenerateOffsetPaginationResponse(res, page, pageSize);
 	}
 

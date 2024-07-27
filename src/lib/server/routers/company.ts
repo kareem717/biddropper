@@ -1,5 +1,8 @@
 import { router, accountProcedure, companyOwnerProcedure } from "../trpc";
-import { EditCompanySchema, NewCompanySchema } from "@/lib/db/queries/validation";
+import {
+	EditCompanySchema,
+	NewCompanySchema,
+} from "@/lib/db/queries/validation";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import CompanyQueryClient from "@/lib/db/queries/company";
@@ -158,14 +161,16 @@ export const companyRouter = router({
 					);
 
 				// Track job recommendation
-				await AnalyticQueryClient.withCaller(
-					tx
-				).TrackAccountCompanyRecommendation(
-					companies.data.map((company) => ({
-						companyId: company.id,
-						accountId: ctx.account.id,
-					}))
-				);
+				if (companies.data.length > 0) {
+					await AnalyticQueryClient.withCaller(
+						tx
+					).TrackAccountCompanyRecommendation(
+						companies.data.map((company) => ({
+							companyId: company.id,
+							accountId: ctx.account.id,
+						}))
+					);
+				}
 
 				return companies;
 			});
