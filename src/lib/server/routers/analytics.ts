@@ -1,9 +1,10 @@
-import { companyOwnerProcedure, router } from "../trpc";
+import { accountProcedure, companyOwnerProcedure, router } from "../trpc";
 import AnalyticsQueryClient from "@/lib/db/queries/analytics";
 import CompanyQueryClient from "@/lib/db/queries/company";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { format, getISOWeek } from "date-fns";
+import JobQueryClient from "@/lib/db/queries/job";
 
 export const analyticsRouter = router({
 	GetCompanyJobViewComparison: companyOwnerProcedure
@@ -123,6 +124,72 @@ export const analyticsRouter = router({
 				await AnalyticsQueryClient.GetInteractionSummaryByCompanyId(
 					input.companyId
 				);
+
+			const calcData = (curr: string | null, prev: string | null) => {
+				const numCurr = Number(curr);
+				const numPrev = Number(prev);
+
+				let percentageChange = 100;
+				if (numPrev !== 0) {
+					percentageChange = (numCurr / numPrev - 1) * 100;
+				}
+
+				return {
+					current: numCurr,
+					previous: numPrev,
+					change: numCurr - numPrev,
+					percentageChange: Math.round(percentageChange),
+				};
+			};
+
+			const calculatedData = {
+				views: calcData(
+					rawData.currentMonth.views,
+					rawData.previousMonth.views
+				),
+				bids: calcData(rawData.currentMonth.bids, rawData.previousMonth.bids),
+				favorites: calcData(
+					rawData.currentMonth.favorites,
+					rawData.previousMonth.favorites
+				),
+			};
+
+			return calculatedData;
+		}),
+
+	GetPublicMonthlyAnalyticsByCompanyId: companyOwnerProcedure
+		.input(z.object({ companyId: z.string().uuid() }))
+		.query(async ({ input }) => {
+			return await AnalyticsQueryClient.GetPublicInteractionSummaryByCompanyId(
+				input.companyId
+			);
+		}),
+
+	GetPublicMonthlyAnalyticsByJobId: accountProcedure
+		.input(z.object({ jobId: z.string().uuid() }))
+		.query(async ({ input }) => {
+			return await AnalyticsQueryClient.GetPublicInteractionSummaryByJobId(
+				input.jobId
+			);
+		}),
+
+	GetMonthlyAnalyticsByJobId: accountProcedure
+		.input(z.object({ jobId: z.string().uuid() }))
+		.query(async ({ input, ctx }) => {
+			const ownedJobs = await JobQueryClient.GetDetailedManyOwnedByAccountId(
+				ctx.account.id
+			);
+
+			if (!ownedJobs.some((job) => job.id === input.jobId)) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "you are not authorized to view this job's analytics",
+				});
+			}
+
+			const rawData = await AnalyticsQueryClient.GetInteractionSummaryByJobId(
+				input.jobId
+			);
 
 			const calcData = (curr: string | null, prev: string | null) => {
 				const numCurr = Number(curr);

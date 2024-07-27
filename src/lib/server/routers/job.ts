@@ -90,25 +90,47 @@ export const jobRouter = router({
 			});
 		}),
 	favouriteJob: accountProcedure
-		.input(z.object({ jobId: z.string() }))
+		.input(z.object({ jobId: z.string(), accountId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
 			const jqc = JobQueryClient;
 			return await jqc.caller.transaction(async (tx) => {
-				const ownedJobs = await jqc
-					.withCaller(tx)
-					.GetDetailedManyOwnedByAccountId(ctx.account.id);
-
-				if (ownedJobs.some((job) => job.id === input.jobId)) {
-					throw new Error("You cannot favourite a job you own");
+				if (input.accountId !== ctx.account.id) {
+					throw new Error("you cannot favourite a job for another account");
 				}
 
-				await jqc.withCaller(tx).Favorite(ctx.account.id, input.jobId);
+				const ownedJobs = await jqc
+					.withCaller(tx)
+					.GetDetailedManyOwnedByAccountId(input.accountId);
+
+				if (ownedJobs.some((job) => job.id === input.jobId)) {
+					throw new Error("you cannot favourite a job you own");
+				}
+
+				await jqc.withCaller(tx).Favorite(input.accountId, input.jobId);
 			});
 		}),
 	unfavouriteJob: accountProcedure
-		.input(z.object({ jobId: z.string() }))
+		.input(z.object({ jobId: z.string(), accountId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			return await JobQueryClient.Unfavorite(ctx.account.id, input.jobId);
+			if (input.accountId !== ctx.account.id) {
+				throw new Error("you cannot unfavourite a job for another account");
+			}
+
+			return await JobQueryClient.Unfavorite(input.accountId, input.jobId);
+		}),
+	getIsJobFavouritedByAccountId: accountProcedure
+		.input(z.object({ jobId: z.string().uuid(), accountId: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			if (input.accountId !== ctx.account.id) {
+				throw new Error(
+					"you cannot check if a job is favourited for another account"
+				);
+			}
+
+			return await JobQueryClient.GetIsJobFavouritedByAccountId(
+				ctx.account.id,
+				input.jobId
+			);
 		}),
 	getFavouritedJobs: accountProcedure
 		.input(
@@ -128,6 +150,7 @@ export const jobRouter = router({
 				includeDeleted
 			);
 		}),
+
 	trackJobView: accountProcedure
 		.input(z.object({ jobId: z.string() }))
 		.mutation(async ({ ctx, input }) => {

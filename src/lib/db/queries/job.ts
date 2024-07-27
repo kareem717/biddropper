@@ -374,7 +374,21 @@ class JobQueryClient extends QueryClient {
 			)
 			.returning();
 	}
+	async GetIsJobFavouritedByAccountId(accountId: string, jobId: string) {
+		const [res] = await this.caller
+			.select()
+			.from(accountJobFavourites)
+			.where(
+				and(
+					eq(accountJobFavourites.accountId, accountId),
+					eq(accountJobFavourites.jobId, jobId),
+					isNull(accountJobFavourites.deletedAt)
+				)
+			);
 
+		console.log(res);
+		return res !== undefined;
+	}
 	async GetBasicMostPopularByCompanyId(companyId: string) {
 		const [res] = await this.caller
 			.select({
@@ -426,6 +440,8 @@ class JobQueryClient extends QueryClient {
 
 		return this.GenerateOffsetPaginationResponse(res, page, pageSize);
 	}
+
+	
 }
 
 // Create  global service

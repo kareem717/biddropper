@@ -326,7 +326,7 @@ class BidsQueryClient extends QueryClient {
 			.where(eq(bids.priceUsd, sql`${sq}`))
 			.limit(10);
 
-		return await this.GetExtendedManyById(bidIds.map((b) => b.bidId));
+		return await this.GetExtendedManyById(bidIds.map((b) => b.bidId) || []);
 	}
 
 	async GetHottestManyByCompanyId(companyId: string) {

@@ -175,4 +175,47 @@ export const companyRouter = router({
 				return companies;
 			});
 		}),
+	favouriteCompany: accountProcedure
+		.input(z.object({ companyId: z.string(), accountId: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			const cqc = CompanyQueryClient;
+			return await cqc.caller.transaction(async (tx) => {
+				if (input.accountId !== ctx.account.id) {
+					throw new Error("you cannot favourite a job for another account");
+				}
+
+				const ownedCompanies = await cqc
+					.withCaller(tx)
+					.GetDetailedManyByOwnerId(input.accountId);
+
+				if (ownedCompanies.some((company) => company.id === input.companyId)) {
+					throw new Error("you cannot favourite a company you own");
+				}
+
+				await cqc.withCaller(tx).Favorite(input.accountId, input.companyId);
+			});
+		}),
+	unfavouriteCompany: accountProcedure
+		.input(z.object({ companyId: z.string(), accountId: z.string() }))
+		.mutation(async ({ ctx, input }) => {
+			if (input.accountId !== ctx.account.id) {
+				throw new Error("you cannot unfavourite a job for another account");
+			}
+
+			return await CompanyQueryClient.Unfavorite(input.accountId, input.companyId);
+		}),
+	getIsCompanyFavouritedByAccountId: accountProcedure
+		.input(z.object({ companyId: z.string().uuid(), accountId: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			if (input.accountId !== ctx.account.id) {
+				throw new Error(
+					"you cannot check if a job is favourited for another account"
+				);
+			}
+
+			return await CompanyQueryClient.GetIsCompanyFavouritedByAccountId(
+				ctx.account.id,
+				input.companyId
+			);
+		}),
 });

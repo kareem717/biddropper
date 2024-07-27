@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "../ui/button";
 import { CreateMessageForm } from "../messages/CreateMessageForm";
-
+import { JobAnalyticLine } from "./JobAnalyticLine";
 
 export interface JobShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
@@ -99,6 +99,7 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
               ))}
             </div>
           </div>
+          <JobAnalyticLine jobId={jobId} className="border-b border-border pb-4" />
           <div className="prose">
             <p>
               {data.job.description}

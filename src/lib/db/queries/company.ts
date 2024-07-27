@@ -4,7 +4,7 @@ import {
 	companies,
 	addresses,
 	dailyCompanyAggregateAnalytics,
-	companyIndustries,
+	accountCompanyFavourites,
 } from "@/lib/db/drizzle/schema";
 import IndustryQueryClient from "./industry";
 import AddressQC from "./address";
@@ -279,6 +279,46 @@ class CompanyQueryClient extends QueryClient {
 			.update(companies)
 			.set({ deletedAt: new Date().toISOString() })
 			.where(eq(companies.id, id));
+	}
+
+	async Favorite(accountId: string, companyId: string) {
+		return await this.caller
+			.insert(accountCompanyFavourites)
+			.values({
+				accountId,
+				companyId,
+			})
+			.returning();
+	}
+
+	async Unfavorite(accountId: string, companyId: string) {
+		return await this.caller
+			.update(accountCompanyFavourites)
+			.set({
+				deletedAt: new Date().toISOString(),
+			})
+			.where(
+				and(
+					eq(accountCompanyFavourites.accountId, accountId),
+					eq(accountCompanyFavourites.companyId, companyId)
+				)
+			)
+			.returning();
+	}
+	async GetIsCompanyFavouritedByAccountId(accountId: string, companyId: string) {
+		const [res] = await this.caller
+			.select()
+			.from(accountCompanyFavourites)
+			.where(
+				and(
+					eq(accountCompanyFavourites.accountId, accountId),
+					eq(accountCompanyFavourites.companyId, companyId),
+					isNull(accountCompanyFavourites.deletedAt)
+				)
+			);
+
+		console.log(res);
+		return res !== undefined;
 	}
 }
 

@@ -182,6 +182,92 @@ class AnalyticQueryClient extends QueryClient {
 			previousMonth,
 		};
 	}
+
+	async GetInteractionSummaryByJobId(jobId: string) {
+		const [currentMonth] = await this.caller
+			.select({
+				views: sum(dailyJobAggregateAnalytics.viewCount),
+				bids: sum(dailyJobAggregateAnalytics.bidsRecievedCount),
+				favorites: sum(dailyJobAggregateAnalytics.favouritedCount),
+			})
+			.from(dailyJobAggregateAnalytics)
+			.where(
+				and(
+					eq(dailyJobAggregateAnalytics.jobId, jobId),
+					gte(
+						dailyJobAggregateAnalytics.createdAt,
+						sql<string>`NOW() - INTERVAL '1 month'`
+					)
+				)
+			);
+
+		const [previousMonth] = await this.caller
+			.select({
+				views: sum(dailyJobAggregateAnalytics.viewCount),
+				bids: sum(dailyJobAggregateAnalytics.bidsRecievedCount),
+				favorites: sum(dailyJobAggregateAnalytics.favouritedCount),
+			})
+			.from(dailyJobAggregateAnalytics)
+			.where(
+				and(
+					eq(dailyJobAggregateAnalytics.jobId, jobId),
+					gte(
+						dailyJobAggregateAnalytics.createdAt,
+						sql<string>`NOW() - INTERVAL '2 month'`
+					),
+					lt(
+						dailyJobAggregateAnalytics.createdAt,
+						sql<string>`NOW() - INTERVAL '1 month'`
+					)
+				)
+			);
+
+		return {
+			currentMonth,
+			previousMonth,
+		};
+	}
+
+	async GetPublicInteractionSummaryByCompanyId(companyId: string) {
+		const [data] = await this.caller
+			.select({
+				views: sum(dailyCompanyAggregateAnalytics.viewCount),
+				favorites: sum(dailyCompanyAggregateAnalytics.favouritedCount),
+			})
+			.from(dailyCompanyAggregateAnalytics)
+			.where(
+				and(
+					eq(dailyCompanyAggregateAnalytics.companyId, companyId),
+					gte(
+						dailyCompanyAggregateAnalytics.createdAt,
+						sql<string>`NOW() - INTERVAL '3 month'`
+					)
+				)
+			);
+
+		return data;
+	}
+
+	async GetPublicInteractionSummaryByJobId(jobId: string) {
+		const [data] = await this.caller
+			.select({
+				views: sum(dailyJobAggregateAnalytics.viewCount),
+				bids: sum(dailyJobAggregateAnalytics.bidsRecievedCount),
+				favorites: sum(dailyJobAggregateAnalytics.favouritedCount),
+			})
+			.from(dailyJobAggregateAnalytics)
+			.where(
+				and(
+					eq(dailyJobAggregateAnalytics.jobId, jobId),
+					gte(
+						dailyJobAggregateAnalytics.createdAt,
+						sql<string>`NOW() - INTERVAL '3 month'`
+					)
+				)
+			);
+
+		return data;
+	}
 }
 
 // Create  global service

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { Icons } from "../Icons"
 import { trpc } from "@/lib/trpc/client"
 import { Card } from "../ui/card"
+import { CompanyAnalyticLine } from "./CompanyAnalyticLine"
 
 interface CompanyShowCardProps extends ComponentPropsWithoutRef<typeof Card> {
   companyId: string
@@ -31,6 +32,7 @@ export const CompanyShowCard: FC<CompanyShowCardProps> = ({ companyId, className
           </div>
           <Badge>{company.isVerified ? "Verified" : "Unverified"}</Badge>
         </div>
+        <CompanyAnalyticLine companyId={companyId} />
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="grid gap-1">
             <div className="text-sm font-medium text-muted-foreground">Service Area</div>
