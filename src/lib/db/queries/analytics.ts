@@ -13,7 +13,7 @@ import { registerService } from "@/lib/utils";
 import { db } from "..";
 import { JobRecommendation, CompanyRecommendation } from "./validation";
 import JobQueryClient from "./job";
-import { and, count, eq, inArray, sql, sum } from "drizzle-orm";
+import { and, count, eq, gte, inArray, sql, sum } from "drizzle-orm";
 
 class AnalyticQueryClient extends QueryClient {
 	async TrackAccountJobRecommendation(values: JobRecommendation[]) {
@@ -136,6 +136,27 @@ class AnalyticQueryClient extends QueryClient {
 			sent,
 			accepted,
 		};
+	}
+
+	async GetInteractionSummaryByCompanyId(companyId: string) {
+		const [res] = await this.caller
+			.select({
+				views: sum(dailyCompanyAggregateAnalytics.viewCount),
+				bids: sum(dailyCompanyAggregateAnalytics.bidsRecievedCount),
+				favorites: sum(dailyCompanyAggregateAnalytics.favouritedCount),
+			})
+			.from(dailyCompanyAggregateAnalytics)
+			.where(
+				and(
+					eq(dailyCompanyAggregateAnalytics.companyId, companyId),
+					gte(
+						dailyCompanyAggregateAnalytics.createdAt,
+						sql<string>`NOW() - INTERVAL '1 month'`
+					)
+				)
+			);
+
+		return res;
 	}
 }
 

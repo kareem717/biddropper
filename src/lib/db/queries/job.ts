@@ -375,6 +375,25 @@ class JobQueryClient extends QueryClient {
 			.returning();
 	}
 
+	async GetBasicMostPopularByCompanyId(companyId: string) {
+		const [res] = await this.caller
+			.select({
+				id: jobs.id,
+				title: jobs.title,
+			})
+			.from(jobs)
+			.innerJoin(
+				dailyJobAggregateAnalytics,
+				eq(jobs.id, dailyJobAggregateAnalytics.jobId)
+			)
+			.innerJoin(companyJobs, eq(jobs.id, companyJobs.jobId))
+			.where(eq(companyJobs.companyId, companyId))
+			.orderBy(desc(dailyJobAggregateAnalytics.viewCount))
+			.limit(1);
+
+		return res;
+	}
+
 	async GetBasicManyByFavouritedAccountId(
 		favouriterId: string,
 		page: number,

@@ -1,8 +1,9 @@
-import { router, accountProcedure } from "../trpc";
+import { router, accountProcedure, companyOwnerProcedure } from "../trpc";
 import { z } from "zod";
 import { EditJobSchema, NewJobSchema } from "@/lib/db/queries/validation";
 import JobQueryClient from "@/lib/db/queries/job";
 import AnalyticQueryClient from "@/lib/db/queries/analytics";
+import CompanyQueryClient from "@/lib/db/queries/company";
 
 export const jobRouter = router({
 	getJobFull: accountProcedure
@@ -133,6 +134,23 @@ export const jobRouter = router({
 			return await AnalyticQueryClient.TrackAccountJobView(
 				ctx.account.id,
 				input.jobId
+			);
+		}),
+	getMostPopularJobByCompanyId: companyOwnerProcedure
+		.input(z.object({ companyId: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
+				ctx.account.id
+			);
+
+			if (!ownedCompanies.some((company) => company.id === input.companyId)) {
+				throw new Error(
+					"cannot view the most popular jobs for a company you do not own"
+				);
+			}
+
+			return await JobQueryClient.GetBasicMostPopularByCompanyId(
+				input.companyId
 			);
 		}),
 });

@@ -104,4 +104,23 @@ export const analyticsRouter = router({
 
 			return combinedData;
 		}),
+
+	GetMonthlyAnalyticsByCompanyId: companyOwnerProcedure
+		.input(z.object({ companyId: z.string().uuid() }))
+		.query(async ({ input, ctx }) => {
+			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
+				ctx.account.id
+			);
+
+			if (!ownedCompanies.some((company) => company.id === input.companyId)) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "you are not authorized to view this company's analytics",
+				});
+			}
+
+			return await AnalyticsQueryClient.GetInteractionSummaryByCompanyId(
+				input.companyId
+			);
+		}),
 });
