@@ -19,6 +19,8 @@ import {
 	FormMessage,
 } from "@/components/ui/form"
 import { cn } from "@/lib/utils";
+import { env } from "@/lib/env.mjs";
+import redirects from "@/config/redirects";
 
 const formSchema = z.object({
 	email: z.string({
@@ -51,7 +53,7 @@ export const LoginForm: FC<LoginFormProps> = ({ onSubmitProp, className, ...prop
 		const { data, error } = await supabase.auth.signInWithOtp({
 			email: values.email,
 			options: {
-				emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+				emailRedirectTo: `https://${env.NEXT_PUBLIC_APP_URL}${redirects.auth.callback}`,
 				shouldCreateUser: true,
 			},
 		})
@@ -59,6 +61,7 @@ export const LoginForm: FC<LoginFormProps> = ({ onSubmitProp, className, ...prop
 		onSubmitProp?.(values);
 
 		if (error) {
+			console.log(error)
 			toast.error("Uh oh!", {
 				description: "Something went wrong. Please try again.",
 			});

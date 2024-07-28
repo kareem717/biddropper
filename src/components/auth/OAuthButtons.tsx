@@ -6,6 +6,7 @@ import { createClient } from "@/lib/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { env } from "@/lib/env.mjs";
 import { ComponentPropsWithoutRef, FC, useState } from "react";
+import redirects from "@/config/redirects";
 
 export type OAuthProvider = "google" | "github";
 
@@ -32,12 +33,11 @@ export const OAuthButtons: FC<{ providers: OAuthProvider[], disabled?: boolean }
     setIsLoading(provider);
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider,
-
       options: {
-        redirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback`
+        redirectTo: `https://${env.NEXT_PUBLIC_APP_URL}${redirects.auth.callback}`
       }
     });
-
+    console.log(data)
     if (error) {
       throw error
     } else {

@@ -14,16 +14,15 @@ export const LogoutButtons = () => {
 
   const handleLogout = async () => {
     setIsLoading(true);
-    
+
     const { error } = await supabase.auth.signOut();
 
     if (error) {
       toast.error("Uh oh! Something went wrong. Please try again.")
-    } else {
-      router.push("/")
+      return setIsLoading(false);
     }
 
-    setIsLoading(false);
+    router.refresh();
   };
 
   return (

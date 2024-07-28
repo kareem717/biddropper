@@ -7,7 +7,6 @@ const redirects = {
 	},
 	auth: {
 		login: "/login",
-		signUp: "/sign-up",
 		logout: "/logout",
 		callback: "/auth/callback",
 		afterLogin: "/dashboard",

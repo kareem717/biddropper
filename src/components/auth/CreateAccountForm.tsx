@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { Icons } from "../Icons";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Textarea } from "../ui/textarea";
+import redirects from "@/config/redirects";
 
 export const CreateAccountForm = () => {
 	const { user } = useAuth();
@@ -38,7 +39,7 @@ export const CreateAccountForm = () => {
 		},
 		onSuccess: () => {
 			toast.success("Account created");
-			router.push("/dashboard");
+			router.push(redirects.auth.afterLogin)
 		},
 	});
 

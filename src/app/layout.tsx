@@ -44,6 +44,10 @@ export default async function RootLayout({
 		const companiesResult = await api.company.getOwnedCompanies.query({});
 		companies = companiesResult || [];
 	}
+
+
+	console.log({ user, account, companies, time: new Date() });
+
 	return (
 		<html lang="en">
 			<body className={cn(inter.className, "h-screen w-screen")}>
