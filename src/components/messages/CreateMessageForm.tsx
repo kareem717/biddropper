@@ -45,9 +45,16 @@ const formSchema = NewMessageSchema
 
 export interface CreateMessageFormProps extends ComponentPropsWithoutRef<"form"> {
   onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
+  replyTo?: {
+    messageId: string;
+    recipient: {
+      id: string;
+      type: "account" | "company";
+    };
+  }[];
 }
 
-export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSubmitProp, ...props }) => {
+export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSubmitProp, replyTo, ...props }) => {
   const { account, user } = useAuth()
   const { companies: ownedCompanies } = useCompany()
   if (!account || !user) {
@@ -62,11 +69,19 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
     },
   })
 
+  const isReply = replyTo && replyTo.length > 0
+
   // @ts-ignore
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       senderAccountId: account.id,
+      replyTo: isReply ? replyTo.map((r) => r.messageId) : undefined,
+      recipients: isReply ? replyTo.reduce((acc, r) => {
+        acc.accountIds.push(...replyTo.filter((rec) => rec.recipient.type === "account").map((rec) => rec.recipient.id));
+        acc.companyIds.push(...replyTo.filter((rec) => rec.recipient.type === "company").map((rec) => rec.recipient.id));
+        return acc;
+      }, { accountIds: [] as string[], companyIds: [] as string[] }) : undefined,
     },
   })
 
@@ -207,38 +222,40 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
             )}
           />
         ) : undefined}
-        <FormField
-          control={form.control}
-          name="recipients"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Recipients</FormLabel>
-              <FormDescription>
-                Search for the recipients of the message.
-              </FormDescription>
-              <FormControl>
-                <ReciepientSearch onValuesChange={(values) => {
-                  const companyIds: string[] = []
-                  const accountIds: string[] = []
+        {!isReply && (
+          <FormField
+            control={form.control}
+            name="recipients"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Recipients</FormLabel>
+                <FormDescription>
+                  Search for the recipients of the message.
+                </FormDescription>
+                <FormControl>
+                  <ReciepientSearch onValuesChange={(values) => {
+                    const companyIds: string[] = []
+                    const accountIds: string[] = []
 
-                  values.map((val) => {
-                    if (val.type === "account") {
-                      accountIds.push(val.id)
-                    } else {
-                      companyIds.push(val.id)
-                    }
-                  })
+                    values.map((val) => {
+                      if (val.type === "account") {
+                        accountIds.push(val.id)
+                      } else {
+                        companyIds.push(val.id)
+                      }
+                    })
 
-                  form.setValue("recipients", {
-                    accountIds,
-                    companyIds
-                  })
-                }} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                    form.setValue("recipients", {
+                      accountIds,
+                      companyIds
+                    })
+                  }} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </form>
       <Button className="w-full mt-8" onClick={form.handleSubmit(onSubmit)} disabled={isLoading}>
         {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}

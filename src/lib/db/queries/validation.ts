@@ -97,6 +97,7 @@ export const NewMessageSchema = createInsertSchema(messages)
 			accountIds: z.array(z.string()).optional().default([]),
 			companyIds: z.array(z.string()).optional().default([]),
 		}),
+		replyTo: z.array(z.string().uuid()).optional(),
 	})
 	.omit({
 		id: true,
@@ -127,6 +128,15 @@ export const ShowMessageSchema = createSelectSchema(messages).extend({
 		readAt: z.string().datetime().nullable(),
 		deletedAt: z.string().datetime().nullable(),
 	}),
+	replyTo: z
+		.object({
+			messageId: z.string().uuid(),
+			replyTo: z.string().uuid(),
+			createdAt: z.string().datetime().nullable(),
+			updatedAt: z.string().datetime().nullable(),
+			deletedAt: z.string().datetime().nullable(),
+		})
+		.nullable(),
 	sender: z.object({
 		id: z.string(),
 		name: z.string(),

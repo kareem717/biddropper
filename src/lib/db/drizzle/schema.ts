@@ -92,81 +92,6 @@ export const usersInAuth = authSchema.table("users", {
 	id: uuid("id").primaryKey(),
 });
 
-export const accountJobViewHistories = pgTable(
-	"account_job_view_histories",
-	{
-		id: uuid("id").defaultRandom().primaryKey().notNull(),
-		accountId: uuid("account_id")
-			.notNull()
-			.references(() => accounts.id),
-		jobId: uuid("job_id")
-			.notNull()
-			.references(() => jobs.id),
-		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-			.default(sql`clock_timestamp()`)
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	},
-	(table) => {
-		return {
-			idxAccountJobViewHistoriesJobIdCreatedAt: index(
-				"idx_account_job_view_histories_job_id_created_at"
-			).using("btree", table.jobId, table.createdAt),
-		};
-	}
-);
-
-export const accountCompanyViewHistories = pgTable(
-	"account_company_view_histories",
-	{
-		id: uuid("id").defaultRandom().primaryKey().notNull(),
-		accountId: uuid("account_id")
-			.notNull()
-			.references(() => accounts.id),
-		companyId: uuid("company_id")
-			.notNull()
-			.references(() => companies.id),
-		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-			.default(sql`clock_timestamp()`)
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	},
-	(table) => {
-		return {
-			idxAccountCompanyViewHistoriesCompanyIdCreatedAt: index(
-				"idx_account_company_view_histories_company_id_created_at"
-			).using("btree", table.companyId, table.createdAt),
-		};
-	}
-);
-
-export const accountCompanyReccomendationHistories = pgTable(
-	"account_company_reccomendation_histories",
-	{
-		id: uuid("id").defaultRandom().primaryKey().notNull(),
-		accountId: uuid("account_id")
-			.notNull()
-			.references(() => accounts.id),
-		companyId: uuid("company_id")
-			.notNull()
-			.references(() => companies.id),
-		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-			.default(sql`clock_timestamp()`)
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	},
-	(table) => {
-		return {
-			idxAccountCompanyReccomendationHistoriesCompanyIdCreated: index(
-				"idx_account_company_reccomendation_histories_company_id_created"
-			).using("btree", table.companyId, table.createdAt),
-		};
-	}
-);
-
 export const gooseDbVersion = pgTable("goose_db_version", {
 	id: serial("id").primaryKey().notNull(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
@@ -232,6 +157,9 @@ export const bids = pgTable(
 				"btree",
 				table.createdAt
 			),
+			idxBidsSenderCompanyIdStatus: index(
+				"idx_bids_sender_company_id_status"
+			).using("btree", table.senderCompanyId, table.status),
 		};
 	}
 );
@@ -309,20 +237,6 @@ export const messageAccountRecipients = pgTable("message_account_recipients", {
 			onUpdate: "cascade",
 		}),
 	readAt: timestamp("read_at", { withTimezone: true, mode: "string" }),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-});
-
-export const messageThread = pgTable("message_thread", {
-	id: uuid("id").defaultRandom().primaryKey().notNull(),
-	messageId: uuid("message_id").references(() => messages.id, {
-		onDelete: "restrict",
-		onUpdate: "cascade",
-	}),
-	createdAt: timestamp("created_at", {
-		withTimezone: true,
-		mode: "string",
-	}).defaultNow(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
 	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 });
 
@@ -426,34 +340,6 @@ export const accounts = pgTable(
 	}
 );
 
-export const accountJobReccomendationHistories = pgTable(
-	"account_job_reccomendation_histories",
-	{
-		id: uuid("id").defaultRandom().primaryKey().notNull(),
-		accountId: uuid("account_id")
-			.notNull()
-			.references(() => accounts.id),
-		jobId: uuid("job_id")
-			.notNull()
-			.references(() => jobs.id),
-		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-			.default(sql`clock_timestamp()`)
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
-		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	},
-	(table) => {
-		return {
-			idxAccountJobReccomendationHistoriesJobIdCreatedAt: index(
-				"idx_account_job_reccomendation_histories_job_id_created_at"
-			).using("btree", table.jobId, table.createdAt),
-			jobRecommendationHistoryAccountIdIdx: index(
-				"job_recommendation_history_account_id_idx"
-			).using("btree", table.accountId),
-		};
-	}
-);
-
 export const accountJobFavourites = pgTable(
 	"account_job_favourites",
 	{
@@ -479,6 +365,116 @@ export const accountJobFavourites = pgTable(
 			idxAccountJobFavouritesJobIdCreatedAt: index(
 				"idx_account_job_favourites_job_id_created_at"
 			).using("btree", table.jobId, table.createdAt),
+		};
+	}
+);
+
+export const accountJobReccomendationHistories = pgTable(
+	"account_job_reccomendation_histories",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		jobId: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxAccountJobReccomendationHistoriesJobIdCreatedAt: index(
+				"idx_account_job_reccomendation_histories_job_id_created_at"
+			).using("btree", table.jobId, table.createdAt),
+		};
+	}
+);
+
+export const accountJobViewHistories = pgTable(
+	"account_job_view_histories",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		jobId: uuid("job_id")
+			.notNull()
+			.references(() => jobs.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxAccountJobViewHistoriesAccountId: index(
+				"idx_account_job_view_histories_account_id"
+			)
+				.using("btree", table.accountId)
+				.where(sql`(deleted_at IS NULL)`),
+			idxAccountJobViewHistoriesJobIdCreatedAt: index(
+				"idx_account_job_view_histories_job_id_created_at"
+			).using("btree", table.jobId, table.createdAt),
+		};
+	}
+);
+
+export const accountCompanyViewHistories = pgTable(
+	"account_company_view_histories",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		companyId: uuid("company_id")
+			.notNull()
+			.references(() => companies.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxAccountCompanyViewHistoriesAccountId: index(
+				"idx_account_company_view_histories_account_id"
+			)
+				.using("btree", table.accountId)
+				.where(sql`(deleted_at IS NULL)`),
+			idxAccountCompanyViewHistoriesCompanyIdCreatedAt: index(
+				"idx_account_company_view_histories_company_id_created_at"
+			).using("btree", table.companyId, table.createdAt),
+		};
+	}
+);
+
+export const accountCompanyReccomendationHistories = pgTable(
+	"account_company_reccomendation_histories",
+	{
+		id: uuid("id").defaultRandom().primaryKey().notNull(),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id),
+		companyId: uuid("company_id")
+			.notNull()
+			.references(() => companies.id),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+			.default(sql`clock_timestamp()`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			idxAccountCompanyReccomendationHistoriesCompanyIdCreated: index(
+				"idx_account_company_reccomendation_histories_company_id_created"
+			).using("btree", table.companyId, table.createdAt),
 		};
 	}
 );
@@ -598,6 +594,38 @@ export const jobIndustries = pgTable(
 			jobIndustriesPkey: primaryKey({
 				columns: [table.jobId, table.industryId],
 				name: "job_industries_pkey",
+			}),
+		};
+	}
+);
+
+export const messageReplies = pgTable(
+	"message_replies",
+	{
+		messageId: uuid("message_id")
+			.notNull()
+			.references(() => messages.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		replyTo: uuid("reply_to")
+			.notNull()
+			.references(() => messages.id, {
+				onDelete: "restrict",
+				onUpdate: "cascade",
+			}),
+		createdAt: timestamp("created_at", {
+			withTimezone: true,
+			mode: "string",
+		}).defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			messageRepliesPkey: primaryKey({
+				columns: [table.messageId, table.replyTo],
+				name: "message_replies_pkey",
 			}),
 		};
 	}

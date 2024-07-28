@@ -1,11 +1,10 @@
 import QueryClient from ".";
-import { z } from "zod";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import {
 	accounts,
 	companies,
 	messageAccountRecipients,
 	messageCompanyRecipients,
+	messageReplies,
 	messages,
 } from "@/lib/db/drizzle/schema";
 import { eq, and, isNull, desc, sql, count, not } from "drizzle-orm";
@@ -44,8 +43,34 @@ class MessageQueryClient extends QueryClient {
 				);
 			}
 
+			if (values.replyTo) {
+				await tx.insert(messageReplies).values(
+					values.replyTo.map((replyTo) => ({
+						messageId: msg.id,
+						replyTo,
+					}))
+				);
+			}
+
 			return msg;
 		});
+	}
+
+	async GetBasicById(messageId: string) {
+		const [res] = await this.caller
+			.select({
+				id: messages.id,
+				title: messages.title,
+				description: sql<string>`substring(messages.description from 0 for 100)`,
+				createdAt: messages.createdAt,
+				updatedAt: messages.updatedAt,
+				deletedAt: messages.deletedAt,
+			})
+			.from(messages)
+			.where(eq(messages.id, messageId))
+			.limit(1);
+
+		return res;
 	}
 
 	async GetExtendedManyReceivedByAccountId(
@@ -56,8 +81,24 @@ class MessageQueryClient extends QueryClient {
 		includeRead: boolean = false,
 		includeDeleted: boolean = false
 	) {
-		const res = await this.WithOffsetPagination(
+		const replyTo = this.caller.$with("replyTo").as(
 			this.caller
+				.select({
+					messageId: messageReplies.messageId,
+					replyTo: messageReplies.replyTo,
+					createdAt: messageReplies.createdAt,
+					updatedAt: messageReplies.updatedAt,
+					deletedAt: messageReplies.deletedAt,
+				})
+				.from(messages)
+				.innerJoin(messageReplies, eq(messages.id, messageReplies.messageId))
+				.orderBy(desc(messageReplies.createdAt))
+				.limit(1)
+		);
+
+		console.log(
+			this.caller
+				.with(replyTo)
 				.select({
 					messages,
 					reciepient: {
@@ -76,12 +117,77 @@ class MessageQueryClient extends QueryClient {
 						name: accounts.username,
 						deletedAt: accounts.deletedAt,
 					},
+					replyTo: {
+						messageId: replyTo.messageId,
+						replyTo: replyTo.replyTo,
+						createdAt: replyTo.createdAt,
+						updatedAt: replyTo.updatedAt,
+						deletedAt: replyTo.deletedAt,
+					},
 				})
 				.from(messages)
 				.innerJoin(
 					messageAccountRecipients,
 					eq(messages.id, messageAccountRecipients.messageId)
 				)
+				.leftJoin(replyTo, eq(messages.id, replyTo.messageId))
+				.leftJoin(accounts, eq(messages.senderAccountId, accounts.id))
+				.leftJoin(companies, eq(messages.senderCompanyId, companies.id))
+				.where(
+					and(
+						eq(messageAccountRecipients.accountId, accountId),
+						includeRead ? undefined : isNull(messageAccountRecipients.readAt),
+						includeDeleted
+							? undefined
+							: isNull(messageAccountRecipients.deletedAt),
+						keywordQuery
+							? sql`messages.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
+							: undefined
+					)
+				)
+				.orderBy(
+					keywordQuery
+						? sql`ts_rank(messages.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
+						: desc(messages.createdAt),
+					desc(messages.createdAt)
+				)
+				.toSQL()
+		);
+		const res = await this.WithOffsetPagination(
+			this.caller
+				.with(replyTo)
+				.select({
+					messages,
+					reciepient: {
+						readAt: messageAccountRecipients.readAt,
+						deletedAt: messageAccountRecipients.deletedAt,
+					},
+					senderCompany: {
+						type: sql<string>`'company'`,
+						id: companies.id,
+						name: companies.name,
+						deletedAt: companies.deletedAt,
+					},
+					senderAccount: {
+						type: sql<string>`'account'`,
+						id: accounts.id,
+						name: accounts.username,
+						deletedAt: accounts.deletedAt,
+					},
+					replyTo: {
+						messageId: replyTo.messageId,
+						replyTo: replyTo.replyTo,
+						createdAt: replyTo.createdAt,
+						updatedAt: replyTo.updatedAt,
+						deletedAt: replyTo.deletedAt,
+					},
+				})
+				.from(messages)
+				.innerJoin(
+					messageAccountRecipients,
+					eq(messages.id, messageAccountRecipients.messageId)
+				)
+				.leftJoin(replyTo, eq(messages.id, replyTo.messageId))
 				.leftJoin(accounts, eq(messages.senderAccountId, accounts.id))
 				.leftJoin(companies, eq(messages.senderCompanyId, companies.id))
 				.where(
@@ -107,6 +213,8 @@ class MessageQueryClient extends QueryClient {
 			pageSize
 		);
 
+		console.log(res);
+
 		return this.GenerateOffsetPaginationResponse(res, page, pageSize);
 	}
 
@@ -118,8 +226,20 @@ class MessageQueryClient extends QueryClient {
 		includeRead: boolean = false,
 		includeDeleted: boolean = false
 	) {
+		const replyTo = this.caller
+			.$with("replyTo")
+			.as(
+				this.caller
+					.select()
+					.from(messages)
+					.innerJoin(messageReplies, eq(messages.id, messageReplies.messageId))
+					.orderBy(desc(messageReplies.createdAt))
+					.limit(1)
+			);
+
 		const res = await this.WithOffsetPagination(
 			this.caller
+				.with(replyTo)
 				.select({
 					messages,
 					reciepient: {
@@ -138,12 +258,20 @@ class MessageQueryClient extends QueryClient {
 						name: accounts.username,
 						deletedAt: accounts.deletedAt,
 					},
+					replyTo: {
+						messageId: replyTo.message_replies.messageId,
+						replyTo: replyTo.message_replies.replyTo,
+						createdAt: replyTo.message_replies.createdAt,
+						updatedAt: replyTo.message_replies.updatedAt,
+						deletedAt: replyTo.message_replies.deletedAt,
+					},
 				})
 				.from(messages)
 				.innerJoin(
 					messageCompanyRecipients,
 					eq(messages.id, messageCompanyRecipients.messageId)
 				)
+				.leftJoin(replyTo, eq(messages.id, replyTo.message_replies.messageId))
 				.leftJoin(accounts, eq(messages.senderAccountId, accounts.id))
 				.leftJoin(companies, eq(messages.senderCompanyId, companies.id))
 				.where(

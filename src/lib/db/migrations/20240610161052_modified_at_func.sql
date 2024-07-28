@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE FUNCTION sync_updated_at_column () RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
-    NEW.updated_at = now();
+    NEW.updated_at = CLOCK_TIMESTAMP();
     RETURN NEW;
 END;
 $$;

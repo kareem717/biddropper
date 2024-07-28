@@ -74,6 +74,7 @@ export const messageRouter = router({
 				return {
 					...message.messages,
 					reciepient: message.reciepient,
+					replyTo: message.replyTo,
 					sender: {
 						...sender,
 						type: sender.type as "account" | "company",
@@ -141,6 +142,7 @@ export const messageRouter = router({
 
 				return {
 					...message.messages,
+					replyTo: message.replyTo,
 					reciepient: message.reciepient,
 					sender: {
 						...sender,
@@ -171,6 +173,15 @@ export const messageRouter = router({
 			}
 
 			return await MessageQueryClient.GetUnreadCountByAccountId(accountId);
+		}),
+	getBasicById: accountProcedure
+		.input(z.object({ messageId: z.string().uuid().optional() }))
+		.query(async ({ ctx, input }) => {
+			//TODO: add way more validation here
+			if (!input.messageId) {
+				return null;
+			}
+			return await MessageQueryClient.GetBasicById(input.messageId);
 		}),
 	getUnreadMessageCountByCompanyId: accountProcedure
 		.input(

@@ -3,11 +3,17 @@
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { ShowMessage } from "@/lib/db/queries/validation"
 import { ComponentPropsWithoutRef, FC } from "react"
-import { timeSince, truncate, cn } from "@/lib/utils"
+import { timeSince, cn } from "@/lib/utils"
 import { trpc } from "@/lib/trpc/client"
 import { toast } from "sonner"
 import { Button } from "../ui/button"
 import { Icons } from "../Icons"
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { CreateMessageForm } from "./CreateMessageForm"
 
 export interface MessageShowCardProps extends ComponentPropsWithoutRef<typeof Card> {
   message: ShowMessage
@@ -19,9 +25,19 @@ export interface MessageShowCardProps extends ComponentPropsWithoutRef<typeof Ca
   onDelete?: () => void
   onMarkAsRead?: () => void
   onMarkAsUnread?: () => void
+  onReplyClick?: () => void
 }
 
-export const MessageShowCard: FC<MessageShowCardProps> = ({ message, recipient, className, onDelete, onMarkAsRead, onMarkAsUnread, ...props }) => {
+export const MessageShowCard: FC<MessageShowCardProps> = ({
+  message,
+  recipient,
+  className,
+  onDelete,
+  onMarkAsRead,
+  onMarkAsUnread,
+  onReplyClick,
+  ...props
+}) => {
   const { mutate: readMessage } = trpc.message.readMessage.useMutation({
     onSuccess: () => {
       toast.success("Message marked as read")
@@ -52,6 +68,7 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({ message, recipient, 
       })
     }
   })
+  const { data: reply, isLoading: replyLoading } = trpc.message.getBasicById.useQuery({ messageId: message.replyTo?.replyTo })
 
   const handleReadMessage = () => {
     readMessage({ messageId: message.id, recipient })
@@ -66,6 +83,8 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({ message, recipient, 
     onDelete?.()
   }
 
+  if (replyLoading) return <div>Loading...</div>
+
   return (
     <Card className={cn("", className)} {...props}>
       <CardHeader className="flex items-center justify-between">
@@ -78,12 +97,28 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({ message, recipient, 
       </CardHeader>
       <CardContent>
         <p>{message.description}</p>
+        {reply && (
+          <p>Reply to: {reply.title}</p>
+        )}
       </CardContent>
       <CardFooter>
         <Button className="flex justify-center items-center gap-2" onClick={handleDeleteMessage}>
           <Icons.trash className="w-4 h-4" />
           Trash
         </Button>
+        <Dialog>
+          <DialogTrigger asChild onClick={onReplyClick}>
+            <Button variant="outline">Reply</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <CreateMessageForm replyTo={[{
+              messageId: message.id, recipient: {
+                id: message.sender.id,
+                type: message.sender.type
+              }
+            }]} />
+          </DialogContent>
+        </Dialog>
         {message.reciepient?.readAt ? (
           <Button className="flex justify-center items-center gap-2" onClick={handleUnreadMessage}>
             <Icons.close className="w-4 h-4" />
