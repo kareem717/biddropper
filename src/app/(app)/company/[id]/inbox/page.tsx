@@ -26,7 +26,7 @@ export default function CompanyInboxPage({ params }: { params: { id: string } })
   const messages = data?.pages
     .map(page => page.data)
     .flat()
-    .filter(message => message.messages.senderCompanyId || message.messages.senderAccountId) // Filter out messages with undefined sender.id
+    .filter(message => message.senderCompanyId || message.senderAccountId) // Filter out messages with undefined sender.id
     .map(message => ({
       ...message,
     }))
@@ -40,7 +40,6 @@ export default function CompanyInboxPage({ params }: { params: { id: string } })
 
   return (
     <MessageInbox
-      //@ts-ignore
       messages={messages}
       recipient={{ companyId: params.id }}
       onSearch={handleSearch}

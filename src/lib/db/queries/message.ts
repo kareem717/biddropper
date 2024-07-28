@@ -8,17 +8,14 @@ import {
 	messageCompanyRecipients,
 	messages,
 } from "@/lib/db/drizzle/schema";
-import { eq, and, isNull, desc, sql, count } from "drizzle-orm";
+import { eq, and, isNull, desc, sql, count, not } from "drizzle-orm";
 import { registerService } from "@/lib/utils";
 import { db } from "..";
 import { NewMessage, UpdateRecipient } from "./validation";
+import { union } from "drizzle-orm/pg-core";
 
 class MessageQueryClient extends QueryClient {
 	async Create(values: NewMessage) {
-		if (!values.senderAccountId && !values.senderCompanyId) {
-			throw new Error("you must provide a sender");
-		}
-
 		if (
 			values.recipients.accountIds.length === 0 &&
 			values.recipients.companyIds.length === 0
@@ -46,6 +43,8 @@ class MessageQueryClient extends QueryClient {
 					}))
 				);
 			}
+
+			return msg;
 		});
 	}
 
@@ -61,14 +60,18 @@ class MessageQueryClient extends QueryClient {
 			this.caller
 				.select({
 					messages,
-					readAt: messageAccountRecipients.readAt,
-					deletedAt: messageAccountRecipients.deletedAt,
+					reciepient: {
+						readAt: messageAccountRecipients.readAt,
+						deletedAt: messageAccountRecipients.deletedAt,
+					},
 					senderCompany: {
+						type: sql<string>`'company'`,
 						id: companies.id,
 						name: companies.name,
 						deletedAt: companies.deletedAt,
 					},
 					senderAccount: {
+						type: sql<string>`'account'`,
 						id: accounts.id,
 						name: accounts.username,
 						deletedAt: accounts.deletedAt,
@@ -119,14 +122,18 @@ class MessageQueryClient extends QueryClient {
 			this.caller
 				.select({
 					messages,
-					readAt: messageCompanyRecipients.readAt,
-					deletedAt: messageCompanyRecipients.deletedAt,
+					reciepient: {
+						readAt: messageCompanyRecipients.readAt,
+						deletedAt: messageCompanyRecipients.deletedAt,
+					},
 					senderCompany: {
+						type: sql<string>`'company'`,
 						id: companies.id,
 						name: companies.name,
 						deletedAt: companies.deletedAt,
 					},
 					senderAccount: {
+						type: sql<string>`'account'`,
 						id: accounts.id,
 						name: accounts.username,
 						deletedAt: accounts.deletedAt,
@@ -231,6 +238,47 @@ class MessageQueryClient extends QueryClient {
 		}
 
 		return res;
+	}
+
+	async GetRecipientsByKeyword(keyword: string) {
+		return await union(
+			this.caller
+				.select({
+					type: sql<string>`'account'`,
+					id: accounts.id,
+					name: accounts.username,
+					rank: sql<number>`ts_rank(accounts.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keyword}))`.as(
+						"rank"
+					),
+				})
+				.from(accounts)
+				.where(
+					and(
+						isNull(accounts.deletedAt),
+						sql`accounts.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keyword})`
+					)
+				)
+				.orderBy(desc(sql`rank`)),
+			this.caller
+				.select({
+					type: sql<string>`'company'`,
+					id: companies.id,
+					name: companies.name,
+					rank: sql<number>`ts_rank(companies.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keyword}))`.as(
+						"rank"
+					),
+				})
+				.from(companies)
+				.where(
+					and(
+						isNull(companies.deletedAt),
+						sql`companies.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keyword})`
+					)
+				)
+				.orderBy(desc(sql`rank`))
+		)
+			.limit(10)
+			.orderBy(desc(sql`rank`));
 	}
 }
 

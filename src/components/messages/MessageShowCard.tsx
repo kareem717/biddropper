@@ -84,7 +84,7 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({ message, recipient, 
           <Icons.trash className="w-4 h-4" />
           Trash
         </Button>
-        {message.readAt ? (
+        {message.reciepient?.readAt ? (
           <Button className="flex justify-center items-center gap-2" onClick={handleUnreadMessage}>
             <Icons.close className="w-4 h-4" />
             Mark as unread

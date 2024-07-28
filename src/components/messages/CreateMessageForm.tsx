@@ -39,26 +39,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCompany } from "../providers/CompanyProvider";
 import { NewMessageSchema } from "@/lib/db/queries/validation";
 import { cn } from "@/lib/utils";
+import { ReciepientSearch } from "./ReciepientSearch";
 
 const formSchema = NewMessageSchema
 
 export interface CreateMessageFormProps extends ComponentPropsWithoutRef<"form"> {
-  recipients?: {
-    accountIds?: string[],
-    companyIds?: string[]
-  }
   onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
 }
 
-export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, className, onSubmitProp, ...props }) => {
+export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSubmitProp, ...props }) => {
   const { account, user } = useAuth()
   const { companies: ownedCompanies } = useCompany()
   if (!account || !user) {
     throw new Error("Account or user not found")
   }
-
-  const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { mutateAsync: createMessage, isLoading, isError } = trpc.message.createMessage.useMutation({
     onError: () => {
@@ -68,15 +62,11 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, clas
     },
   })
 
-
-
   // @ts-ignore
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      recipients,
       senderAccountId: account.id,
-      senderCompanyId: ownedCompanies.length > 0 ? ownedCompanies[0].id : undefined,
     },
   })
 
@@ -92,21 +82,12 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, clas
     onSubmitProp?.(values);
 
     if (!isError) {
-      toast.success("Job created!", {
-        description: "We've created your job and added it to your dashboard."
+      toast.success("Message created!", {
+        description: "Your message was sent"
       });
-
-      router.push(`/company/${id}`);
     }
   }
 
-  const handleConfirmDialog = async () => {
-    await form.trigger()
-    console.log(form.formState.isValid)
-    if (form.formState.isValid) {
-      setIsDialogOpen(true);
-    }
-  }
 
   return (
     <Form {...form}>
@@ -151,11 +132,15 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, clas
                     <Checkbox
                       id="terms1"
                       onCheckedChange={(val) => {
-                        form.setValue(
-                          "senderCompanyId",
-                          val ? ownedCompanies[0]?.id : undefined,
-                        );
+                        if (val) {
+                          form.setValue("senderAccountId", form.getValues("senderAccountId") ? undefined : account.id);
+                          form.setValue("senderCompanyId", ownedCompanies[0]?.id);
+                        } else {
+                          form.setValue("senderAccountId", account.id);
+                          form.setValue("senderCompanyId", undefined);
+                        }
                       }}
+                      checked={form.getValues("senderCompanyId") === ownedCompanies[0]?.id}
                     />
                     <div className="grid gap-1.5 leading-none">
                       <label
@@ -188,9 +173,11 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, clas
                   <Select
                     onValueChange={(value) => {
                       if (value === "") {
+                        form.setValue("senderAccountId", account.id);
                         form.setValue("senderCompanyId", undefined);
                       } else {
                         form.setValue("senderCompanyId", value);
+                        form.setValue("senderAccountId", undefined);
                       }
                     }}
                     defaultValue={field.value || undefined}
@@ -220,25 +207,42 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ recipients, clas
             )}
           />
         ) : undefined}
+        <FormField
+          control={form.control}
+          name="recipients"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Recipients</FormLabel>
+              <FormDescription>
+                Search for the recipients of the message.
+              </FormDescription>
+              <FormControl>
+                <ReciepientSearch onValuesChange={(values) => {
+                  const companyIds: string[] = []
+                  const accountIds: string[] = []
+
+                  values.map((val) => {
+                    if (val.type === "account") {
+                      accountIds.push(val.id)
+                    } else {
+                      companyIds.push(val.id)
+                    }
+                  })
+
+                  form.setValue("recipients", {
+                    accountIds,
+                    companyIds
+                  })
+                }} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </form>
-      <Button className="w-full mt-8" onClick={handleConfirmDialog} disabled={isLoading}>
+      <Button className="w-full mt-8" onClick={form.handleSubmit(onSubmit)} disabled={isLoading}>
         {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}
       </Button>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. This will permanently delete your account
-              and remove your data from our servers.
-            </DialogDescription>
-          </DialogHeader>
-          {JSON.stringify(form.getValues())}
-          <Button type="button" className="w-full" onClick={form.handleSubmit(onSubmit)} disabled={isLoading}>
-            {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}
-          </Button>
-        </DialogContent>
-      </Dialog>
     </Form >
   );
 };

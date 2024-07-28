@@ -238,22 +238,22 @@ export const Inbox: FC<InboxProps> = ({ className, ...props }) => {
         {data.slice(0, 3).map((message) => (
           <Link
             className="flex items-start gap-3 rounded-lg border border-border py-2 px-4 w-full"
-            key={message.messages.id}
-            href={`/inbox/${message.messages.id}`}
+            key={message.id}
+            href={`/inbox/${message.id}`}
             onFocus={() => handleNotificationFocus(message)}
           >
             <div className="space-y-1">
               <div className="flex items-center gap-2 justify-start">
-                {!readNotificationId.includes(message.messages.id) && (
+                {!readNotificationId.includes(message.id) && (
                   <div className="h-2 w-2 bg-primary rounded-full mt-1" />
                 )}
-                <p className="font-medium">{titleCase(message.messages.title)}</p>
+                <p className="font-medium">{titleCase(message.title)}</p>
               </div>
               <p className="text-sm text-muted-foreground">
-                {message.messages.description.substring(0, 25)}
-                {message.messages.description.length > 25 ? "..." : ""}
+                {message.description.substring(0, 25)}
+                {message.description.length > 25 ? "..." : ""}
               </p>
-              <p className="text-sm text-muted-foreground">{timeSince(new Date(message.messages.createdAt))}</p>
+              <p className="text-sm text-muted-foreground">{timeSince(new Date(message.createdAt))}</p>
             </div>
           </Link>
         ))}

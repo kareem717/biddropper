@@ -10,7 +10,14 @@ import CompanyQueryClient from "@/lib/db/queries/company";
 
 export const messageRouter = router({
 	createMessage: accountProcedure
-		.input(NewMessageSchema)
+		.input(
+			NewMessageSchema.refine((data) => {
+				return (
+					(data.senderAccountId && !data.senderCompanyId) ||
+					(!data.senderAccountId && data.senderCompanyId)
+				);
+			}, "senderAccountId or senderCompanyId is required but not both")
+		)
 		.mutation(async ({ input }) => {
 			return await MessageQueryClient.Create(input);
 		}),
@@ -42,14 +49,42 @@ export const messageRouter = router({
 				});
 			}
 
-			return await MessageQueryClient.GetExtendedManyReceivedByAccountId(
-				accountId,
-				keywordQuery,
-				page,
-				pageSize,
-				includeRead,
-				includeDeleted
-			);
+			const rawData =
+				await MessageQueryClient.GetExtendedManyReceivedByAccountId(
+					accountId,
+					keywordQuery,
+					page,
+					pageSize,
+					includeRead,
+					includeDeleted
+				);
+
+			const transformedData = rawData.data.map((message) => {
+				const sender = message.senderAccount
+					? message.senderAccount
+					: message.senderCompany;
+
+				if (!sender) {
+					throw new TRPCError({
+						code: "NOT_FOUND",
+						message: "sender not found",
+					});
+				}
+
+				return {
+					...message.messages,
+					reciepient: message.reciepient,
+					sender: {
+						...sender,
+						type: sender.type as "account" | "company",
+					},
+				};
+			});
+
+			return {
+				...rawData,
+				data: transformedData,
+			};
 		}),
 	getReceivedMessagesByCompanyId: accountProcedure
 		.input(
@@ -82,14 +117,42 @@ export const messageRouter = router({
 				});
 			}
 
-			return await MessageQueryClient.GetExtendedManyReceivedByCompanyId(
-				companyId,
-				keywordQuery,
-				page,
-				pageSize,
-				includeRead,
-				includeDeleted
-			);
+			const rawData =
+				await MessageQueryClient.GetExtendedManyReceivedByCompanyId(
+					companyId,
+					keywordQuery,
+					page,
+					pageSize,
+					includeRead,
+					includeDeleted
+				);
+
+			const transformedData = rawData.data.map((message) => {
+				const sender = message.senderAccount
+					? message.senderAccount
+					: message.senderCompany;
+
+				if (!sender) {
+					throw new TRPCError({
+						code: "NOT_FOUND",
+						message: "sender not found",
+					});
+				}
+
+				return {
+					...message.messages,
+					reciepient: message.reciepient,
+					sender: {
+						...sender,
+						type: sender.type as "account" | "company",
+					},
+				};
+			});
+
+			return {
+				...rawData,
+				data: transformedData,
+			};
 		}),
 	getUnreadMessageCountByAccountId: accountProcedure
 		.input(
@@ -221,5 +284,14 @@ export const messageRouter = router({
 				recipient: input.recipient,
 				readAt: null,
 			});
+		}),
+	getReciepientsByKeyword: accountProcedure
+		.input(
+			z.object({
+				keyword: z.string(),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			return await MessageQueryClient.GetRecipientsByKeyword(input.keyword);
 		}),
 });
