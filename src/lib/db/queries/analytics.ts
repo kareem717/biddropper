@@ -13,7 +13,21 @@ import { registerService } from "@/lib/utils";
 import { db } from "..";
 import { JobRecommendation, CompanyRecommendation } from "./validation";
 import JobQueryClient from "./job";
-import { and, count, eq, gte, inArray, lt, sql, sum } from "drizzle-orm";
+import {
+	and,
+	count,
+	eq,
+	gte,
+	inArray,
+	isNull,
+	or,
+	lte,
+	lt,
+	min,
+	sql,
+	sum,
+} from "drizzle-orm";
+import { union } from "drizzle-orm/pg-core";
 
 class AnalyticQueryClient extends QueryClient {
 	async TrackAccountJobRecommendation(values: JobRecommendation[]) {
@@ -31,16 +45,166 @@ class AnalyticQueryClient extends QueryClient {
 	}
 
 	async TrackAccountJobView(accountId: string, jobId: string) {
-		return await this.caller.insert(accountJobViewHistories).values({
-			jobId,
-			accountId,
+		//TODO: This is atrocious, but it's a quick fix for now
+		// TODO: this might cause errors because we're only deleting one row (what happens is a user views at the same time they delete a row?)
+		const [jobCount] = await this.caller
+			.select({
+				count: count(accountJobViewHistories.id),
+			})
+			.from(accountJobViewHistories)
+			.where(
+				and(
+					eq(accountJobViewHistories.accountId, accountId),
+					isNull(accountJobViewHistories.deletedAt)
+				)
+			);
+
+		const [companyCount] = await this.caller
+			.select({
+				count: count(accountCompanyViewHistories.id),
+			})
+			.from(accountCompanyViewHistories)
+			.where(
+				and(
+					eq(accountCompanyViewHistories.accountId, accountId),
+					isNull(accountCompanyViewHistories.deletedAt)
+				)
+			);
+
+		return await this.caller.transaction(async (tx) => {
+			if (jobCount.count + companyCount.count >= 5000) {
+				const [oldestJobHistory] = await tx
+					.select({
+						id: accountJobViewHistories.id,
+						createdAt: min(accountJobViewHistories.createdAt),
+					})
+					.from(accountJobViewHistories)
+					.where(eq(accountJobViewHistories.accountId, accountId))
+					.limit(1)
+					.for("update");
+
+				const [oldestCompanyHistory] = await tx
+					.select({
+						id: accountCompanyViewHistories.id,
+						createdAt: min(accountCompanyViewHistories.createdAt),
+					})
+					.from(accountCompanyViewHistories)
+					.where(eq(accountCompanyViewHistories.accountId, accountId))
+					.limit(1)
+					.for("update");
+
+				let oldestHistory;
+				if (
+					oldestJobHistory.createdAt &&
+					oldestCompanyHistory.createdAt &&
+					new Date(oldestJobHistory.createdAt) <
+						new Date(oldestCompanyHistory.createdAt)
+				) {
+					oldestHistory = {
+						id: oldestJobHistory.id,
+						createdAt: oldestJobHistory.createdAt,
+						table: accountJobViewHistories,
+					};
+				} else {
+					oldestHistory = {
+						id: oldestCompanyHistory.id,
+						createdAt: oldestCompanyHistory.createdAt,
+						table: accountCompanyViewHistories,
+					};
+				}
+
+				await tx
+					.update(oldestHistory.table)
+					.set({ deletedAt: new Date().toISOString() })
+					.where(eq(oldestHistory.table.id, oldestHistory.id));
+			}
+
+			return await tx.insert(accountJobViewHistories).values({
+				jobId,
+				accountId,
+			});
 		});
 	}
 
 	async TrackAccountCompanyView(accountId: string, companyId: string) {
-		return await this.caller.insert(accountCompanyViewHistories).values({
-			companyId,
-			accountId,
+		//TODO: This is atrocious, but it's a quick fix for now
+		// TODO: this might cause errors because we're only deleting one row (what happens is a user views at the same time they delete a row?)
+		const [jobCount] = await this.caller
+			.select({
+				count: count(accountJobViewHistories.id),
+			})
+			.from(accountJobViewHistories)
+			.where(
+				and(
+					eq(accountJobViewHistories.accountId, accountId),
+					isNull(accountJobViewHistories.deletedAt)
+				)
+			);
+
+		const [companyCount] = await this.caller
+			.select({
+				count: count(accountCompanyViewHistories.id),
+			})
+			.from(accountCompanyViewHistories)
+			.where(
+				and(
+					eq(accountCompanyViewHistories.accountId, accountId),
+					isNull(accountCompanyViewHistories.deletedAt)
+				)
+			);
+
+		return await this.caller.transaction(async (tx) => {
+			if (jobCount.count + companyCount.count >= 5000) {
+				const [oldestJobHistory] = await tx
+					.select({
+						id: accountJobViewHistories.id,
+						createdAt: min(accountJobViewHistories.createdAt),
+					})
+					.from(accountJobViewHistories)
+					.where(eq(accountJobViewHistories.accountId, accountId))
+					.limit(1)
+					.for("update");
+
+				const [oldestCompanyHistory] = await tx
+					.select({
+						id: accountCompanyViewHistories.id,
+						createdAt: min(accountCompanyViewHistories.createdAt),
+					})
+					.from(accountCompanyViewHistories)
+					.where(eq(accountCompanyViewHistories.accountId, accountId))
+					.limit(1)
+					.for("update");
+
+				let oldestHistory;
+				if (
+					oldestJobHistory.createdAt &&
+					oldestCompanyHistory.createdAt &&
+					new Date(oldestJobHistory.createdAt) <
+						new Date(oldestCompanyHistory.createdAt)
+				) {
+					oldestHistory = {
+						id: oldestJobHistory.id,
+						createdAt: oldestJobHistory.createdAt,
+						table: accountJobViewHistories,
+					};
+				} else {
+					oldestHistory = {
+						id: oldestCompanyHistory.id,
+						createdAt: oldestCompanyHistory.createdAt,
+						table: accountCompanyViewHistories,
+					};
+				}
+
+				await tx
+					.update(oldestHistory.table)
+					.set({ deletedAt: new Date().toISOString() })
+					.where(or(eq(oldestHistory.table.id, oldestHistory.id)));
+			}
+
+			return await tx.insert(accountCompanyViewHistories).values({
+				companyId,
+				accountId,
+			});
 		});
 	}
 

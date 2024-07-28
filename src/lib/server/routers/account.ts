@@ -70,4 +70,39 @@ export const accountRouter = router({
 				includeDeleted
 			);
 		}),
+
+	getAccountHistory: accountProcedure
+		.input(
+			z.object({
+				accountId: z.string().uuid(),
+				page: z.number().optional().default(1),
+				pageSize: z.number().optional().default(10),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			if (ctx.account.id != input.accountId) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "cannot get history for other account",
+				});
+			}
+
+			return await AccountQueryClient.GetHistoryByAccountId(ctx.account.id, {
+				page: input.page,
+				pageSize: input.pageSize,
+			});
+		}),
+
+	clearHistory: accountProcedure
+		.input(z.object({ accountId: z.string().uuid() }))
+		.mutation(async ({ ctx, input }) => {
+			if (ctx.account.id != input.accountId) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "cannot clear history for other account",
+				});
+			}
+
+			await AccountQueryClient.ClearHistory(input.accountId);
+		}),
 });

@@ -37,12 +37,12 @@ export default function FavouriteCompaniesPage() {
                 <PaginationContent>
                   {data?.hasPrevious ? (
                     <PaginationItem>
-                      <PaginationPrevious href="#" />
+                      <PaginationPrevious href={`/favourites/companies?page=${data?.previousPage}`} />
                     </PaginationItem>
                   ) : null}
                   {data?.hasNext ? (
                     <PaginationItem>
-                      <PaginationNext href="#" />
+                      <PaginationNext href={`/favourites/companies?page=${data?.nextPage}`} />
                     </PaginationItem>
                   ) : null}
                 </PaginationContent>

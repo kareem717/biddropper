@@ -36,12 +36,12 @@ export default function FavouriteJobsPage() {
                 <PaginationContent>
                   {data?.hasPrevious ? (
                     <PaginationItem>
-                      <PaginationPrevious href="#" />
+                      <PaginationPrevious href={`/favourites/jobs?page=${data?.previousPage}`} />
                     </PaginationItem>
                   ) : null}
                   {data?.hasNext ? (
                     <PaginationItem>
-                      <PaginationNext href="#" />
+                      <PaginationNext href={`/favourites/jobs?page=${data?.nextPage}`} />
                     </PaginationItem>
                   ) : null}
                 </PaginationContent>
