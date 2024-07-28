@@ -10,6 +10,9 @@ run: build
 dev:
 	@bun run dev
 
+ngrok:
+	@ngrok http --domain=${NGROK_DOMAIN} 3000
+
 db-status:
 	@GOOSE_DRIVER=${GOOSE_DRIVER} GOOSE_DBSTRING=${DATABASE_URL} goose -dir=${GOOSE_MIGRATIONS_PATH} status
 
