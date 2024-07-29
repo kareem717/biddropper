@@ -1,15 +1,18 @@
 import { z } from "zod";
 import { accountProcedure, publicProcedure, router } from "../trpc";
-import { resend } from "@/lib/email";
 import { env } from "@/lib/env.mjs";
 import { randomInt } from "crypto";
-import { SupportRequestEmail } from "@/components/emails/SupportRequest";
-import { ContactUsCallbackEmail } from "@/components/emails/ContactUs";
 import {
-	DemoRequestEmail,
-	DemoRequestCallbackEmail,
+	SupportRequestEmailHTML,
+} from "@/components/emails/SupportRequest";
+import { ContactUsEmailHTML } from "@/components/emails/ContactUs";
+import {
+	DemoRequestCallbackEmailHTML,
+	DemoRequestEmailHTML,
 } from "@/components/emails/DemoRequest";
 import demo from "@/config/landing/demo";
+import ses from "@/lib/aws/ses";
+import { TRPCError } from "@trpc/server";
 
 export const emailRouter = router({
 	submitFeedback: accountProcedure
@@ -20,13 +23,32 @@ export const emailRouter = router({
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const { email, message } = input;
+			const params = {
+				Source: `Feedback <${env.NEXT_PUBLIC_SUPPORT_EMAIL}>`,
+				Destination: {
+					ToAddresses: [input.email, env.NEXT_PUBLIC_SUPPORT_EMAIL],
+				},
+				Message: {
+					Body: {
+						Html: {
+							Charset: "UTF-8",
+							Data: ContactUsEmailHTML(input),
+						},
+					},
+					Subject: {
+						Charset: "UTF-8",
+						Data: "Feedback",
+					},
+				},
+			};
 
-			await resend.emails.send({
-				from: email,
-				to: [env.NEXT_PUBLIC_OUTREACH_EMAIL],
-				subject: "Feedback",
-				text: `Feedback from account ${ctx.account.id}: ${message}`,
+			await ses.sendEmail(params, (err, data) => {
+				if (err) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: err.message,
+					});
+				}
 			});
 		}),
 	submitSupportRequest: accountProcedure
@@ -41,16 +63,36 @@ export const emailRouter = router({
 
 			const requestId = randomInt(0, 9999999).toString();
 
-			await resend.emails.send({
-				from: `Support <${env.NEXT_PUBLIC_SUPPORT_EMAIL}>`,
-				to: [email, env.NEXT_PUBLIC_SUPPORT_EMAIL],
-				subject: `Support Request #${requestId}`,
-				text: `Support request from ${ctx.account.username}: ${message}`, // Added text property
-				react: SupportRequestEmail({
-					name: ctx.account.username,
-					requestText: message,
-					requestId,
-				}),
+			const params = {
+				Source: `Support <${env.NEXT_PUBLIC_SUPPORT_EMAIL}>`,
+				Destination: {
+					ToAddresses: [email, env.NEXT_PUBLIC_SUPPORT_EMAIL],
+				},
+				Message: {
+					Body: {
+						Html: {
+							Charset: "UTF-8",
+							Data: SupportRequestEmailHTML({
+								name: ctx.account.username,
+								requestText: message,
+								requestId,
+							}),
+						},
+					},
+					Subject: {
+						Charset: "UTF-8",
+						Data: "Support Request",
+					},
+				},
+			};
+
+			await ses.sendEmail(params, (err, data) => {
+				if (err) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: err.message,
+					});
+				}
 			});
 		}),
 	submitContactUs: publicProcedure
@@ -64,16 +106,36 @@ export const emailRouter = router({
 		.mutation(async ({ ctx, input }) => {
 			const { name, email, message } = input;
 
-			await resend.emails.send({
-				from: env.NEXT_PUBLIC_SUPPORT_EMAIL,
-				to: [env.NEXT_PUBLIC_SUPPORT_EMAIL],
-				subject: `Contact`,
-				text: `Contact us request from ${name} <${email}>: ${message}`, // Added text property
-				react: ContactUsCallbackEmail({
-					name,
-					email,
-					message,
-				}),
+			const params = {
+				Source: `Support <${env.NEXT_PUBLIC_SUPPORT_EMAIL}>`,
+				Destination: {
+					ToAddresses: [email, env.NEXT_PUBLIC_SUPPORT_EMAIL],
+				},
+				Message: {
+					Body: {
+						Html: {
+							Charset: "UTF-8",
+							Data: ContactUsEmailHTML({
+								name,
+								email,
+								message,
+							}),
+						},
+					},
+					Subject: {
+						Charset: "UTF-8",
+						Data: "Contact Us",
+					},
+				},
+			};
+
+			await ses.sendEmail(params, (err, data) => {
+				if (err) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: err.message,
+					});
+				}
 			});
 		}),
 	submitDemoRequest: publicProcedure
@@ -130,20 +192,60 @@ export const emailRouter = router({
 			})
 		)
 		.mutation(async ({ ctx, input }) => {
-			await resend.emails.send({
-				from: env.NEXT_PUBLIC_SALES_EMAIL,
-				to: [env.NEXT_PUBLIC_SALES_EMAIL],
-				subject: `Demo Request`,
-				text: `Demo request`, // Added text property
-				react: DemoRequestCallbackEmail(input),
+			const callbackParams = {
+				Source: `Sales <${env.NEXT_PUBLIC_SALES_EMAIL}>`,
+				Destination: {
+					ToAddresses: [env.NEXT_PUBLIC_SALES_EMAIL],
+				},
+				Message: {
+					Body: {
+						Html: {
+							Charset: "UTF-8",
+							Data: DemoRequestCallbackEmailHTML(input),
+						},
+					},
+					Subject: {
+						Charset: "UTF-8",
+						Data: "Demo Request Callback",
+					},
+				},
+			};
+
+			await ses.sendEmail(callbackParams, (err, data) => {
+				if (err) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: err.message,
+					});
+				}
 			});
 
-			await resend.emails.send({
-				from: `Sales <${env.NEXT_PUBLIC_SALES_EMAIL}>`,
-				to: [input.email],
-				subject: `Demo Request`,
-				text: `We received your demo request. We will review your request and get back to you shortly. If you have any questions, please email us at ${env.NEXT_PUBLIC_SUPPORT_EMAIL}`, // Added text property
-				react: DemoRequestEmail(),
+			const outboundParams = {
+				Source: `Sales <${env.NEXT_PUBLIC_SALES_EMAIL}>`,
+				Destination: {
+					ToAddresses: [input.email],
+				},
+				Message: {
+					Body: {
+						Html: {
+							Charset: "UTF-8",
+							Data: DemoRequestEmailHTML(input),
+						},
+					},
+					Subject: {
+						Charset: "UTF-8",
+						Data: "Demo Request",
+					},
+				},
+			};
+
+			await ses.sendEmail(outboundParams, (err, data) => {
+				if (err) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: err.message,
+					});
+				}
 			});
 		}),
 });

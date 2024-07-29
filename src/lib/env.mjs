@@ -7,9 +7,9 @@ export const env = createEnv({
 			.enum(["development", "test", "production"])
 			.default("development"),
 		DATABASE_URL: z.string().min(1),
-
-		RESEND_API_KEY: z.string().min(1),
-
+		AWS_ACCESS_KEY: z.string().min(1),
+		AWS_SECRET_ACCESS_KEY: z.string().min(1),
+		AWS_SES_REGION: z.string().min(1),
 		SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 	},
 	client: {
