@@ -181,6 +181,7 @@ export const messageRouter = router({
 			if (!input.messageId) {
 				return null;
 			}
+			
 			return await MessageQueryClient.GetBasicById(input.messageId);
 		}),
 	getUnreadMessageCountByCompanyId: accountProcedure

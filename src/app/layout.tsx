@@ -45,9 +45,6 @@ export default async function RootLayout({
 		companies = companiesResult || [];
 	}
 
-
-	console.log({ user, account, companies, time: new Date() });
-
 	return (
 		<html lang="en">
 			<body className={cn(inter.className, "h-screen w-screen")}>

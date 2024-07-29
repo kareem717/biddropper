@@ -64,7 +64,6 @@ export const jobRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			// TODO: Need to track recommendations per account/company and then which ones they acctually view/bid on
 			const { cursor, pageSize, includeDeleted } = input;
 			const jqc = JobQueryClient;
 

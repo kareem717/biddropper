@@ -203,15 +203,14 @@ export const HelpForm: FC<HelpFormProps> = ({ className, onSubmit: onSubmitProp,
 }
 
 export interface InboxProps extends ComponentPropsWithoutRef<typeof Card> {
+  accountId: string
 }
 
-export const Inbox: FC<InboxProps> = ({ className, ...props }) => {
-  const { account } = useAuth()
-  if (!account) throw new Error("Account not found")
+export const Inbox: FC<InboxProps> = ({ accountId, className, ...props }) => {
   const [readNotificationId, setReadNotificationId] = useState<string[]>([])
 
   const { data: res, isLoading } = trpc.message.getReceivedMessagesByAccountId.useQuery({
-    accountId: account.id,
+    accountId,
   })
 
   const { mutate: readNotification } = trpc.message.readMessage.useMutation()
@@ -223,7 +222,7 @@ export const Inbox: FC<InboxProps> = ({ className, ...props }) => {
     if (message.description.length > 25) return
     if (readNotificationId.includes(message.id)) return
     setReadNotificationId([...readNotificationId, message.id])
-    readNotification({ messageId: message.id, recipient: { accountId: account.id } })
+    readNotification({ messageId: message.id, recipient: { accountId } })
   }
 
   const data = res?.data
@@ -282,13 +281,15 @@ export const FeedbackButton = () => {
   )
 }
 
-export const InboxButton = () => {
-  const { account } = useAuth()
-  //TODO: this creates a bug on user signup, it throws a "account not found error"
-  if (!account) throw new Error("Account not found")
+export interface InboxButtonProps extends ComponentPropsWithoutRef<"div"> {
+  accountId: string
+}
+
+export const InboxButton: FC<InboxButtonProps> = ({ accountId }) => {
   const { data } = trpc.message.getUnreadMessageCountByAccountId.useQuery({
-    accountId: account.id,
+    accountId,
   })
+
   return (
     <Popover>
       <PopoverTrigger className={buttonVariants({ variant: "outline", size: "sm" })}>
@@ -305,7 +306,7 @@ export const InboxButton = () => {
         </div>
       </PopoverTrigger>
       <PopoverContent className="mx-4">
-        <Inbox />
+        <Inbox accountId={accountId} />
       </PopoverContent>
     </Popover>
   )

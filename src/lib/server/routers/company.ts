@@ -148,7 +148,6 @@ export const companyRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			// TODO: Need to track recommendations per account/company and then which ones they acctually view/select
 			const { cursor, pageSize, includeDeleted } = input;
 
 			return await CompanyQueryClient.caller.transaction(async (tx) => {

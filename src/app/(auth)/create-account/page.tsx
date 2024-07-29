@@ -8,11 +8,11 @@ export default function CreateAccountPage() {
 	const router = useRouter();
 	const { user, account } = useAuth();
 
-	if (user && account) {
-		router.push("/dashboard");
-	}
-
-	if (!user) {
+	if (user) {
+		if (account) {
+			router.push("/dashboard");
+		} 
+	} else {
 		router.push("/login");
 	}
 
