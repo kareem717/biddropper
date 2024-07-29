@@ -1,3 +1,5 @@
+"use client"
+
 import { CreateCompanyForm } from "@/components/companies/CreateCompanyForm";
 import {
   Card,

@@ -29,7 +29,7 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
 }) => {
   const { getAddress } = useAddressInput();
   const { setAddress: setMapAddress } = useAutoFillMap();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const address = getAddress();
   const centerPosition = {
     lat: Number(address?.yCoordinate) || DEFAULT_POSITION.lat,
@@ -38,10 +38,10 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
 
   const mapStyle = useMemo(
     () =>
-      theme === "dark"
+      resolvedTheme === "dark"
         ? env.NEXT_PUBLIC_MAPBOX_STYLE_DARK
         : env.NEXT_PUBLIC_MAPBOX_STYLE_LIGHT,
-    [theme],
+    [resolvedTheme],
   );
 
   const MapPanner = () => {

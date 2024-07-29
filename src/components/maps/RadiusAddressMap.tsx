@@ -29,7 +29,7 @@ interface RadiusAddressMapProps extends ComponentPropsWithoutRef<"div"> {
 }
 
 const defaultPosition = { lat: 43.6532, lng: -79.3832 };
-//TODO: causes a "window is not defined" error
+
 const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
   addressInputProps,
   labelSliderProps,
@@ -40,7 +40,7 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
   className,
   ...props
 }) => {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [radius, setRadius] = useState<number>(defaultRadius || 50);
   const { onValueChange: onValueChangeLabelSlider } = labelSliderProps || {};
   const { setAddress: setMapAddress, setRadius: setMapRadius, getAddress: getMapAddress, getRadius: getMapRadius } = useRadiusMap();
@@ -52,10 +52,10 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
 
   const mapStyle = useMemo(
     () =>
-      theme === "dark"
+      resolvedTheme === "dark"
         ? env.NEXT_PUBLIC_MAPBOX_STYLE_DARK
         : env.NEXT_PUBLIC_MAPBOX_STYLE_LIGHT,
-    [theme],
+    [resolvedTheme],
   );
 
   const MapPanner = () => {
