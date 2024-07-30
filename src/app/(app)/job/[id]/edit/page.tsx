@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { EditJobForm } from "@/components/jobs/EditJobForm";
 import { trpc } from "@/lib/trpc/client";
 
-export default function JobEditPage() {
+export default function JobEditPage({}) {
   const jobId = useParams().id;
   const { data: job, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId as string });
 

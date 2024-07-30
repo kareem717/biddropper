@@ -305,6 +305,7 @@ class CompanyQueryClient extends QueryClient {
 			)
 			.returning();
 	}
+
 	async GetIsCompanyFavouritedByAccountId(
 		accountId: string,
 		companyId: string
@@ -330,7 +331,6 @@ class CompanyQueryClient extends QueryClient {
 		pageSize: number,
 		includeDeleted: boolean = false
 	) {
-		
 		const res = await this.WithOffsetPagination(
 			this.caller
 				.select({
@@ -345,7 +345,9 @@ class CompanyQueryClient extends QueryClient {
 				)
 				.where(
 					and(
-						includeDeleted ? undefined : isNull(accountCompanyFavourites.deletedAt),
+						includeDeleted
+							? undefined
+							: isNull(accountCompanyFavourites.deletedAt),
 						eq(accountCompanyFavourites.accountId, favouriterId)
 					)
 				)

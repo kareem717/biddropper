@@ -31,10 +31,9 @@ export const ViewConversionRateChart: FC<ViewConversionRateChartProps> = ({
   ...props
 }) => {
 
-  const { data, isLoading } = trpc.analytics.GetJobViewBidComparison.useQuery({
+  const { data, isLoading, isError, error } = trpc.analytics.GetJobViewBidComparison.useQuery({
     companyId,
   });
-
   if (!isLoading && !data) throw new Error("No data");
 
   return (

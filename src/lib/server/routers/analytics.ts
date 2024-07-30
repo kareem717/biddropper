@@ -82,6 +82,9 @@ export const analyticsRouter = router({
 				throw new TRPCError({
 					code: "FORBIDDEN",
 					message: "you are not authorized to view this company's analytics",
+					cause: new Error(
+						"you are not authorized to view this company's analytics"
+					),
 				});
 			}
 
@@ -116,14 +119,25 @@ export const analyticsRouter = router({
 			if (!ownedCompanies.some((company) => company.id === input.companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you are not authorized to view this company's analytics",
+					message: "You're not authorized to view this company's analytics",
+					cause: new Error(
+						"User is trying to view analytics for a company they don't own"
+					),
 				});
 			}
 
-			const rawData =
-				await AnalyticsQueryClient.GetInteractionSummaryByCompanyId(
+			let rawData;
+			try {
+				rawData = await AnalyticsQueryClient.GetInteractionSummaryByCompanyId(
 					input.companyId
 				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching the analytics data",
+					cause: error,
+				});
+			}
 
 			const calcData = (curr: string | null, prev: string | null) => {
 				const numCurr = Number(curr);
@@ -142,19 +156,27 @@ export const analyticsRouter = router({
 				};
 			};
 
-			const calculatedData = {
-				views: calcData(
-					rawData.currentMonth.views,
-					rawData.previousMonth.views
-				),
-				bids: calcData(rawData.currentMonth.bids, rawData.previousMonth.bids),
-				favorites: calcData(
-					rawData.currentMonth.favorites,
-					rawData.previousMonth.favorites
-				),
-			};
+			try {
+				const calculatedData = {
+					views: calcData(
+						rawData.currentMonth.views,
+						rawData.previousMonth.views
+					),
+					bids: calcData(rawData.currentMonth.bids, rawData.previousMonth.bids),
+					favorites: calcData(
+						rawData.currentMonth.favorites,
+						rawData.previousMonth.favorites
+					),
+				};
 
-			return calculatedData;
+				return calculatedData;
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while processing the analytics data",
+					cause: error,
+				});
+			}
 		}),
 
 	GetPublicMonthlyAnalyticsByCompanyId: companyOwnerProcedure

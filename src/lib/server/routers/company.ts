@@ -16,19 +16,13 @@ export const companyRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			return await CompanyQueryClient.GetDetailedManyByOwnerId(
-				ctx.account.id,
-				input.includeDeleted
+			if (input.includeDeleted) {
+				return ctx.ownedCompanies;
+			}
+
+			return ctx.ownedCompanies?.filter(
+				(company) => company.deletedAt === null
 			);
-		}),
-	getCompanyById: accountProcedure
-		.input(
-			z.object({
-				id: z.string(),
-			})
-		)
-		.query(async ({ ctx, input }) => {
-			return await CompanyQueryClient.GetDetailedById(input.id);
 		}),
 	getCompanyFull: accountProcedure
 		.input(

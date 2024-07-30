@@ -13,7 +13,7 @@ export default async function CompanyLayout({
   const company = await api.company.getCompanyFull.query({
     id: params.id,
   });
-
+  console.log(company)
   if (!company) {
     throw new Error("Company not found");
   }

@@ -33,6 +33,12 @@ export const messageRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
+			throw new TRPCError({
+				code: "NOT_IMPLEMENTED",
+				message: "This endpoint is not implemented",
+				cause: new Error("This endpoint is not implemented 12123123"),
+			});
+			
 			const {
 				accountId,
 				keywordQuery,
@@ -181,7 +187,7 @@ export const messageRouter = router({
 			if (!input.messageId) {
 				return null;
 			}
-			
+
 			return await MessageQueryClient.GetBasicById(input.messageId);
 		}),
 	getUnreadMessageCountByCompanyId: accountProcedure

@@ -2,8 +2,6 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { Context } from "@/lib/trpc/context";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { accounts } from "../db/drizzle/schema";
-import { eq } from "drizzle-orm";
 
 /**
  * Initialization of tRPC backend
@@ -33,7 +31,8 @@ export const userProcedure = t.procedure.use(async ({ ctx, next }) => {
 	if (!ctx.user) {
 		throw new TRPCError({
 			code: "UNAUTHORIZED",
-			message: "Unauthorized",
+			message: "You are not logged in.",
+			cause: new Error("User not found on context, not signed in"),
 		});
 	}
 
@@ -41,33 +40,26 @@ export const userProcedure = t.procedure.use(async ({ ctx, next }) => {
 });
 
 export const accountProcedure = userProcedure.use(async ({ ctx, next }) => {
-	const [account] = await ctx.db
-		.select()
-		.from(accounts)
-		.where(eq(accounts.userId, ctx.user.id));
-
-	if (!account) {
+	if (!ctx.account) {
 		throw new TRPCError({
-			code: "NOT_FOUND",
-			message: "Account not found",
+			code: "UNAUTHORIZED",
+			message: "You need to create a account.",
+			cause: new Error("Account not found on context, not signed in"),
 		});
 	}
-	return next({ ctx: { ...ctx, account: account } });
+
+	return next({ ctx: { ...ctx, account: ctx.account } });
 });
 
 export const companyOwnerProcedure = accountProcedure.use(
 	async ({ ctx, next }) => {
-		const activeOwnedCompanies = ctx.ownedCompanies?.filter(
-			(company) => company.deletedAt === null
-		);
-
-		if (!activeOwnedCompanies) {
+		if (!ctx.ownedCompanies?.some((company) => company.deletedAt === null)) {
 			throw new TRPCError({
 				code: "FORBIDDEN",
-				message: "You are not the owner of any companies",
+				message: "You are not the owner of any active companies",
 			});
 		}
 
-		return next({ ctx: { ...ctx, ownedCompanies: activeOwnedCompanies } });
+		return next({ ctx: { ...ctx, ownedCompanies: ctx.ownedCompanies } });
 	}
 );

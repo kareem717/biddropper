@@ -8,7 +8,7 @@ import { trpc } from "@/lib/trpc/client";
 export interface MetricSummaryProps extends ComponentPropsWithoutRef<"div"> { }
 
 export const MetricSummary: FC<MetricSummaryProps> = ({ className, ...props }) => {
-  const { data: analytics, isLoading: isAnalyticsLoading } = trpc.analytics.GetMonthlyAnalyticsByCompanyId.useQuery({ companyId: "3cf805b6-da72-46a9-a6bb-c1d134f2a072" });
+  const { data: analytics, isLoading: isAnalyticsLoading, error } = trpc.analytics.GetMonthlyAnalyticsByCompanyId.useQuery({ companyId: "3cf805b6-da72-46a9-a6bb-c1d134f2a072" });
   const { data: mostPopularJob, isLoading: isMostPopularJobLoading } = trpc.job.getMostPopularJobByCompanyId.useQuery({ companyId: "3cf805b6-da72-46a9-a6bb-c1d134f2a072" });
 
   if (!isAnalyticsLoading && !isMostPopularJobLoading) {

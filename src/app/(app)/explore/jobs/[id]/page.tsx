@@ -1,7 +1,6 @@
 "use client"
 
 import { JobShowCard } from "@/components/jobs/JobShowCard";
-import { useParams } from "next/navigation";
 
 export default function JobShowPage({ params }: { params: { id: string } }) {
   return (

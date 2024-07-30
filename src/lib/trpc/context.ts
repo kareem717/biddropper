@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/index";
 import { createClient } from "@/lib/utils/supabase/server";
-import { eq, and, isNull } from "drizzle-orm";
-import { accounts, companies } from "@/lib/db/drizzle/schema";
+import AccountQueryClient from "@/lib/db/queries/account";
+import CompanyQueryClient from "@/lib/db/queries/company";
 
 export async function createTRPCContext(opts: { headers: Headers }) {
 	const supabase = createClient();
@@ -14,17 +14,14 @@ export async function createTRPCContext(opts: { headers: Headers }) {
 	let ownedCompanies = null;
 
 	if (user) {
-		[account] = await db
-			.select()
-			.from(accounts)
-			.where(and(eq(accounts.userId, user.id), isNull(accounts.deletedAt)));
+		account = await AccountQueryClient.GetDetailedByUserId(user.id);
 	}
 
 	if (account) {
-		ownedCompanies = await db
-			.select()
-			.from(companies)
-			.where(eq(companies.ownerId, account.id));
+		ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
+			account.id,
+			true
+		);
 	}
 
 	return {
