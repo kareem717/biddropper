@@ -13,17 +13,15 @@ export default async function CompanyLayout({
   const company = await api.company.getCompanyFull.query({
     id: params.id,
   });
-  console.log(company)
+
   if (!company) {
     throw new Error("Company not found");
   }
 
-  const getOwnedCompanies = await api.company.getOwnedCompanies.query({
-    includeDeleted: true,
-  });
+  const account = await api.account.getLoggedInAccount.query();
 
-  // Check if the user is the owner of the company
-  if (!getOwnedCompanies?.some(company => company.id === params.id)) {
+  if (company.ownerId !== account.id) {
+    console.log(company.ownerId, account.id)
     throw new Error("Forbidden");
   }
 

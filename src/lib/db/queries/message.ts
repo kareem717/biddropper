@@ -96,63 +96,6 @@ class MessageQueryClient extends QueryClient {
 				.limit(1)
 		);
 
-		console.log(
-			this.caller
-				.with(replyTo)
-				.select({
-					messages,
-					reciepient: {
-						readAt: messageAccountRecipients.readAt,
-						deletedAt: messageAccountRecipients.deletedAt,
-					},
-					senderCompany: {
-						type: sql<string>`'company'`,
-						id: companies.id,
-						name: companies.name,
-						deletedAt: companies.deletedAt,
-					},
-					senderAccount: {
-						type: sql<string>`'account'`,
-						id: accounts.id,
-						name: accounts.username,
-						deletedAt: accounts.deletedAt,
-					},
-					replyTo: {
-						messageId: replyTo.messageId,
-						replyTo: replyTo.replyTo,
-						createdAt: replyTo.createdAt,
-						updatedAt: replyTo.updatedAt,
-						deletedAt: replyTo.deletedAt,
-					},
-				})
-				.from(messages)
-				.innerJoin(
-					messageAccountRecipients,
-					eq(messages.id, messageAccountRecipients.messageId)
-				)
-				.leftJoin(replyTo, eq(messages.id, replyTo.messageId))
-				.leftJoin(accounts, eq(messages.senderAccountId, accounts.id))
-				.leftJoin(companies, eq(messages.senderCompanyId, companies.id))
-				.where(
-					and(
-						eq(messageAccountRecipients.accountId, accountId),
-						includeRead ? undefined : isNull(messageAccountRecipients.readAt),
-						includeDeleted
-							? undefined
-							: isNull(messageAccountRecipients.deletedAt),
-						keywordQuery
-							? sql`messages.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
-							: undefined
-					)
-				)
-				.orderBy(
-					keywordQuery
-						? sql`ts_rank(messages.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
-						: desc(messages.createdAt),
-					desc(messages.createdAt)
-				)
-				.toSQL()
-		);
 		const res = await this.WithOffsetPagination(
 			this.caller
 				.with(replyTo)
@@ -198,13 +141,13 @@ class MessageQueryClient extends QueryClient {
 							? undefined
 							: isNull(messageAccountRecipients.deletedAt),
 						keywordQuery
-							? sql`messages.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
+							? sql`${messages.englishSearchVector} @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
 							: undefined
 					)
 				)
 				.orderBy(
 					keywordQuery
-						? sql`ts_rank(messages.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
+						? sql`ts_rank(${messages.englishSearchVector}, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
 						: desc(messages.createdAt),
 					desc(messages.createdAt)
 				)
@@ -226,16 +169,21 @@ class MessageQueryClient extends QueryClient {
 		includeRead: boolean = false,
 		includeDeleted: boolean = false
 	) {
-		const replyTo = this.caller
-			.$with("replyTo")
-			.as(
-				this.caller
-					.select()
-					.from(messages)
-					.innerJoin(messageReplies, eq(messages.id, messageReplies.messageId))
-					.orderBy(desc(messageReplies.createdAt))
-					.limit(1)
-			);
+		console.log(companyId);
+		const replyTo = this.caller.$with("replyTo").as(
+			this.caller
+				.select({
+					messageId: messageReplies.messageId,
+					replyTo: messageReplies.replyTo,
+					createdAt: messageReplies.createdAt,
+					updatedAt: messageReplies.updatedAt,
+					deletedAt: messageReplies.deletedAt,
+				})
+				.from(messages)
+				.innerJoin(messageReplies, eq(messages.id, messageReplies.messageId))
+				.orderBy(desc(messageReplies.createdAt))
+				.limit(1)
+		);
 
 		const res = await this.WithOffsetPagination(
 			this.caller
@@ -259,11 +207,11 @@ class MessageQueryClient extends QueryClient {
 						deletedAt: accounts.deletedAt,
 					},
 					replyTo: {
-						messageId: replyTo.message_replies.messageId,
-						replyTo: replyTo.message_replies.replyTo,
-						createdAt: replyTo.message_replies.createdAt,
-						updatedAt: replyTo.message_replies.updatedAt,
-						deletedAt: replyTo.message_replies.deletedAt,
+						messageId: replyTo.messageId,
+						replyTo: replyTo.replyTo,
+						createdAt: replyTo.createdAt,
+						updatedAt: replyTo.updatedAt,
+						deletedAt: replyTo.deletedAt,
 					},
 				})
 				.from(messages)
@@ -271,24 +219,24 @@ class MessageQueryClient extends QueryClient {
 					messageCompanyRecipients,
 					eq(messages.id, messageCompanyRecipients.messageId)
 				)
-				.leftJoin(replyTo, eq(messages.id, replyTo.message_replies.messageId))
+				.leftJoin(replyTo, eq(messages.id, replyTo.messageId))
 				.leftJoin(accounts, eq(messages.senderAccountId, accounts.id))
 				.leftJoin(companies, eq(messages.senderCompanyId, companies.id))
 				.where(
 					and(
 						eq(messageCompanyRecipients.companyId, companyId),
-						includeRead ? undefined : isNull(messageAccountRecipients.readAt),
+						includeRead ? undefined : isNull(messageCompanyRecipients.readAt),
 						includeDeleted
 							? undefined
-							: isNull(messageAccountRecipients.deletedAt),
+							: isNull(messageCompanyRecipients.deletedAt),
 						keywordQuery
-							? sql`messages.english_search_vector @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
+							? sql`${messages.englishSearchVector} @@ WEBSEARCH_TO_TSQUERY('english',${keywordQuery})`
 							: undefined
 					)
 				)
 				.orderBy(
 					keywordQuery
-						? sql`ts_rank(messages.english_search_vector, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
+						? sql`ts_rank(${messages.englishSearchVector}, WEBSEARCH_TO_TSQUERY('english', ${keywordQuery}))`
 						: desc(messages.createdAt),
 					desc(messages.createdAt)
 				)

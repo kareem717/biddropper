@@ -33,12 +33,6 @@ export const messageRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			throw new TRPCError({
-				code: "NOT_IMPLEMENTED",
-				message: "This endpoint is not implemented",
-				cause: new Error("This endpoint is not implemented 12123123"),
-			});
-			
 			const {
 				accountId,
 				keywordQuery,
@@ -113,7 +107,7 @@ export const messageRouter = router({
 				includeRead,
 				includeDeleted,
 			} = input;
-
+			console.log(companyId);
 			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
 				ctx.account.id
 			);
@@ -123,6 +117,7 @@ export const messageRouter = router({
 					message: "you cannot get messages for this company",
 				});
 			}
+			console.log(ownedCompanies)
 
 			const rawData =
 				await MessageQueryClient.GetExtendedManyReceivedByCompanyId(
@@ -133,6 +128,7 @@ export const messageRouter = router({
 					includeRead,
 					includeDeleted
 				);
+			console.log(rawData);
 
 			const transformedData = rawData.data.map((message) => {
 				const sender = message.senderAccount
@@ -157,6 +153,10 @@ export const messageRouter = router({
 				};
 			});
 
+			console.log({
+				...rawData,
+				data: transformedData,
+			});
 			return {
 				...rawData,
 				data: transformedData,
@@ -178,7 +178,8 @@ export const messageRouter = router({
 				});
 			}
 
-			return await MessageQueryClient.GetUnreadCountByAccountId(accountId);
+			const cnt = await MessageQueryClient.GetUnreadCountByAccountId(accountId);
+			return cnt || 0;
 		}),
 	getBasicById: accountProcedure
 		.input(z.object({ messageId: z.string().uuid().optional() }))
@@ -212,7 +213,7 @@ export const messageRouter = router({
 			return await MessageQueryClient.GetUnreadCountByCompanyId(companyId);
 		}),
 	readMessage: accountProcedure
-		.input(UpdateRecipientSchema)
+		.input(UpdateRecipientSchema.omit({ readAt: true, deletedAt: true }))
 		.mutation(async ({ ctx, input }) => {
 			const { recipient } = input;
 
@@ -274,7 +275,7 @@ export const messageRouter = router({
 			});
 		}),
 	unreadMessage: accountProcedure
-		.input(UpdateRecipientSchema)
+		.input(UpdateRecipientSchema.omit({ readAt: true, deletedAt: true }))
 		.mutation(async ({ ctx, input }) => {
 			const { recipient } = input;
 			if ("accountId" in recipient) {

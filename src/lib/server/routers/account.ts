@@ -26,9 +26,12 @@ export const accountRouter = router({
 				userId: z.string().uuid(),
 			})
 		)
-		.query(async ({ ctx, input }) => {
+		.query(async ({ input }) => {
 			return await AccountQueryClient.GetDetailedByUserId(input.userId);
 		}),
+	getLoggedInAccount: accountProcedure.query(async ({ ctx }) => {
+		return await AccountQueryClient.GetDetailedByUserId(ctx.user.id);
+	}),
 	editAccount: accountProcedure
 		.input(EditAccountSchema)
 		.mutation(async ({ ctx, input }) => {
