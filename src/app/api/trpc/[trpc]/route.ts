@@ -33,7 +33,6 @@ const handler = (req: NextRequest) =>
 				);
 			}
 
-			return error.cause;
 		},
 	});
 
