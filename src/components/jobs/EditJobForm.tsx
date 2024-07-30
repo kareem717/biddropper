@@ -38,14 +38,16 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { CustomRadioButtons } from "@/components/app/CustomRadioButtons"
-import { AutoFillMap } from "@/components/maps/AutoFillMap"
 import { IndustrySelect } from "../app/IndustrySelect";
 import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect } from "react";
 import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
+import dynamic from 'next/dynamic';
 
 const formSchema = EditJobSchema
+
+const AutoFillMap = dynamic(() => import("@/components/maps/AutoFillMap"), { ssr: false });
 
 export interface EditJobFormProps extends ComponentPropsWithoutRef<"form"> {
   job: EditJob

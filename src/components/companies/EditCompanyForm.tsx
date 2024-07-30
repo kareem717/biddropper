@@ -56,9 +56,8 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ company, className, 
 
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { address, radius } = useRadiusMap();
-  const { getSelectedIndustries, setSelectedIndustries } = useIndustrySelect();
   const { setAddress } = useRadiusMap();
+  const { getSelectedIndustries, setSelectedIndustries } = useIndustrySelect();
   const { mutateAsync: editCompany, isLoading, isError } = trpc.company.editCompany.useMutation({
     onError: () => {
       toast.error("Something went wrong!", {

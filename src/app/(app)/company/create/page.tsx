@@ -1,5 +1,3 @@
-"use client"
-
 import { CreateCompanyForm } from "@/components/companies/CreateCompanyForm";
 import {
   Card,
@@ -9,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export default function CreateCompanyPage() {
+export default async function CreateCompanyPage() {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <Card>

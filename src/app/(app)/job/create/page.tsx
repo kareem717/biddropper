@@ -1,5 +1,3 @@
-"use client"
-
 import { CreateJobForm } from "@/components/jobs/CreateJobForm";
 import {
   Card,
@@ -9,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export default function JobCreatePage() {
+export default async function JobCreatePage() {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <Card>

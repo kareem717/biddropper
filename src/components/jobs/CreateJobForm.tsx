@@ -49,14 +49,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { CustomRadioButtons } from "@/components/app/CustomRadioButtons"
-import { AutoFillMap } from "@/components/maps/AutoFillMap"
 import { IndustrySelect } from "../app/IndustrySelect";
 import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
 import { Textarea } from "@/components/ui/textarea";
 import { FC, ComponentPropsWithoutRef } from "react";
+import dynamic from 'next/dynamic';
 
 const formSchema = NewJobSchema
 
+const AutoFillMap = dynamic(() => import("@/components/maps/AutoFillMap"), { ssr: false });
 
 export interface CreateJobFormProps extends ComponentPropsWithoutRef<"form"> {
   onSubmitProp?: (values: z.infer<typeof formSchema>) => void;

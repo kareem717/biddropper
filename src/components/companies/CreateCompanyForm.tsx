@@ -26,7 +26,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import useRadiusMap from "@/lib/hooks/useRadiusMap";
-import RadiusAddressMap from "../maps/RadiusAddressMap";
+import dynamic from 'next/dynamic';
 import { IndustrySelect } from "../app/IndustrySelect";
 import { trpc } from "@/lib/trpc/client";
 import { toast } from "sonner";
@@ -41,6 +41,8 @@ import {
 import { useState, FC, ComponentPropsWithoutRef } from "react";
 import { Icons } from "../Icons";
 import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
+
+const RadiusAddressMap = dynamic(() => import("@/components/maps/RadiusAddressMap"), { ssr: false });
 
 const formSchema = NewCompanySchema
 
@@ -57,7 +59,7 @@ export const CreateCompanyForm: FC<CreateCompanyFormProps> = ({ onSubmitProp, cl
 
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { address, radius } = useRadiusMap();
+  const { getAddress, getRadius } = useRadiusMap();
   const { getSelectedIndustries } = useIndustrySelect();
   const { mutateAsync: createCompany, isLoading, isError } = trpc.company.createCompany.useMutation({
     onError: () => {
@@ -77,8 +79,8 @@ export const CreateCompanyForm: FC<CreateCompanyFormProps> = ({ onSubmitProp, cl
       websiteUrl: "",
       emailAddress: "",
       name: "",
-      address: address,
-      serviceArea: radius?.toString() || null,
+      address: getAddress(),
+      serviceArea: getRadius()?.toString() || null,
     },
   })
 

@@ -1,6 +1,7 @@
 "use client";
+//! WARNING: This component is not SSR compatible
 
-import { ComponentPropsWithoutRef, useMemo, useState, FC, useEffect } from "react";
+import { ComponentPropsWithoutRef, useMemo, FC, useEffect } from "react";
 import { env } from "@/lib/env.mjs";
 import {
   MapContainer,
@@ -41,9 +42,8 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
   ...props
 }) => {
   const { resolvedTheme } = useTheme();
-  const [radius, setRadius] = useState<number>(defaultRadius || 50);
   const { onValueChange: onValueChangeLabelSlider } = labelSliderProps || {};
-  const { setAddress: setMapAddress, setRadius: setMapRadius, getAddress: getMapAddress, getRadius: getMapRadius } = useRadiusMap();
+  const { setAddress: setMapAddress, setRadius, getAddress: getMapAddress, getRadius } = useRadiusMap();
   const address = getMapAddress();
   const centerPosition = {
     lat: Number(address?.yCoordinate) || defaultPosition.lat,
@@ -70,7 +70,13 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
       defaultPosition.lng = Number(defaultAddress.xCoordinate);
       setMapAddress(defaultAddress);
     }
-  }, [defaultAddress, setMapAddress])
+
+    if (defaultRadius) {
+      setRadius(defaultRadius);
+    } else {
+      setRadius(0);
+    }
+  }, [defaultAddress, setMapAddress, defaultRadius, setRadius])
 
   return (
     <div
@@ -93,7 +99,7 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
       {address && (
         <div className="absolute bottom-6 z-20 flex w-full items-center justify-center">
           <LabelSlider
-            defaultValue={[radius]}
+            defaultValue={[getRadius() || 0]}
             max={5001}
             step={1}
             className="w-4/5 sm:w-1/2"
@@ -101,7 +107,6 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
             {...labelSliderProps}
             onValueChange={(val) => {
               setRadius(val[0] || 0);
-              setMapRadius(val[0] || 0);
               onValueChangeLabelSlider?.(val);
             }}
           />
@@ -128,7 +133,7 @@ const RadiusAddressMap: FC<RadiusAddressMapProps> = ({
                 color: "hsl(var(--primary))",
                 fillColor: "hsl(var(--primary))",
               }}
-              radius={radius * 1000}
+              radius={(getRadius() ?? 0) * 1000}
             />
             <Marker
               position={centerPosition}

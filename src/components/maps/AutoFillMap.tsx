@@ -1,4 +1,5 @@
 "use client";
+//! WARNING: This component is not SSR compatible
 
 import { ComponentPropsWithoutRef, useMemo, FC, useEffect } from "react";
 import { env } from "@/lib/env.mjs";
@@ -19,8 +20,7 @@ interface AutoFillMapProps extends ComponentPropsWithoutRef<"div"> {
   addressInputProps?: ComponentPropsWithoutRef<typeof AddressInput>;
   defaultAddress?: NewAddress;
 }
-
-export const AutoFillMap: FC<AutoFillMapProps> = ({
+const AutoFillMap: FC<AutoFillMapProps> = ({
   mapContainerProps,
   defaultAddress,
   className,
@@ -104,3 +104,5 @@ export const AutoFillMap: FC<AutoFillMapProps> = ({
     </div>
   );
 };
+
+export default AutoFillMap;
