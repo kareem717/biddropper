@@ -9,8 +9,6 @@ import { cookies } from "next/headers";
 import TrpcProvider from "@/components/providers/TRPCProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import { cn } from "@/lib/utils";
-import { ShowCompany } from "@/lib/db/queries/validation";
-import CompanyProvider from "@/components/providers/CompanyProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -28,7 +26,6 @@ export default async function RootLayout({
 
 	let user = null;
 	let account = null;
-	let companies: ShowCompany[] = [];
 
 	const supabase = createClient();
 	const { data } = await supabase.auth.getUser();
@@ -40,30 +37,23 @@ export default async function RootLayout({
 		});
 	}
 
-	if (account) {
-		const companiesResult = await api.company.getOwnedCompanies.query({});
-		companies = companiesResult || [];
-	}
-
 	return (
 		<html lang="en">
 			<body className={cn(inter.className, "h-screen w-screen")}>
 				<AuthProvider user={user} account={account}>
-					<CompanyProvider companies={companies}>
-						<TrpcProvider cookies={cookies().toString()}>
-							<ThemeProvider
-								attribute="class"
-								defaultTheme="system"
-								enableSystem
-								disableTransitionOnChange
-							>
-								<TooltipProvider>
-									{children}
-								</TooltipProvider>
-							</ThemeProvider>
-							<Toaster richColors />
-						</TrpcProvider>
-					</CompanyProvider>
+					<TrpcProvider cookies={cookies().toString()}>
+						<ThemeProvider
+							attribute="class"
+							defaultTheme="system"
+							enableSystem
+							disableTransitionOnChange
+						>
+							<TooltipProvider>
+								{children}
+							</TooltipProvider>
+						</ThemeProvider>
+						<Toaster richColors />
+					</TrpcProvider>
 				</AuthProvider>
 			</body>
 		</html>

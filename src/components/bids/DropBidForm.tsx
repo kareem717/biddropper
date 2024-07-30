@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { useAuth } from "../providers/AuthProvider";
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -25,21 +24,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { NewBidSchema } from "@/lib/db/queries/validation";
+import { NewBidSchema, ShowCompany } from "@/lib/db/queries/validation";
 import { Textarea } from "../ui/textarea";
 import { cn } from "@/lib/utils";
-import { useCompany } from "../providers/CompanyProvider";
 
 const formSchema = NewBidSchema
 
 export interface DropBidFormProps extends ComponentPropsWithoutRef<"form"> {
   jobId: string
   onSubmitProp?: (values: z.infer<typeof formSchema>) => void;
+  companies: ShowCompany[]
 }
 
-export const DropBidForm = ({ jobId, onSubmitProp, className, ...props }: DropBidFormProps) => {
-  const { account, user } = useAuth()
-  const { companies } = useCompany()
+export const DropBidForm = ({ jobId, onSubmitProp, companies, className, ...props }: DropBidFormProps) => {
   const router = useRouter();
 
   const { mutateAsync: createBid, isLoading, isError } = trpc.bid.createBid.useMutation({
@@ -58,9 +55,6 @@ export const DropBidForm = ({ jobId, onSubmitProp, className, ...props }: DropBi
     },
   })
 
-  if (!account || !user) {
-    throw new Error("Account or user not found")
-  }
 
   if (companies.length === 0) {
     throw new Error("No companies found")

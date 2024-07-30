@@ -9,7 +9,6 @@ import { trpc } from "@/lib/trpc/client"
 import { AddressDisplay } from "@/components/app/AddressDisplay"
 import { ShowAddress } from "@/lib/db/queries/validation"
 import { useAuth } from "../providers/AuthProvider"
-import { useCompany } from "../providers/CompanyProvider"
 import { DropBidForm } from "../bids/DropBidForm"
 import {
   Dialog,
@@ -29,9 +28,9 @@ export interface JobShowCardProps extends ComponentPropsWithoutRef<"div"> {
 
 export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }) => {
   const { data, isLoading } = trpc.job.getJobFull.useQuery({ id: jobId })
+  const { data: companies } = trpc.company.getOwnedCompanies.useQuery({})
   const { mutate } = trpc.job.trackJobView.useMutation()
 
-  const { companies } = useCompany()
   const { account } = useAuth()
 
   useEffect(() => {
@@ -66,9 +65,6 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
     }
   }
 
-
-
-  console.log(companies)
   return (
     <div className={cn("flex flex-col md:flex-row gap-4", className)} {...props}>
       <div className="w-full">
@@ -107,10 +103,10 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
           </div>
         </div>
       </div>
-      {companies.length > 0 && (
+      {companies && companies.length > 0 && (
         <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
           <h1 className="text-2xl font-bold mb-4">Drop a bid</h1>
-          <DropBidForm jobId={jobId} />
+          <DropBidForm jobId={jobId} companies={companies} />
           <Dialog>
             <DialogTrigger asChild><Button variant="outline" className="w-full mt-2">Request More Info</Button></DialogTrigger>
             <DialogContent>

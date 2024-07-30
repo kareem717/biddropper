@@ -15,15 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { trpc } from "@/lib/trpc/client";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { ComponentPropsWithoutRef, useState, FC } from "react";
+import { ComponentPropsWithoutRef, FC } from "react";
 import { Icons } from "../Icons";
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -36,7 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea";
-import { useCompany } from "../providers/CompanyProvider";
 import { NewMessageSchema } from "@/lib/db/queries/validation";
 import { cn } from "@/lib/utils";
 import { ReciepientSearch } from "./ReciepientSearch";
@@ -56,11 +47,11 @@ export interface CreateMessageFormProps extends ComponentPropsWithoutRef<"form">
 
 export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSubmitProp, replyTo, ...props }) => {
   const { account, user } = useAuth()
-  const { companies: ownedCompanies } = useCompany()
   if (!account || !user) {
     throw new Error("Account or user not found")
   }
 
+  const { data: ownedCompanies, isLoading: isLoadingOwnedCompanies } = trpc.company.getOwnedCompanies.useQuery({})
   const { mutateAsync: createMessage, isLoading, isError } = trpc.message.createMessage.useMutation({
     onError: () => {
       toast.error("Something went wrong!", {
