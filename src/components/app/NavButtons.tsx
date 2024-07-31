@@ -28,6 +28,8 @@ import { trpc } from "@/lib/trpc/client"
 import { Textarea } from "../ui/textarea"
 import { titleCase } from "title-case"
 import { toast } from "sonner"
+import { ErrorDiv } from "../app/ErrorDiv"
+import { Skeleton } from "../ui/skeleton"
 
 export interface FeedbackFormProps extends ComponentPropsWithoutRef<"form"> {
   onSubmit?: () => void
@@ -209,14 +211,16 @@ export interface InboxProps extends ComponentPropsWithoutRef<typeof Card> {
 export const Inbox: FC<InboxProps> = ({ accountId, className, ...props }) => {
   const [readNotificationId, setReadNotificationId] = useState<string[]>([])
 
-  const { data: res, isLoading } = trpc.message.getReceivedMessagesByAccountId.useQuery({
+  const { data: res, isLoading, error, isError, refetch, isRefetching, errorUpdateCount } = trpc.message.getReceivedMessagesByAccountId.useQuery({
     accountId,
+  }, {
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false
   })
 
   const { mutate: readNotification } = trpc.message.readMessage.useMutation()
 
-  if (isLoading) return <div>Loading...</div>
-  if (!res) return <div>No messages</div>
 
   const handleNotificationFocus = (message: any) => {
     if (message.description.length > 25) return
@@ -231,32 +235,37 @@ export const Inbox: FC<InboxProps> = ({ accountId, className, ...props }) => {
     <Card className={cn("shadow-none border-0", className)} {...props}>
       <CardHeader>
         <CardTitle>Notifications</CardTitle>
-        <CardDescription>You have {data.length} unread messages.</CardDescription>
+        <CardDescription>You have {data?.length || 0} unread messages.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 w-full p-4">
-        {data.slice(0, 3).map((message) => (
-          <Link
-            className="flex items-start gap-3 rounded-lg border border-border py-2 px-4 w-full"
-            key={message.id}
-            href={`/inbox/${message.id}`}
-            onFocus={() => handleNotificationFocus(message)}
-          >
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 justify-start">
-                {!readNotificationId.includes(message.id) && (
-                  <div className="h-2 w-2 bg-primary rounded-full mt-1" />
-                )}
-                <p className="font-medium">{titleCase(message.title)}</p>
+        {isError ? (
+          <ErrorDiv message={error?.message} retry={refetch} isRetrying={isRefetching} retriable={errorUpdateCount < 3} className="w-48 h-64" />
+        ) : isLoading || isRefetching ? (
+          <Skeleton className="w-48 h-96" />
+        ) : (
+          data?.slice(0, 3).map((message) => (
+            <Link
+              className="flex items-start gap-3 rounded-lg border border-border py-2 px-4 w-full"
+              key={message.id}
+              href={`/inbox/${message.id}`}
+              onFocus={() => handleNotificationFocus(message)}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 justify-start">
+                  {!readNotificationId.includes(message.id) && (
+                    <div className="h-2 w-2 bg-primary rounded-full mt-1" />
+                  )}
+                  <p className="font-medium">{titleCase(message.title)}</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {message.description.substring(0, 25)}
+                  {message.description.length > 25 ? "..." : ""}
+                </p>
+                <p className="text-sm text-muted-foreground">{timeSince(new Date(message.createdAt))}</p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {message.description.substring(0, 25)}
-                {message.description.length > 25 ? "..." : ""}
-              </p>
-              <p className="text-sm text-muted-foreground">{timeSince(new Date(message.createdAt))}</p>
-            </div>
-          </Link>
-        ))}
-        {data.length > 3 && (
+            </Link>
+          )))}
+        {data?.length && data.length > 3 && (
           <Link className="text-sm text-muted-foreground" href="/inbox">
             View all
           </Link>

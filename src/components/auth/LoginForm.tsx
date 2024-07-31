@@ -114,7 +114,7 @@ export const LoginForm: FC<LoginFormProps> = ({ onSubmitProp, className, ...prop
 					<span className="bg-background px-2 text-muted-foreground">Or continue with</span>
 				</div>
 			</div>
-			<OAuthButtons providers={["google", "github"]} disabled={isLoading} />
+			<OAuthButtons providers={[{ provider: "google", icon: "google" }, { provider: "github", icon: "github" }]} disabled={isLoading} />
 		</div>
 	);
 };

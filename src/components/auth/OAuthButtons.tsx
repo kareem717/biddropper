@@ -1,5 +1,4 @@
 "use client";
-
 import { Icons } from "../Icons";
 import { Button } from "../ui/button";
 import { createClient } from "@/lib/utils/supabase/client";
@@ -7,24 +6,28 @@ import { useRouter } from "next/navigation";
 import { env } from "@/lib/env.mjs";
 import { ComponentPropsWithoutRef, FC, useState } from "react";
 import redirects from "@/config/redirects";
-
 export type OAuthProvider = "google" | "github";
 
 export interface OAuthButtonProps extends ComponentPropsWithoutRef<typeof Button> {
   provider: OAuthProvider;
+  icon: keyof typeof Icons;
   isLoading: string | null;
   handleLogin: (provider: OAuthProvider) => void;
 }
 
-export const OAuthButton: FC<OAuthButtonProps> = ({ provider, isLoading, handleLogin, ...props }) => (
-  <Button className="w-full" variant="secondary" onClick={() => handleLogin(provider)} disabled={isLoading === provider} {...props}>
-    {
-      isLoading === "github" ? <Icons.spinner className="w-4 h-4 animate-spin" /> : <Icons.github className="w-4 h-4" />
-    }
-  </Button>
-);
+export const OAuthButton: FC<OAuthButtonProps> = ({ icon, provider, isLoading, handleLogin, ...props }) => {
+  const Icon = Icons[icon];
 
-export const OAuthButtons: FC<{ providers: OAuthProvider[], disabled?: boolean }> = ({ providers, disabled }) => {
+  return (
+    <Button className="w-full" variant="secondary" onClick={() => handleLogin(provider)} disabled={!!isLoading} {...props}>
+      {
+        isLoading === provider ? <Icons.spinner className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />
+      }
+    </Button>
+  )
+};
+
+export const OAuthButtons: FC<{ providers: { provider: OAuthProvider, icon: keyof typeof Icons }[], disabled?: boolean }> = ({ providers, disabled }) => {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const supabase = createClient();
   const router = useRouter();
@@ -49,8 +52,8 @@ export const OAuthButtons: FC<{ providers: OAuthProvider[], disabled?: boolean }
   return (
 
     <div className="grid grid-cols-2 gap-2 md:grid-cols-1">
-      {providers.map((provider) => (
-        <OAuthButton key={provider} provider={provider} isLoading={isLoading} handleLogin={handleLogin} disabled={disabled} />
+      {providers.map(({ provider, icon }) => (
+        <OAuthButton key={provider} provider={provider} icon={icon} isLoading={isLoading} handleLogin={handleLogin} disabled={disabled} />
       ))}
     </div>
   );

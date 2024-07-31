@@ -9,12 +9,21 @@ export async function GET(request: Request) {
 	// https://supabase.com/docs/guides/auth/server-side/nextjs
 	const requestUrl = new URL(request.url);
 	const code = requestUrl.searchParams.get("code");
+	const error = requestUrl.searchParams.get("error");
 
-	if (code) {
+	if (error) {
+		const errMsg = requestUrl.searchParams.get("error_description") || "An error occurred while authenticating";
+		console.error(error, errMsg);
+		return NextResponse.redirect(
+			`https://${env.NEXT_PUBLIC_APP_URL}/auth/error?error=${errMsg}`
+		);
+	} else if (code) {
 		const supabase = createClient();
 		await supabase.auth.exchangeCodeForSession(code);
 	}
 
 	// URL to redirect to after sign up process completes
-	return NextResponse.redirect(`https://${env.NEXT_PUBLIC_APP_URL}${redirects.auth.afterLogin}`);
+	return NextResponse.redirect(
+		`https://${env.NEXT_PUBLIC_APP_URL}${redirects.auth.afterLogin}`
+	);
 }

@@ -86,9 +86,13 @@ export const HottestBidsCard: FC<HottestBidsCardProps> = ({
             </div>
           ) : (
             <CardContent className="grid gap-4 p-4 overflow-y-auto">
-              {bids?.slice(0, 10).map((bid, i) => (
+              {bids && bids.length > 0 ? bids.slice(0, 10).map((bid, i) => (
                 <ReceivedBidIndexCard key={i} bid={bid} />
-              ))}
+              )) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <p className="text-sm text-muted-foreground">No bids found</p>
+                </div>
+              )}
             </CardContent>
           )}
         </>

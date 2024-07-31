@@ -10,27 +10,42 @@ import {
 } from "@/components/ui/pagination"
 import { trpc } from "@/lib/trpc/client";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { HistoryCard } from "@/components/app/HistoryCard";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/Icons";
+import { toast } from "sonner";
+import { ErrorDiv } from "@/components/app/ErrorDiv";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AccountHistoryPage() {
   const { account } = useAuth();
   if (!account) throw new Error("Account not found");
 
   const page = useSearchParams().get("page");
-  const { data, isLoading, isError, error, refetch } = trpc.account.getAccountHistory.useQuery({
+  const { data, isLoading, isError, error, refetch, isRefetching, errorUpdateCount, } = trpc.account.getAccountHistory.useQuery({
     accountId: account.id,
     pageSize: 10,
     page: page ? parseInt(page) : undefined,
+  }, {
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false
   })
 
-  const { mutateAsync: clearHistory, isLoading: isClearingHistory } = trpc.account.clearHistory.useMutation()
+  const { mutateAsync: clearHistory, isLoading: isClearingHistory } = trpc.account.clearHistory.useMutation({
+    onError: (error) => {
+      toast.error("Something went wrong", {
+        description: error.message
+      })
+    },
+    onSuccess: () => {
+      toast.success("History cleared")
+      refetch()
+    }
+  })
 
   const handleClearHistory = async () => {
     await clearHistory({ accountId: account.id })
-    await refetch()
   }
 
   return (
@@ -49,12 +64,19 @@ export default function AccountHistoryPage() {
           </div>
 
           <div className="mt-8 flex flex-col gap-6 w-full">
-            {isLoading ? <div>Loading...</div> : data?.data.length === 0 ? <div>No history found</div> : data?.data.map((history, idx) => {
-              const type = history.jobId ? "job" : "company"
-              const href = history.jobId ? `explore/jobs/${history.jobId}` : `explore/companies/${history.companyId}`
-              const name = history.jobId ? history.jobTitle : history.companyName
-              return <HistoryCard key={idx} name={name} href={href} type={type} className="w-full" />
-            })}
+            {isError ? (
+              <ErrorDiv message={error?.message} retry={refetch} isRetrying={isRefetching} retriable={errorUpdateCount < 3} className="w-full h-96" />
+            ) :
+              isLoading || isRefetching ? (
+                Array(10).map((_, idx) => (
+                  <Skeleton className="w-full h-24" key={idx} />
+                ))
+              ) : data?.data.length === 0 ? <div>No history found</div> : data?.data.map((history, idx) => {
+                const type = history.jobId ? "job" : "company"
+                const href = history.jobId ? `explore/jobs/${history.jobId}` : `explore/companies/${history.companyId}`
+                const name = history.jobId ? history.jobTitle : history.companyName
+                return <HistoryCard key={idx} name={name} href={href} type={type} className="w-full" />
+              })}
           </div>
           <div className="mt-8 flex justify-center">
             {data?.hasNext || data?.hasPrevious ? (

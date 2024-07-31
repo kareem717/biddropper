@@ -14,6 +14,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { CreateMessageForm } from "./CreateMessageForm"
+import { Skeleton } from "../ui/skeleton"
+import { ErrorDiv } from "../app/ErrorDiv"
 
 export interface MessageShowCardProps extends ComponentPropsWithoutRef<typeof Card> {
   message: ShowMessage
@@ -68,7 +70,11 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({
       })
     }
   })
-  const { data: reply, isLoading: replyLoading } = trpc.message.getBasicById.useQuery({ messageId: message.replyTo?.replyTo })
+  const { data: reply, isLoading, error, isError, refetch, isRefetching, errorUpdateCount } = trpc.message.getBasicById.useQuery({ messageId: message.replyTo?.replyTo }, {
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false
+  })
 
   const handleReadMessage = () => {
     readMessage({ messageId: message.id, recipient })
@@ -83,54 +89,60 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({
     onDelete?.()
   }
 
-  if (replyLoading) return <div>Loading...</div>
-
   return (
-    <Card className={cn("", className)} {...props}>
-      <CardHeader className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h3 className="text-lg font-medium">New message from {message.sender.name}</h3>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{timeSince(new Date(message.createdAt))}</span>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p>{message.description}</p>
-        {reply && (
-          <p>Reply to: {reply.title}</p>
-        )}
-      </CardContent>
-      <CardFooter>
-        <Button className="flex justify-center items-center gap-2" onClick={handleDeleteMessage}>
-          <Icons.trash className="w-4 h-4" />
-          Trash
-        </Button>
-        <Dialog>
-          <DialogTrigger asChild onClick={onReplyClick}>
-            <Button variant="outline">Reply</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <CreateMessageForm replyTo={[{
-              messageId: message.id, recipient: {
-                id: message.sender.id,
-                type: message.sender.type
-              }
-            }]} />
-          </DialogContent>
-        </Dialog>
-        {message.reciepient?.readAt ? (
-          <Button className="flex justify-center items-center gap-2" onClick={handleUnreadMessage}>
-            <Icons.close className="w-4 h-4" />
-            Mark as unread
-          </Button>
-        ) : (
-          <Button className="flex justify-center items-center gap-2" onClick={handleReadMessage}>
-            <Icons.check className="w-4 h-4" />
-            Mark as read
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+    <>
+      {isError ? (
+        <ErrorDiv message={error.message} retry={refetch} isRetrying={isRefetching} retriable={errorUpdateCount < 3} />
+      ) : isLoading || isRefetching ? (
+        <Skeleton className="w-full h-full" />
+      ) : (
+        <Card className={cn("", className)} {...props}>
+          <CardHeader className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-lg font-medium">New message from {message.sender.name}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{timeSince(new Date(message.createdAt))}</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p>{message.description}</p>
+            {reply && (
+              <p>Reply to: {reply.title}</p>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button className="flex justify-center items-center gap-2" onClick={handleDeleteMessage}>
+              <Icons.trash className="w-4 h-4" />
+              Trash
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild onClick={onReplyClick}>
+                <Button variant="outline">Reply</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <CreateMessageForm replyTo={[{
+                  messageId: message.id, recipient: {
+                    id: message.sender.id,
+                    type: message.sender.type
+                  }
+                }]} />
+              </DialogContent>
+            </Dialog>
+            {message.reciepient?.readAt ? (
+              <Button className="flex justify-center items-center gap-2" onClick={handleUnreadMessage}>
+                <Icons.close className="w-4 h-4" />
+                Mark as unread
+              </Button>
+            ) : (
+              <Button className="flex justify-center items-center gap-2" onClick={handleReadMessage}>
+                <Icons.check className="w-4 h-4" />
+                Mark as read
+              </Button>
+            )}
+          </CardFooter>
+        </Card>)
+      }
+    </>
   )
 }
