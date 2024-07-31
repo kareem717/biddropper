@@ -5,6 +5,7 @@ import { cn, truncate } from "@/lib/utils"
 import { Icons } from "../Icons"
 import { trpc } from "@/lib/trpc/client"
 import { Button } from "../ui/button"
+import { toast } from "sonner"
 
 interface FavouriteJobCardProps extends ComponentPropsWithoutRef<"div"> {
   job: {
@@ -18,7 +19,13 @@ interface FavouriteJobCardProps extends ComponentPropsWithoutRef<"div"> {
 }
 
 export const FavouriteJobCard: FC<FavouriteJobCardProps> = ({ job, accountId, className, onUnfavourite, ...props }) => {
-  const { mutateAsync: unfavouriteJob, isLoading: isUnfavouriting } = trpc.job.unfavouriteJob.useMutation()
+  const { mutateAsync: unfavouriteJob, isLoading: isUnfavouriting } = trpc.job.unfavouriteJob.useMutation({
+    onError: (error) => {
+      toast.error("Uh oh!", {
+        description: error.message
+      })
+    }
+  })
 
   const handleUnfavouriteJob = async (jobId: string) => {
     await unfavouriteJob({ jobId, accountId })

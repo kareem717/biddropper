@@ -1,34 +1,23 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import { EditJobForm } from "@/components/jobs/EditJobForm";
-import { trpc } from "@/lib/trpc/client";
+import { Card, CardDescription, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-export default function JobEditPage({}) {
-  const jobId = useParams().id;
-  const { data: job, isLoading, isError, error } = trpc.job.getJobFull.useQuery({ id: jobId as string });
-
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error: {error.message}</div>;
-
-  if (!job) return <div>Job not found</div>;
-
-  // Transform the job data to match the expected type
-  const transformedJob = {
-    ...job.job,
-    industries: job.industries.map(industry => ({
-      id: industry.id,
-      name: industry.name,
-      createdAt: industry.createdAt,
-      updatedAt: industry.updatedAt,
-      deletedAt: industry.deletedAt,
-    })),
-    address: {
-      ...job.address,
-      rawJson: job.address.rawJson as any,
-    },
-  };
-
-  console.log(transformedJob.address);
-  return <EditJobForm job={transformedJob} />;
+export default function JobEditPage({ params }: { params: { id: string } }) {
+  return (
+    <Card className="w-[50vw] max-w-4xl">
+      <CardHeader>
+        <CardTitle>
+          Edit Job
+        </CardTitle>
+        <CardDescription>
+          Edit the job details
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[70vh]">
+          <EditJobForm jobId={params.id} />
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
 }

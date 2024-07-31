@@ -34,7 +34,7 @@ export const ErrorDiv: FC<ErrorDivProps> = ({
         </span>
         {retriable && (
           <Button onClick={handleRetry} disabled={isRetrying} className="w-full" >
-            {isRetrying ? <Icons.spinner className="h-4 w-4 mr-2" /> : null}
+            {isRetrying ? <Icons.spinner className="h-4 w-4 mr-2 animate-spin" /> : null}
             Retry
           </Button>
         )}

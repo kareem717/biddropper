@@ -1,29 +1,19 @@
-"use client"
+import { BidIndexShell } from "@/components/bids/BidIndexShell"
+import { api } from "@/lib/trpc/api"
 
-import { ReceivedBidIndexShell } from "@/components/bids/BidIndexShell"
-import { trpc } from "@/lib/trpc/client"
-import { useSearchParams } from "next/navigation"
-import { useAuth } from "@/components/providers/AuthProvider"
-
-export default function AccountBidsPage({ params }: { params: { id: string } }) {
-  const { account } = useAuth()
-  if (!account) throw new Error("Account not found")
-
-  const page = useSearchParams().get("page")
-  const { data: bids, isLoading, isError, error } = trpc.bid.getReceivedBidsByAccountId.useQuery({
-    accountId: account.id,
-    filter: {},
-    pagination: { page: page ? parseInt(page) : undefined, pageSize: 10 }
-  })
-
-  if (isError) return <div>Error: {error.message}</div>
-  if (isLoading) return <div>Loading...</div>
-
-  if (!bids) return <div>No bids found</div>
+export default async function AccountBidsPage({ searchParams }: { searchParams: { page?: string | null } }) {
+  const page = searchParams.page
+  const account = await api.account.getLoggedInAccount.query()
 
   return (
-    <ReceivedBidIndexShell
-      bids={bids.data}
-    />
+    <div className="flex flex-col gap-4 h-full w-full">
+      <h1>Recieved</h1>
+      <BidIndexShell
+        entity={{ accountId: account.id }}
+        direction="incoming"
+        page={page ? parseInt(page) : undefined}
+        pageSize={10}
+      />
+    </div>
   )
 }

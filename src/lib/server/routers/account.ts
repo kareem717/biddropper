@@ -13,12 +13,21 @@ export const accountRouter = router({
 		.mutation(async ({ ctx, input }) => {
 			if (ctx.user.id != input.userId) {
 				throw new TRPCError({
-					code: "BAD_REQUEST",
-					message: "cannot create account for other user",
+					code: "FORBIDDEN",
+					message: "Cannot create account for another user",
 				});
 			}
 
-			return await AccountQueryClient.Create(input);
+			try {
+				return await AccountQueryClient.Create(input);
+			} catch (error) {
+				console.error(error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to create account",
+					cause: error,
+				});
+			}
 		}),
 	getAccountByUserId: userProcedure
 		.input(
@@ -27,31 +36,58 @@ export const accountRouter = router({
 			})
 		)
 		.query(async ({ input }) => {
-			return await AccountQueryClient.GetDetailedByUserId(input.userId);
+			try {
+				return await AccountQueryClient.GetDetailedByUserId(input.userId);
+			} catch (error) {
+				console.error(error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get account",
+					cause: error,
+				});
+			}
 		}),
 	getLoggedInAccount: accountProcedure.query(async ({ ctx }) => {
-		return await AccountQueryClient.GetDetailedByUserId(ctx.user.id);
+		try {
+			return await AccountQueryClient.GetDetailedByUserId(ctx.user.id);
+		} catch (error) {
+			console.error(error);
+			throw new TRPCError({
+				code: "INTERNAL_SERVER_ERROR",
+				message: "Failed to get logged in account",
+				cause: error,
+			});
+		}
 	}),
 	editAccount: accountProcedure
 		.input(EditAccountSchema)
 		.mutation(async ({ ctx, input }) => {
 			const { id: accountId, ...account } = input;
 
+			if (ctx.account.id != accountId) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "Cannot edit details for other account",
+				});
+			}
+
 			if (ctx.user.id != account.userId) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
-					message: "cannot edit account for other user",
+					message: "Cannot transfer account ownership",
 				});
 			}
 
-			if (ctx.account.id != accountId) {
+			try {
+				return await AccountQueryClient.Update(input);
+			} catch (error) {
+				console.error(error);
 				throw new TRPCError({
-					code: "BAD_REQUEST",
-					message: "cannot edit details for other account",
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to edit account",
+					cause: error,
 				});
 			}
-
-			return await AccountQueryClient.Update(input);
 		}),
 	searhAccountsByKeyword: accountProcedure
 		.input(
@@ -65,13 +101,22 @@ export const accountRouter = router({
 		.query(async ({ ctx, input }) => {
 			const { keywordQuery, cursor, pageSize, includeDeleted } = input;
 
-			return await AccountQueryClient.GetBasicManyByKeyword(
-				ctx.account.id,
-				keywordQuery,
-				cursor,
-				pageSize,
-				includeDeleted
-			);
+			try {
+				return await AccountQueryClient.GetBasicManyByKeyword(
+					ctx.account.id,
+					keywordQuery,
+					cursor,
+					pageSize,
+					includeDeleted
+				);
+			} catch (error) {
+				console.error(error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to search accounts",
+					cause: error,
+				});
+			}
 		}),
 
 	getAccountHistory: accountProcedure
@@ -90,12 +135,20 @@ export const accountRouter = router({
 				});
 			}
 
-			return await AccountQueryClient.GetHistoryByAccountId(ctx.account.id, {
-				page: input.page,
-				pageSize: input.pageSize,
-			});
+			try {
+				return await AccountQueryClient.GetHistoryByAccountId(ctx.account.id, {
+					page: input.page,
+					pageSize: input.pageSize,
+				});
+			} catch (error) {
+				console.error(error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get account history",
+					cause: error,
+				});
+			}
 		}),
-
 	clearHistory: accountProcedure
 		.input(z.object({ accountId: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
@@ -106,6 +159,15 @@ export const accountRouter = router({
 				});
 			}
 
-			await AccountQueryClient.ClearHistory(input.accountId);
+			try {
+				await AccountQueryClient.ClearHistory(input.accountId);
+			} catch (error) {
+				console.error(error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to clear account history",
+					cause: error,
+				});
+			}
 		}),
 });

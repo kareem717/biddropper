@@ -273,11 +273,8 @@ class BidsQueryClient extends QueryClient {
 				},
 			})
 			.from(bids)
+			.innerJoin(jobBids, and(eq(bids.id, jobBids.bidId)))
 			.innerJoin(jobs, eq(jobBids.jobId, jobs.id))
-			.innerJoin(
-				jobBids,
-				and(eq(jobBids.jobId, jobId), eq(bids.id, jobBids.bidId))
-			)
 			.where(
 				and(
 					inArray(bids.status, statuses),

@@ -4,6 +4,7 @@ import { EditJobSchema, NewJobSchema } from "@/lib/db/queries/validation";
 import JobQueryClient from "@/lib/db/queries/job";
 import AnalyticQueryClient from "@/lib/db/queries/analytics";
 import CompanyQueryClient from "@/lib/db/queries/company";
+import { TRPCError } from "@trpc/server";
 
 export const jobRouter = router({
 	getJobFull: accountProcedure

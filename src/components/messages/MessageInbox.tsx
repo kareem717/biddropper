@@ -57,7 +57,8 @@ export const MessageInbox: FC<MessageInboxProps> = ({
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false)
   const [selectedMessage, setSelectedMessage] = useState<ShowMessage | null>(null)
 
-  const id = 'accountId' in recipient ? recipient.accountId : recipient.companyId
+  const forAccount = 'accountId' in recipient
+  const id = forAccount ? recipient.accountId : recipient.companyId
 
   const {
     data: accountData,
@@ -213,14 +214,14 @@ export const MessageInbox: FC<MessageInboxProps> = ({
     setDrawerOpen(true)
   }
 
-  const isLoading = 'accountId' in recipient ? isAccountLoading : isCompanyLoading
-  const isError = 'accountId' in recipient ? isAccountError : isCompanyError
-  const error = 'accountId' in recipient ? accountError : companyError
-  const isRefetching = 'accountId' in recipient ? isAccountRefetching : isCompanyRefetching
-  const errorUpdateCount = 'accountId' in recipient ? accountErrorUpdateCount : companyErrorUpdateCount
-  const hasNextPage = 'accountId' in recipient ? hasNextAccountPage : hasNextCompanyPage
+  const isLoading = forAccount ? isAccountLoading : isCompanyLoading
+  const isError = forAccount ? isAccountError : isCompanyError
+  const error = forAccount ? accountError : companyError
+  const isRefetching = forAccount ? isAccountRefetching : isCompanyRefetching
+  const errorUpdateCount = forAccount ? accountErrorUpdateCount : companyErrorUpdateCount
+  const hasNextPage = forAccount ? hasNextAccountPage : hasNextCompanyPage
   const refetch = () => {
-    if ('accountId' in recipient) {
+    if (forAccount) {
       refetchAccount()
     } else {
       refetchCompany()
