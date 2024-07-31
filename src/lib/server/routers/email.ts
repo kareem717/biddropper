@@ -2,9 +2,7 @@ import { z } from "zod";
 import { accountProcedure, publicProcedure, router } from "../trpc";
 import { env } from "@/lib/env.mjs";
 import { randomInt } from "crypto";
-import {
-	SupportRequestEmailHTML,
-} from "@/components/emails/SupportRequest";
+import { SupportRequestEmailHTML } from "@/components/emails/SupportRequest";
 import { ContactUsEmailHTML } from "@/components/emails/ContactUs";
 import {
 	DemoRequestCallbackEmailHTML,
@@ -43,12 +41,11 @@ export const emailRouter = router({
 			};
 
 			await ses.sendEmail(params, (err, data) => {
-				if (err) {
-					throw new TRPCError({
-						code: "INTERNAL_SERVER_ERROR",
-						message: err.message,
-					});
-				}
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to send feedback email",
+					cause: err,
+				});
 			});
 		}),
 	submitSupportRequest: accountProcedure
@@ -87,12 +84,11 @@ export const emailRouter = router({
 			};
 
 			await ses.sendEmail(params, (err, data) => {
-				if (err) {
-					throw new TRPCError({
-						code: "INTERNAL_SERVER_ERROR",
-						message: err.message,
-					});
-				}
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to send support request email",
+					cause: err,
+				});
 			});
 		}),
 	submitContactUs: publicProcedure
@@ -130,12 +126,11 @@ export const emailRouter = router({
 			};
 
 			await ses.sendEmail(params, (err, data) => {
-				if (err) {
-					throw new TRPCError({
-						code: "INTERNAL_SERVER_ERROR",
-						message: err.message,
-					});
-				}
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to send contact us email",
+					cause: err,
+				});
 			});
 		}),
 	submitDemoRequest: publicProcedure
@@ -212,12 +207,11 @@ export const emailRouter = router({
 			};
 
 			await ses.sendEmail(callbackParams, (err, data) => {
-				if (err) {
-					throw new TRPCError({
-						code: "INTERNAL_SERVER_ERROR",
-						message: err.message,
-					});
-				}
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to send demo request callback email",
+					cause: err,
+				});
 			});
 
 			const outboundParams = {
@@ -240,12 +234,11 @@ export const emailRouter = router({
 			};
 
 			await ses.sendEmail(outboundParams, (err, data) => {
-				if (err) {
-					throw new TRPCError({
-						code: "INTERNAL_SERVER_ERROR",
-						message: err.message,
-					});
-				}
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to send demo request emails",
+					cause: err,
+				});
 			});
 		}),
 });

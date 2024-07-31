@@ -16,13 +16,21 @@ export const companyRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			if (input.includeDeleted) {
-				return ctx.ownedCompanies;
-			}
+			try {
+				if (input.includeDeleted) {
+					return ctx.ownedCompanies;
+				}
 
-			return ctx.ownedCompanies?.filter(
-				(company) => company.deletedAt === null
-			);
+				return ctx.ownedCompanies?.filter(
+					(company) => company.deletedAt === null
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching owned companies",
+					cause: error,
+				});
+			}
 		}),
 	getCompanyFull: accountProcedure
 		.input(
@@ -31,7 +39,15 @@ export const companyRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			return await CompanyQueryClient.GetExtendedById(input.id);
+			try {
+				return await CompanyQueryClient.GetExtendedById(input.id);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching the company",
+					cause: error,
+				});
+			}
 		}),
 
 	createCompany: accountProcedure
@@ -40,18 +56,26 @@ export const companyRouter = router({
 			if (input.industries.length === 0) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
-					message: "industries are required",
+					message: "You must select at least one industry",
 				});
 			}
 
 			if (input.ownerId !== ctx.account.id) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
-					message: "owner must be the current account",
+					message: "You must be the owner of the company",
 				});
 			}
 
-			return await CompanyQueryClient.Create(input);
+			try {
+				return await CompanyQueryClient.Create(input);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while creating the company",
+					cause: error,
+				});
+			}
 		}),
 	editCompany: companyOwnerProcedure
 		.input(EditCompanySchema)
@@ -59,16 +83,25 @@ export const companyRouter = router({
 			if (!input.id) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
-					message: "company id is required",
+					message: "Company ID is required",
 				});
 			}
 
-			const company = await CompanyQueryClient.GetDetailedById(input.id);
+			let company;
+			try {
+				company = await CompanyQueryClient.GetDetailedById(input.id);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching the company",
+					cause: error,
+				});
+			}
 
 			if (!company) {
 				throw new TRPCError({
 					code: "NOT_FOUND",
-					message: "company not found",
+					message: "Company not found",
 				});
 			}
 
@@ -76,7 +109,7 @@ export const companyRouter = router({
 			if (company.ownerId !== ctx.account.id) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "user not authorized to edit this company",
+					message: "You are not authorized to edit this company",
 				});
 			}
 
@@ -84,11 +117,19 @@ export const companyRouter = router({
 			if (input.ownerId !== company.ownerId) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
-					message: "cannot transfer ownership",
+					message: "You cannot transfer ownership of a company",
 				});
 			}
 
-			return await CompanyQueryClient.Update(input);
+			try {
+				return await CompanyQueryClient.Update(input);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while editing the company",
+					cause: error,
+				});
+			}
 		}),
 	deleteCompany: companyOwnerProcedure
 		.input(
@@ -99,19 +140,22 @@ export const companyRouter = router({
 		.mutation(async ({ ctx, input }) => {
 			const { id } = input;
 
-			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
-				ctx.account.id,
-				false
-			);
-
-			if (!ownedCompanies.some((c) => c.id === id)) {
+			if (!ctx.ownedCompanies.some((c) => c.id === id)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "user not authorized to delete this company",
+					message: "You are not authorized to delete this company",
 				});
 			}
 
-			return await CompanyQueryClient.Delete(id);
+			try {
+				return await CompanyQueryClient.Delete(id);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while deleting the company",
+					cause: error,
+				});
+			}
 		}),
 	searchCompaniesByKeyword: accountProcedure
 		.input(
@@ -125,13 +169,21 @@ export const companyRouter = router({
 		.query(async ({ ctx, input }) => {
 			const { keywordQuery, cursor, pageSize, includeDeleted } = input;
 
-			return await CompanyQueryClient.GetBasicManyByKeyword(
-				keywordQuery,
-				cursor,
-				pageSize,
-				includeDeleted,
-				ctx.account.id
-			);
+			try {
+				return await CompanyQueryClient.GetBasicManyByKeyword(
+					keywordQuery,
+					cursor,
+					pageSize,
+					includeDeleted,
+					ctx.account.id
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while searching companies",
+					cause: error,
+				});
+			}
 		}),
 	recommendCompanies: accountProcedure
 		.input(
@@ -145,24 +197,40 @@ export const companyRouter = router({
 			const { cursor, pageSize, includeDeleted } = input;
 
 			return await CompanyQueryClient.caller.transaction(async (tx) => {
-				const companies =
-					await CompanyQueryClient.GetBasicManyByUserReccomendation(
+				let companies;
+				try {
+					companies = await CompanyQueryClient.GetBasicManyByUserReccomendation(
 						ctx.account.id,
 						cursor,
 						pageSize,
 						includeDeleted
 					);
+				} catch (error) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: "An error occurred while recommending companies",
+						cause: error,
+					});
+				}
 
-				// Track job recommendation
-				if (companies.data.length > 0) {
-					await AnalyticQueryClient.withCaller(
-						tx
-					).TrackAccountCompanyRecommendation(
-						companies.data.map((company) => ({
-							companyId: company.id,
-							accountId: ctx.account.id,
-						}))
-					);
+				try {
+					// Track job recommendation
+					if (companies.data.length > 0) {
+						await AnalyticQueryClient.withCaller(
+							tx
+						).TrackAccountCompanyRecommendation(
+							companies.data.map((company) => ({
+								companyId: company.id,
+								accountId: ctx.account.id,
+							}))
+						);
+					}
+				} catch (error) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: "An error occurred while tracking company recommendation",
+						cause: error,
+					});
 				}
 
 				return companies;
@@ -172,33 +240,57 @@ export const companyRouter = router({
 		.input(z.object({ companyId: z.string(), accountId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
 			const cqc = CompanyQueryClient;
-			return await cqc.caller.transaction(async (tx) => {
-				if (input.accountId !== ctx.account.id) {
-					throw new Error("you cannot favourite a job for another account");
-				}
 
-				const ownedCompanies = await cqc
-					.withCaller(tx)
-					.GetDetailedManyByOwnerId(input.accountId);
+			if (input.accountId !== ctx.account.id) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You cannot favourite a company for another account",
+				});
+			}
 
-				if (ownedCompanies.some((company) => company.id === input.companyId)) {
-					throw new Error("you cannot favourite a company you own");
-				}
+			if (
+				ctx.ownedCompanies?.some((company) => company.id === input.companyId)
+			) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "You cannot favourite a company you own",
+				});
+			}
 
-				await cqc.withCaller(tx).Favorite(input.accountId, input.companyId);
-			});
+			try {
+				return await cqc.caller.transaction(async (tx) => {
+					await cqc.withCaller(tx).Favorite(input.accountId, input.companyId);
+				});
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while favouriting the company",
+					cause: error,
+				});
+			}
 		}),
 	unfavouriteCompany: accountProcedure
 		.input(z.object({ companyId: z.string(), accountId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
 			if (input.accountId !== ctx.account.id) {
-				throw new Error("you cannot unfavourite a job for another account");
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You cannot unfavourite a company for another account",
+				});
 			}
 
-			return await CompanyQueryClient.Unfavorite(
-				input.accountId,
-				input.companyId
-			);
+			try {
+				return await CompanyQueryClient.Unfavorite(
+					input.accountId,
+					input.companyId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while unfavouriting the company",
+					cause: error,
+				});
+			}
 		}),
 	getIsCompanyFavouritedByAccountId: accountProcedure
 		.input(
@@ -206,15 +298,26 @@ export const companyRouter = router({
 		)
 		.query(async ({ ctx, input }) => {
 			if (input.accountId !== ctx.account.id) {
-				throw new Error(
-					"you cannot check if a job is favourited for another account"
-				);
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message:
+						"You cannot check if a company is favourited for another account",
+				});
 			}
 
-			return await CompanyQueryClient.GetIsCompanyFavouritedByAccountId(
-				ctx.account.id,
-				input.companyId
-			);
+			try {
+				return await CompanyQueryClient.GetIsCompanyFavouritedByAccountId(
+					ctx.account.id,
+					input.companyId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message:
+						"An error occurred while checking if the company is favourited",
+					cause: error,
+				});
+			}
 		}),
 
 	getFavouritedCompanies: accountProcedure
@@ -230,16 +333,26 @@ export const companyRouter = router({
 			const { accountId, cursor, pageSize, includeDeleted } = input;
 
 			if (accountId !== ctx.account.id) {
-				throw new Error(
-					"you cannot check if a job is favourited for another account"
-				);
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message:
+						"You cannot check if a company is favourited for another account",
+				});
 			}
 
-			return await CompanyQueryClient.GetBasicManyFavouritedByAccountId(
-				accountId,
-				cursor,
-				pageSize,
-				includeDeleted
-			);
+			try {
+				return await CompanyQueryClient.GetBasicManyFavouritedByAccountId(
+					accountId,
+					cursor,
+					pageSize,
+					includeDeleted
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching favourited companies",
+					cause: error,
+				});
+			}
 		}),
 });

@@ -40,11 +40,19 @@ export const bidRouter = router({
 				});
 			}
 
-			return await BidQueryClient.GetExtendedManySentByCompanyId(
-				filter,
-				pagination,
-				companyId
-			);
+			try {
+				return await BidQueryClient.GetExtendedManySentByCompanyId(
+					filter,
+					pagination,
+					companyId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching your sent bids",
+					cause: error,
+				});
+			}
 		}),
 	getReceivedBidsByCompanyId: companyOwnerProcedure
 		.input(
@@ -66,11 +74,19 @@ export const bidRouter = router({
 				});
 			}
 
-			return await BidQueryClient.GetExtendedManyReceivedByCompanyId(
-				filter,
-				pagination,
-				companyId
-			);
+			try {
+				return await BidQueryClient.GetExtendedManyReceivedByCompanyId(
+					filter,
+					pagination,
+					companyId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching your received bids",
+					cause: error,
+				});
+			}
 		}),
 	getReceivedBidsByAccountId: accountProcedure
 		.input(
@@ -86,15 +102,23 @@ export const bidRouter = router({
 			if (ctx.account.id !== accountId) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you are not the owner of the company",
+					message: "You are not the owner of the account",
 				});
 			}
 
-			return await BidQueryClient.GetExtendedManyReceivedByAccountId(
-				filter,
-				pagination,
-				accountId
-			);
+			try {
+				return await BidQueryClient.GetExtendedManyReceivedByAccountId(
+					filter,
+					pagination,
+					accountId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching received bids",
+					cause: error,
+				});
+			}
 		}),
 	getRecievedBidsByJobId: accountProcedure
 		.input(
@@ -106,41 +130,76 @@ export const bidRouter = router({
 		.query(async ({ ctx, input }) => {
 			const { filter, jobId } = input;
 
-			return await BidQueryClient.GetExtendedManyReceivedByJobId(filter, jobId);
+			try {
+				return await BidQueryClient.GetExtendedManyReceivedByJobId(
+					filter,
+					jobId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching received bids for the job",
+					cause: error,
+				});
+			}
 		}),
 	getBidFull: accountProcedure
 		.input(z.object({ bidId: z.string() }))
 		.query(async ({ input }) => {
 			const { bidId } = input;
 
-			const [bid] = await BidQueryClient.GetExtendedManyById([bidId]);
-
-			return bid;
+			try {
+				const [bid] = await BidQueryClient.GetExtendedManyById([bidId]);
+				return bid;
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching the bid",
+					cause: error,
+				});
+			}
 		}),
 	createBid: companyOwnerProcedure
 		.input(NewBidSchema)
 		.mutation(async ({ ctx, input }) => {
-			const newId = await BidQueryClient.Create(input, ctx.account.id);
-			return newId;
+			try {
+				const newId = await BidQueryClient.Create(input, ctx.account.id);
+				return newId;
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while creating the bid",
+					cause: error,
+				});
+			}
 		}),
 	acceptBid: companyOwnerProcedure
 		.input(z.object({ bidId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
 			const { bidId } = input;
 
-			const [bid] = await BidQueryClient.GetExtendedManyById([bidId]);
+			let bid;
+			try {
+				[bid] = await BidQueryClient.GetExtendedManyById([bidId]);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching the bid",
+					cause: error,
+				});
+			}
 
 			if (!bid) {
 				throw new TRPCError({
 					code: "NOT_FOUND",
-					message: "bid not found",
+					message: "No bid found",
 				});
 			}
 
 			if (bid.bids.status !== bidStatus.enumValues[0]) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
-					message: "bid is not pending",
+					message: "The bid is not pending",
 				});
 			}
 
@@ -157,63 +216,118 @@ export const bidRouter = router({
 			if (!isAccountOwner && !isCompanyOwner) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you are not the owner of the job",
+					message: "You are not the owner of the job",
 				});
 			}
 
-			await ctx.db.transaction(async (tx) => {
-				const otherBidsOnSameJob = await tx
-					.select({
-						id: bids.id,
-						senderCompany: {
-							ownerAccountId: companies.ownerId,
-						},
-					})
-					.from(bids)
-					.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
-					.innerJoin(companies, eq(bids.senderCompanyId, companies.id))
-					.where(and(eq(jobBids.jobId, bid.job.id), not(eq(bids.id, bidId))));
+			try {
+				await ctx.db.transaction(async (tx) => {
+					let otherBidsOnSameJob;
+					try {
+						otherBidsOnSameJob = await tx
+							.select({
+								id: bids.id,
+								senderCompany: {
+									ownerAccountId: companies.ownerId,
+								},
+							})
+							.from(bids)
+							.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
+							.innerJoin(companies, eq(bids.senderCompanyId, companies.id))
+							.where(
+								and(eq(jobBids.jobId, bid.job.id), not(eq(bids.id, bidId)))
+							);
+					} catch (error) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "An error verifying other bids on the same job",
+							cause: error,
+						});
+					}
 
-				// reject all other pending bids on the same job
-				await BidQueryClient.withCaller(tx).RejectMany(
-					otherBidsOnSameJob.map((b) => b.id),
-					ctx.account.id
-				);
+					try {
+						// reject all other pending bids on the same job
+						await BidQueryClient.withCaller(tx).RejectMany(
+							otherBidsOnSameJob.map((b) => b.id),
+							ctx.account.id
+						);
+					} catch (error) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "An error rejecting other bids on the same job",
+							cause: error,
+						});
+					}
 
-				//notify the rejected bidders
-				await tx.insert(messages).values(
-					otherBidsOnSameJob.map((b) => ({
-						accountId: b.senderCompany.ownerAccountId,
-						title: "Bid rejected",
-						description: `Your bid for ${bid.job.title} has been rejected`,
-					}))
-				);
+					try {
+						//notify the rejected bidders
+						await tx.insert(messages).values(
+							otherBidsOnSameJob.map((b) => ({
+								accountId: b.senderCompany.ownerAccountId,
+								title: "Bid rejected",
+								description: `Your bid for ${bid.job.title} has been rejected`,
+							}))
+						);
+					} catch (error) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "An error occurred while notifying rejected bidders",
+							cause: error,
+						});
+					}
 
-				await BidQueryClient.withCaller(tx).UpdateStatusMany(
-					[bidId],
-					"accepted",
-					true
-				);
+					try {
+						await BidQueryClient.withCaller(tx).UpdateStatusMany(
+							[bidId],
+							"accepted",
+							true
+						);
+					} catch (error) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "An error occurred while accepting the bid",
+							cause: error,
+						});
+					}
 
-				const accountId = bid.senderCompany.ownerAccountId;
+					const accountId = bid.senderCompany.ownerAccountId;
 
-				if (!accountId) {
-					throw new TRPCError({
-						code: "INTERNAL_SERVER_ERROR",
-						message: "account id not found",
-					});
-				}
+					if (!accountId) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "An error occurred while accepting the bid",
+							cause: new Error("account id not found"),
+						});
+					}
 
-				await MessageQueryClient.withCaller(tx).Create({
-					senderAccountId: accountId,
-					recipients: {
-						accountIds: [ctx.account.id],
-						companyIds: [],
-					},
-					title: "Bid accepted",
-					description: `You have been accepted for ${bid.job.title}!`,
+					try {
+						await MessageQueryClient.withCaller(tx).Create({
+							senderAccountId: accountId,
+							recipients: {
+								accountIds: [ctx.account.id],
+								companyIds: [],
+							},
+							title: "Bid accepted",
+							description: `You have been accepted for ${bid.job.title}!`,
+						});
+					} catch (error) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "An error occurred while processing the bid acceptance",
+							cause: error,
+						});
+					}
 				});
-			});
+			} catch (error) {
+				if (error instanceof TRPCError) {
+					throw error;
+				}
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while accepting the bid",
+					cause: error,
+				});
+			}
 		}),
 	withdrawBid: companyOwnerProcedure
 		.input(z.object({ bidId: z.string() }))
@@ -225,7 +339,7 @@ export const bidRouter = router({
 			if (!bid) {
 				throw new TRPCError({
 					code: "NOT_FOUND",
-					message: "bid not found",
+					message: "The bid was not found",
 				});
 			}
 
@@ -235,61 +349,104 @@ export const bidRouter = router({
 			) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you are not the owner of the company who sent the bid",
+					message: "You are not the owner of the company who sent the bid",
 				});
 			}
 
 			if (bid.bids.status !== bidStatus.enumValues[0]) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
-					message: "bid is not pending",
+					message: "The bid is not pending",
 				});
 			}
 
-			await ctx.db.transaction(async (tx) => {
-				await BidQueryClient.withCaller(tx).UpdateStatusMany(
-					[bidId],
-					"withdrawn",
-					true
-				);
+			try {
+				await ctx.db.transaction(async (tx) => {
+					try {
+						await BidQueryClient.withCaller(tx).UpdateStatusMany(
+							[bidId],
+							"withdrawn",
+							true
+						);
+					} catch (error) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "An error occurred while withdrawing the bid",
+							cause: error,
+						});
+					}
 
-				let accountId: string | undefined;
+					let accountId: string | undefined;
 
-				if ("accountId" in bid.job.owner) {
-					accountId = bid.job.owner.accountId;
-				} else if ("companyId" in bid.job.owner) {
-					accountId = bid.job.owner.ownerAccountId;
-				}
+					if ("accountId" in bid.job.owner) {
+						accountId = bid.job.owner.accountId;
+					} else if ("companyId" in bid.job.owner) {
+						accountId = bid.job.owner.ownerAccountId;
+					}
 
-				if (!accountId) {
-					throw new TRPCError({
-						code: "INTERNAL_SERVER_ERROR",
-						message: "account id not found",
-					});
-				}
+					if (!accountId) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "account id not found",
+						});
+					}
 
-				await MessageQueryClient.withCaller(tx).Create({
-					senderAccountId: accountId,
-					recipients: {
-						accountIds: [ctx.account.id],
-						companyIds: [],
-					},
-					title: "Bid withdrawn",
-					description: `A bid for the job ${bid.job.title} has been withdrawn`,
+					try {
+						await MessageQueryClient.withCaller(tx).Create({
+							senderAccountId: accountId,
+							recipients: {
+								accountIds: [ctx.account.id],
+								companyIds: [],
+							},
+							title: "Bid withdrawn",
+							description: `A bid for the job ${bid.job.title} has been withdrawn`,
+						});
+					} catch (error) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "An error occurred while notifying the job owner",
+							cause: error,
+						});
+					}
 				});
-			});
+			} catch (error) {
+				if (error instanceof TRPCError) {
+					throw error;
+				}
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while withdrawing the bid",
+					cause: error,
+				});
+			}
 		}),
 	rejectBid: companyOwnerProcedure
 		.input(z.object({ bidId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
 			const { bidId } = input;
 
-			return await BidQueryClient.RejectMany([bidId], ctx.account.id);
+			try {
+				return await BidQueryClient.RejectMany([bidId], ctx.account.id);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while rejecting the bid",
+					cause: error,
+				});
+			}
 		}),
 	editBid: companyOwnerProcedure
 		.input(EditBidSchema)
 		.mutation(async ({ ctx, input }) => {
-			return await BidQueryClient.Update(input, ctx.account.id);
+			try {
+				return await BidQueryClient.Update(input, ctx.account.id);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while editing the bid",
+					cause: error,
+				});
+			}
 		}),
 	getHottestBidsByAccountId: accountProcedure
 		.input(
@@ -307,7 +464,15 @@ export const bidRouter = router({
 				});
 			}
 
-			return await BidQueryClient.GetHottestManyByAccountId(ctx.account.id);
+			try {
+				return await BidQueryClient.GetHottestManyByAccountId(ctx.account.id);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching the hottest bids",
+					cause: error,
+				});
+			}
 		}),
 
 	getHottestBidsByCompanyId: companyOwnerProcedure
@@ -322,10 +487,18 @@ export const bidRouter = router({
 			if (!ctx.ownedCompanies.some((c) => c.id === companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "You're not able to access this companies bid data",
+					message: "You're not able to access this company's bid data",
 				});
 			}
 
-			return await BidQueryClient.GetHottestManyByAccountId(ctx.account.id);
+			try {
+				return await BidQueryClient.GetHottestManyByAccountId(ctx.account.id);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while fetching the hottest bids",
+					cause: error,
+				});
+			}
 		}),
 });

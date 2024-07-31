@@ -1,4 +1,4 @@
-import { router, accountProcedure } from "../trpc";
+import { router, accountProcedure, companyOwnerProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import MessageQueryClient from "@/lib/db/queries/message";
@@ -19,7 +19,15 @@ export const messageRouter = router({
 			}, "senderAccountId or senderCompanyId is required but not both")
 		)
 		.mutation(async ({ input }) => {
-			return await MessageQueryClient.Create(input);
+			try {
+				return await MessageQueryClient.Create(input);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to create message",
+					cause: error,
+				});
+			}
 		}),
 	getReceivedMessagesByAccountId: accountProcedure
 		.input(
@@ -49,8 +57,9 @@ export const messageRouter = router({
 				});
 			}
 
-			const rawData =
-				await MessageQueryClient.GetExtendedManyReceivedByAccountId(
+			let rawData;
+			try {
+				rawData = await MessageQueryClient.GetExtendedManyReceivedByAccountId(
 					accountId,
 					keywordQuery,
 					page,
@@ -58,36 +67,51 @@ export const messageRouter = router({
 					includeRead,
 					includeDeleted
 				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get received messages",
+					cause: error,
+				});
+			}
 
-			const transformedData = rawData.data.map((message) => {
-				const sender = message.senderAccount
-					? message.senderAccount
-					: message.senderCompany;
+			try {
+				const transformedData = rawData.data.map((message) => {
+					const sender = message.senderAccount
+						? message.senderAccount
+						: message.senderCompany;
 
-				if (!sender) {
-					throw new TRPCError({
-						code: "NOT_FOUND",
-						message: "sender not found",
-					});
-				}
+					if (!sender) {
+						throw new TRPCError({
+							code: "NOT_FOUND",
+							message: "sender not found",
+						});
+					}
+
+					return {
+						...message.messages,
+						reciepient: message.reciepient,
+						replyTo: message.replyTo,
+						sender: {
+							...sender,
+							type: sender.type as "account" | "company",
+						},
+					};
+				});
 
 				return {
-					...message.messages,
-					reciepient: message.reciepient,
-					replyTo: message.replyTo,
-					sender: {
-						...sender,
-						type: sender.type as "account" | "company",
-					},
+					...rawData,
+					data: transformedData,
 				};
-			});
-
-			return {
-				...rawData,
-				data: transformedData,
-			};
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occured processing the data",
+					cause: error,
+				});
+			}
 		}),
-	getReceivedMessagesByCompanyId: accountProcedure
+	getReceivedMessagesByCompanyId: companyOwnerProcedure
 		.input(
 			z.object({
 				companyId: z.string(),
@@ -107,20 +131,17 @@ export const messageRouter = router({
 				includeRead,
 				includeDeleted,
 			} = input;
-			console.log(companyId);
-			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
-				ctx.account.id
-			);
-			if (!ownedCompanies.some((company) => company.id === companyId)) {
+
+			if (!ctx.ownedCompanies.some((company) => company.id === companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
 					message: "you cannot get messages for this company",
 				});
 			}
-			console.log(ownedCompanies)
 
-			const rawData =
-				await MessageQueryClient.GetExtendedManyReceivedByCompanyId(
+			let rawData;
+			try {
+				rawData = await MessageQueryClient.GetExtendedManyReceivedByCompanyId(
 					companyId,
 					keywordQuery,
 					page,
@@ -128,35 +149,46 @@ export const messageRouter = router({
 					includeRead,
 					includeDeleted
 				);
-			console.log(rawData);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get received messages by company",
+					cause: error,
+				});
+			}
 
-			const transformedData = rawData.data.map((message) => {
-				const sender = message.senderAccount
-					? message.senderAccount
-					: message.senderCompany;
+			let transformedData;
+			try {
+				transformedData = rawData.data.map((message) => {
+					const sender = message.senderAccount
+						? message.senderAccount
+						: message.senderCompany;
 
-				if (!sender) {
-					throw new TRPCError({
-						code: "NOT_FOUND",
-						message: "sender not found",
-					});
-				}
+					if (!sender) {
+						throw new TRPCError({
+							code: "NOT_FOUND",
+							message: "sender not found",
+						});
+					}
 
-				return {
-					...message.messages,
-					replyTo: message.replyTo,
-					reciepient: message.reciepient,
-					sender: {
-						...sender,
-						type: sender.type as "account" | "company",
-					},
-				};
-			});
+					return {
+						...message.messages,
+						replyTo: message.replyTo,
+						reciepient: message.reciepient,
+						sender: {
+							...sender,
+							type: sender.type as "account" | "company",
+						},
+					};
+				});
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occured processing the data",
+					cause: error,
+				});
+			}
 
-			console.log({
-				...rawData,
-				data: transformedData,
-			});
 			return {
 				...rawData,
 				data: transformedData,
@@ -178,18 +210,36 @@ export const messageRouter = router({
 				});
 			}
 
-			const cnt = await MessageQueryClient.GetUnreadCountByAccountId(accountId);
-			return cnt || 0;
+			try {
+				const cnt = await MessageQueryClient.GetUnreadCountByAccountId(
+					accountId
+				);
+				return cnt || 0;
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get unread message count",
+					cause: error,
+				});
+			}
 		}),
 	getBasicById: accountProcedure
 		.input(z.object({ messageId: z.string().uuid().optional() }))
 		.query(async ({ ctx, input }) => {
 			//TODO: add way more validation here
 			if (!input.messageId) {
-				return null;
+				return undefined;
 			}
 
-			return await MessageQueryClient.GetBasicById(input.messageId);
+			try {
+				return await MessageQueryClient.GetBasicById(input.messageId);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get message by ID",
+					cause: error,
+				});
+			}
 		}),
 	getUnreadMessageCountByCompanyId: accountProcedure
 		.input(
@@ -200,17 +250,22 @@ export const messageRouter = router({
 		.query(async ({ ctx, input }) => {
 			const { companyId } = input;
 
-			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
-				ctx.account.id
-			);
-			if (!ownedCompanies.some((company) => company.id === companyId)) {
+			if (!ctx.ownedCompanies?.some((company) => company.id === companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you cannot get unread message count for this company",
+					message: "You cannot get unread message count for this company",
 				});
 			}
 
-			return await MessageQueryClient.GetUnreadCountByCompanyId(companyId);
+			try {
+				return await MessageQueryClient.GetUnreadCountByCompanyId(companyId);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get unread message count by company",
+					cause: error,
+				});
+			}
 		}),
 	readMessage: accountProcedure
 		.input(UpdateRecipientSchema.omit({ readAt: true, deletedAt: true }))
@@ -221,27 +276,35 @@ export const messageRouter = router({
 				if (ctx.account.id !== recipient.accountId) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
-						message: "you cannot read this account message",
+						message: "You cannot read this account message",
 					});
 				}
 			} else if ("companyId" in recipient) {
-				const ownedCompanies =
-					await CompanyQueryClient.GetDetailedManyByOwnerId(ctx.account.id);
 				if (
-					!ownedCompanies.some((company) => company.id === recipient.companyId)
+					!ctx.ownedCompanies?.some(
+						(company) => company.id === recipient.companyId
+					)
 				) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
-						message: "you cannot read this company message",
+						message: "You cannot read this company message",
 					});
 				}
 			}
 
-			return await MessageQueryClient.UpdateRecipient({
-				messageId: input.messageId,
-				recipient: input.recipient,
-				readAt: new Date().toISOString(),
-			});
+			try {
+				return await MessageQueryClient.UpdateRecipient({
+					messageId: input.messageId,
+					recipient: input.recipient,
+					readAt: new Date().toISOString(),
+				});
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to read message",
+					cause: error,
+				});
+			}
 		}),
 	deleteMessage: accountProcedure
 		.input(UpdateRecipientSchema)
@@ -252,32 +315,41 @@ export const messageRouter = router({
 				if (ctx.account.id !== recipient.accountId) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
-						message: "you cannot read this account message",
+						message: "You cannot read this account message",
 					});
 				}
 			} else if ("companyId" in recipient) {
-				const ownedCompanies =
-					await CompanyQueryClient.GetDetailedManyByOwnerId(ctx.account.id);
 				if (
-					!ownedCompanies.some((company) => company.id === recipient.companyId)
+					!ctx.ownedCompanies?.some(
+						(company) => company.id === recipient.companyId
+					)
 				) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
-						message: "you cannot read this company message",
+						message: "You cannot read this company message",
 					});
 				}
 			}
 
-			return await MessageQueryClient.UpdateRecipient({
-				messageId: input.messageId,
-				recipient: input.recipient,
-				deletedAt: new Date().toISOString(),
-			});
+			try {
+				return await MessageQueryClient.UpdateRecipient({
+					messageId: input.messageId,
+					recipient: input.recipient,
+					deletedAt: new Date().toISOString(),
+				});
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to delete message",
+					cause: error,
+				});
+			}
 		}),
 	unreadMessage: accountProcedure
 		.input(UpdateRecipientSchema.omit({ readAt: true, deletedAt: true }))
 		.mutation(async ({ ctx, input }) => {
 			const { recipient } = input;
+
 			if ("accountId" in recipient) {
 				if (ctx.account.id !== recipient.accountId) {
 					throw new TRPCError({
@@ -286,10 +358,10 @@ export const messageRouter = router({
 					});
 				}
 			} else if ("companyId" in recipient) {
-				const ownedCompanies =
-					await CompanyQueryClient.GetDetailedManyByOwnerId(ctx.account.id);
 				if (
-					!ownedCompanies.some((company) => company.id === recipient.companyId)
+					!ctx.ownedCompanies?.some(
+						(company) => company.id === recipient.companyId
+					)
 				) {
 					throw new TRPCError({
 						code: "FORBIDDEN",
@@ -298,11 +370,19 @@ export const messageRouter = router({
 				}
 			}
 
-			return await MessageQueryClient.UpdateRecipient({
-				messageId: input.messageId,
-				recipient: input.recipient,
-				readAt: null,
-			});
+			try {
+				return await MessageQueryClient.UpdateRecipient({
+					messageId: input.messageId,
+					recipient: input.recipient,
+					readAt: null,
+				});
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to unread message",
+					cause: error,
+				});
+			}
 		}),
 	getReciepientsByKeyword: accountProcedure
 		.input(
@@ -311,6 +391,14 @@ export const messageRouter = router({
 			})
 		)
 		.query(async ({ ctx, input }) => {
-			return await MessageQueryClient.GetRecipientsByKeyword(input.keyword);
+			try {
+				return await MessageQueryClient.GetRecipientsByKeyword(input.keyword);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get recipients by keyword",
+					cause: error,
+				});
+			}
 		}),
 });

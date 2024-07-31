@@ -14,21 +14,28 @@ export const analyticsRouter = router({
 			})
 		)
 		.query(async ({ input, ctx }) => {
-			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
-				ctx.account.id
-			);
+			const ownedCompanies = ctx.ownedCompanies;
 
 			if (!ownedCompanies.some((company) => company.id === input.companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you are not authorized to view this company's analytics",
+					message: "You're not authorized to view this company's analytics",
 				});
 			}
 
-			const rawData =
-				await AnalyticsQueryClient.GetCompanyViewsVersusJobViewsWeeklyByCompanyId(
-					input.companyId
-				);
+			let rawData;
+			try {
+				rawData =
+					await AnalyticsQueryClient.GetCompanyViewsVersusJobViewsWeeklyByCompanyId(
+						input.companyId
+					);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error while fetching the analytics data",
+					cause: error,
+				});
+			}
 
 			return rawData.company.map((data, index) => ({
 				week: format(new Date(data.week), "P"),
@@ -44,21 +51,28 @@ export const analyticsRouter = router({
 			})
 		)
 		.query(async ({ input, ctx }) => {
-			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
-				ctx.account.id
-			);
+			const ownedCompanies = ctx.ownedCompanies;
 
 			if (!ownedCompanies.some((company) => company.id === input.companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you are not authorized to view this company's analytics",
+					message: "You're not authorized to view this company's analytics",
 				});
 			}
 
-			const rawData =
-				await AnalyticsQueryClient.GetJobViewVersusJobBidWeeklyByCompanyId(
-					input.companyId
-				);
+			let rawData;
+			try {
+				rawData =
+					await AnalyticsQueryClient.GetJobViewVersusJobBidWeeklyByCompanyId(
+						input.companyId
+					);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error while fetching the analytics data",
+					cause: error,
+				});
+			}
 
 			return rawData.map((data) => ({
 				week: format(new Date(data.week), "P"),
@@ -74,24 +88,28 @@ export const analyticsRouter = router({
 			})
 		)
 		.query(async ({ input, ctx }) => {
-			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
-				ctx.account.id
-			);
+			const ownedCompanies = ctx.ownedCompanies;
 
 			if (!ownedCompanies.some((company) => company.id === input.companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you are not authorized to view this company's analytics",
-					cause: new Error(
-						"you are not authorized to view this company's analytics"
-					),
+					message: "You're not authorized to view this company's analytics",
 				});
 			}
 
-			const rawData =
-				await AnalyticsQueryClient.GetBidsSentVersusAcceptedWeeklyByCompanyId(
-					input.companyId
-				);
+			let rawData;
+			try {
+				rawData =
+					await AnalyticsQueryClient.GetBidsSentVersusAcceptedWeeklyByCompanyId(
+						input.companyId
+					);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error while fetching the analytics data",
+					cause: error,
+				});
+			}
 
 			const combinedData = rawData.sent.map((sentData) => {
 				const acceptedData = rawData.accepted.find(
@@ -112,17 +130,12 @@ export const analyticsRouter = router({
 	GetMonthlyAnalyticsByCompanyId: companyOwnerProcedure
 		.input(z.object({ companyId: z.string().uuid() }))
 		.query(async ({ input, ctx }) => {
-			const ownedCompanies = await CompanyQueryClient.GetDetailedManyByOwnerId(
-				ctx.account.id
-			);
+			const ownedCompanies = ctx.ownedCompanies;
 
 			if (!ownedCompanies.some((company) => company.id === input.companyId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
 					message: "You're not authorized to view this company's analytics",
-					cause: new Error(
-						"User is trying to view analytics for a company they don't own"
-					),
 				});
 			}
 
@@ -182,36 +195,70 @@ export const analyticsRouter = router({
 	GetPublicMonthlyAnalyticsByCompanyId: companyOwnerProcedure
 		.input(z.object({ companyId: z.string().uuid() }))
 		.query(async ({ input }) => {
-			return await AnalyticsQueryClient.GetPublicInteractionSummaryByCompanyId(
-				input.companyId
-			);
+			try {
+				return await AnalyticsQueryClient.GetPublicInteractionSummaryByCompanyId(
+					input.companyId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error while fetching the analytics data",
+					cause: error,
+				});
+			}
 		}),
 
 	GetPublicMonthlyAnalyticsByJobId: accountProcedure
 		.input(z.object({ jobId: z.string().uuid() }))
 		.query(async ({ input }) => {
-			return await AnalyticsQueryClient.GetPublicInteractionSummaryByJobId(
-				input.jobId
-			);
+			try {
+				return await AnalyticsQueryClient.GetPublicInteractionSummaryByJobId(
+					input.jobId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error while fetching the analytics data",
+					cause: error,
+				});
+			}
 		}),
 
 	GetMonthlyAnalyticsByJobId: accountProcedure
 		.input(z.object({ jobId: z.string().uuid() }))
 		.query(async ({ input, ctx }) => {
-			const ownedJobs = await JobQueryClient.GetDetailedManyOwnedByAccountId(
-				ctx.account.id
-			);
+			let ownedJobs;
+			try {
+				ownedJobs = await JobQueryClient.GetDetailedManyOwnedByAccountId(
+					ctx.account.id
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error while fetching your owned jobs",
+					cause: error,
+				});
+			}
 
 			if (!ownedJobs.some((job) => job.id === input.jobId)) {
 				throw new TRPCError({
 					code: "FORBIDDEN",
-					message: "you are not authorized to view this job's analytics",
+					message: "You're not authorized to view this job's analytics",
 				});
 			}
 
-			const rawData = await AnalyticsQueryClient.GetInteractionSummaryByJobId(
-				input.jobId
-			);
+			let rawData;
+			try {
+				rawData = await AnalyticsQueryClient.GetInteractionSummaryByJobId(
+					input.jobId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error while fetching the analytics data",
+					cause: error,
+				});
+			}
 
 			const calcData = (curr: string | null, prev: string | null) => {
 				const numCurr = Number(curr);
@@ -230,18 +277,26 @@ export const analyticsRouter = router({
 				};
 			};
 
-			const calculatedData = {
-				views: calcData(
-					rawData.currentMonth.views,
-					rawData.previousMonth.views
-				),
-				bids: calcData(rawData.currentMonth.bids, rawData.previousMonth.bids),
-				favorites: calcData(
-					rawData.currentMonth.favorites,
-					rawData.previousMonth.favorites
-				),
-			};
+			try {
+				const calculatedData = {
+					views: calcData(
+						rawData.currentMonth.views,
+						rawData.previousMonth.views
+					),
+					bids: calcData(rawData.currentMonth.bids, rawData.previousMonth.bids),
+					favorites: calcData(
+						rawData.currentMonth.favorites,
+						rawData.previousMonth.favorites
+					),
+				};
 
-			return calculatedData;
+				return calculatedData;
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "An error occurred while processing the analytics data",
+					cause: error,
+				});
+			}
 		}),
 });
