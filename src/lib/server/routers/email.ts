@@ -113,7 +113,6 @@ export const emailRouter = router({
 							Charset: "UTF-8",
 							Data: ContactUsEmailHTML({
 								name,
-								email,
 								message,
 							}),
 						},
