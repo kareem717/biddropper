@@ -19,7 +19,7 @@ interface FavouriteJobCardProps extends ComponentPropsWithoutRef<"div"> {
 }
 
 export const FavouriteJobCard: FC<FavouriteJobCardProps> = ({ job, accountId, className, onUnfavourite, ...props }) => {
-  const { mutateAsync: unfavouriteJob, isLoading: isUnfavouriting } = trpc.job.unfavouriteJob.useMutation({
+  const { mutateAsync: unfavouriteJob, isLoading: isUnfavouriting, isError } = trpc.job.unfavouriteJob.useMutation({
     onError: (error) => {
       toast.error("Uh oh!", {
         description: error.message
@@ -29,7 +29,10 @@ export const FavouriteJobCard: FC<FavouriteJobCardProps> = ({ job, accountId, cl
 
   const handleUnfavouriteJob = async (jobId: string) => {
     await unfavouriteJob({ jobId, accountId })
-    onUnfavourite?.()
+    if (!isError) {
+      onUnfavourite?.()
+      toast.success("Job removed from favorites")
+    }
   }
 
   return (

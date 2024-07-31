@@ -309,4 +309,23 @@ export const bidRouter = router({
 
 			return await BidQueryClient.GetHottestManyByAccountId(ctx.account.id);
 		}),
+
+	getHottestBidsByCompanyId: companyOwnerProcedure
+		.input(
+			z.object({
+				companyId: z.string().optional(),
+			})
+		)
+		.query(async ({ ctx, input }) => {
+			const { companyId } = input;
+
+			if (!ctx.ownedCompanies.some((c) => c.id === companyId)) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You're not able to access this companies bid data",
+				});
+			}
+
+			return await BidQueryClient.GetHottestManyByAccountId(ctx.account.id);
+		}),
 });

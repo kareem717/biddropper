@@ -12,7 +12,7 @@ export default function NotFound() {
 				<span className="text-primary">4</span>
 				<span>!</span>
 			</div>
-			<p className="text-center text-xl text-muted-foreground">We couldn't find what you were looking for</p>
+			<p className="text-center text-xl text-muted-foreground">We couldn&#39;t find what you were looking for</p>
 			<Link
 				href={redirects.home}
 				className={cn(buttonVariants(), 'px-8')}

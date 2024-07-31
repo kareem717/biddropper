@@ -323,7 +323,10 @@ class BidsQueryClient extends QueryClient {
 			.where(eq(bids.priceUsd, sql`${sq}`))
 			.limit(10);
 
-		return await this.GetExtendedManyById(bidIds.map((b) => b.bidId) || []);
+		if (bidIds.length === 0) {
+			return [];
+		}
+		return await this.GetExtendedManyById(bidIds.map((b) => b.bidId));
 	}
 
 	async GetHottestManyByCompanyId(companyId: string) {
@@ -360,7 +363,10 @@ class BidsQueryClient extends QueryClient {
 			.innerJoin(stdDevJobs, eq(jobBids.jobId, stdDevJobs.jobId))
 			.where(eq(bids.priceUsd, sql`${sq}`))
 			.limit(10);
-
+			
+		if (bidIds.length === 0) {
+			return [];
+		}
 		return await this.GetExtendedManyById(bidIds.map((b) => b.bidId));
 	}
 

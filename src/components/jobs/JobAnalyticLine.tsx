@@ -18,7 +18,11 @@ export const JobAnalyticLine: FC<JobAnalyticLineProps> = ({ className, jobId, ..
     throw new Error("No account");
   }
 
-  const { data, isLoading, isError, refetch, isRefetching, error } = trpc.analytics.GetPublicMonthlyAnalyticsByJobId.useQuery({ jobId });
+  const { data, isLoading, isError, refetch, isRefetching, error } = trpc.analytics.GetPublicMonthlyAnalyticsByJobId.useQuery({ jobId },{
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
   const { mutate: favouriteJob } = trpc.job.favouriteJob.useMutation();
   const { mutate: unfavouriteJob } = trpc.job.unfavouriteJob.useMutation();
   const { data: isJobFavouritedByAccountId, refetch: refetchIsJobFavouritedByAccountId } = trpc.job.getIsJobFavouritedByAccountId.useQuery({ jobId, accountId: account.id },{
@@ -63,9 +67,9 @@ export const JobAnalyticLine: FC<JobAnalyticLineProps> = ({ className, jobId, ..
       {isLoading || isRefetching ? (
         <Skeleton className="w-full h-12" />
       ) : data && (
-        <div {...props} onClick={handleFavourite} className={cn("flex flex-row justify-between items-center gap-4", className)}>
+        <div {...props} className={cn("flex flex-row justify-between items-center gap-4", className)}>
           <div className="flex flex-row gap-1 items-center">
-            <Icons.heart className={cn(favourited && "text-red-600 fill-current")} />
+            <Icons.heart className={cn(favourited && "text-red-600 fill-current")} onClick={handleFavourite} />
             <p>{favourited ? Number(data.favorites) + 1 : data.favorites}</p>
             <p>favorites</p>
           </div>

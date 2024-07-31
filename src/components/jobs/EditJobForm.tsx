@@ -82,9 +82,9 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
     isError: isEditJobError,
     error: editJobError
   } = trpc.job.editJob.useMutation({
-    onError: () => {
+    onError: (error) => {
       toast.error("Something went wrong!", {
-        description: "Please try again later."
+        description: error.message
       });
     },
   })
@@ -92,7 +92,10 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
   // @ts-ignore
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: job,
+    defaultValues: {
+      ...job,
+      address: getAddress()
+    },
   })
 
   useEffect(() => {
