@@ -15,6 +15,7 @@ const redirects = {
 	},
 	dashboard: "/overview",
 	pricing: "/pricing",
+	settings: "/settings",
 	about: "/about",
 	contact: "/contact",
 };
