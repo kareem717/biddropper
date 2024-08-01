@@ -33,7 +33,7 @@ export default function CompanyExplorePage() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-2">
           <h1 className="text-3xl font-bold text-primary">My Companies</h1>
-          <Link href="/my-companies/create" className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
+          <Link href="/my-companies/create" className={cn(buttonVariants(), "flex items-center gap-2")}>
             <Icons.add className="w-5 h-5" />
             Create
           </Link>

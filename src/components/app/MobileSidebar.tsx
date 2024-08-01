@@ -6,12 +6,12 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { useState } from "react";
 import { Icons } from "@/components/Icons"
 import { usePathname } from "next/navigation";
 import { LogoDiv } from "./LogoDiv";
@@ -24,7 +24,7 @@ import Link from "next/link";
 import { LargeModeToggle } from "./LargeModeToggle";
 import { useAuth } from "@/components/providers/AuthProvider";
 import redirects from "@/config/redirects";
-
+import navConfig from "@/config/nav";
 export interface MobileSidebarProps extends ComponentPropsWithoutRef<typeof Sheet> {
   contentProps?: ComponentPropsWithoutRef<typeof SheetContent>;
   triggerProps?: ComponentPropsWithoutRef<typeof SheetTrigger>;
@@ -32,11 +32,12 @@ export interface MobileSidebarProps extends ComponentPropsWithoutRef<typeof Shee
 
 export const MobileSidebar = ({ contentProps, triggerProps, ...props }: MobileSidebarProps) => {
   const { className, ...otherContentProps } = contentProps || {};
+  const [open, setOpen] = useState(false);
   const { account, user } = useAuth();
   const path = usePathname().split("/").slice(1)
-  console.log(path);
+
   return (
-    <Sheet {...props}>
+    <Sheet {...props} open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild {...triggerProps}>
         <Button variant="outline">
           <Icons.menu className="w-4 h-4" />
@@ -49,21 +50,34 @@ export const MobileSidebar = ({ contentProps, triggerProps, ...props }: MobileSi
           </SheetTitle>
         </SheetHeader>
         <div className="flex flex-col justify-between h-full py-8">
-          <div className="grid gap-4 py-4">
-            <Collapsible>
-              <CollapsibleTrigger>Can I use this in my project?</CollapsibleTrigger>
-              <CollapsibleContent>
-                Yes. Free to use for personal and commercial projects. No attribution
-                required.
-              </CollapsibleContent>
-            </Collapsible>
-            <Collapsible>
-              <CollapsibleTrigger>Can I use this in my project?</CollapsibleTrigger>
-              <CollapsibleContent>
-                Yes. Free to use for personal and commercial projects. No attribution
-                required.
-              </CollapsibleContent>
-            </Collapsible>
+          <div className="grid gap-4 py-4 text-muted-foreground">
+            {navConfig.map((nav) => {
+
+              return (
+                <Collapsible key={nav.href}>
+                  {nav.href ? (
+                    <Link href={nav.href} onClick={() => setOpen(false)}>
+                      <CollapsibleTrigger className={cn(path.includes(nav.urlPath) && "text-primary")}>{nav.title}</CollapsibleTrigger>
+                    </Link>
+                  ) : (
+                    <CollapsibleTrigger className={cn(path.includes(nav.urlPath) && "text-primary")}>{nav.title}</CollapsibleTrigger>
+                  )}
+                  {nav.subItems && (
+                    <CollapsibleContent className="ml-4 flex flex-col gap-1">
+                      {nav.subItems.map((subItem) => (
+                        <Link
+                          href={`/${nav.urlPath}${subItem.href}`}
+                          key={subItem.href}
+                          onClick={() => setOpen(false)}
+                          className={cn(path.includes(subItem.urlPath) && path.includes(nav.urlPath) && "text-primary")}>
+                          {subItem.title}
+                        </Link>
+                      ))}
+                    </CollapsibleContent>
+                  )}
+                </Collapsible>
+              )
+            })}
           </div>
           <div className="flex flex-col gap-4">
             <Link href={redirects.settings} className="flex items-center justify-between gap-4 px-2 hover:text-muted-foreground transition duration-150">
