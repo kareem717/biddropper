@@ -304,4 +304,52 @@ export const jobRouter = router({
 				});
 			}
 		}),
+	getByOwnerAccountId: accountProcedure
+		.input(z.object({ accountId: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			if (ctx.account.id !== input.accountId) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message:
+						"You cannot view the jobs for another account",
+				});
+			}
+
+			try {
+				return await JobQueryClient.GetDetailedManyOwnedByAccountId(
+					input.accountId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get jobs",
+					cause: error,
+				});
+			}
+		}),
+	getByOwnerCompanyId: companyOwnerProcedure
+		.input(z.object({ companyId: z.string().uuid() }))
+		.query(async ({ ctx, input }) => {
+			if (
+				!ctx.ownedCompanies.some((company) => company.id === input.companyId)
+			) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message:
+						"You cannot view the jobs for a company you do not own",
+				});
+			}
+
+			try {
+				return await JobQueryClient.GetBasicManyByCompanyId(
+					input.companyId
+				);
+			} catch (error) {
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to get jobs",
+					cause: error,
+				});
+			}
+		}),
 });

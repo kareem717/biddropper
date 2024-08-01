@@ -116,7 +116,7 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
               </p>
             </div>
             <div className="flex gap-2 w-full">
-              <Link href={`/job/${jobId}/edit`} className={cn(buttonVariants(), "w-full")}>
+              <Link href={`/my-jobs/${jobId}/edit`} className={cn(buttonVariants(), "w-full")}>
                 Edit
               </Link>
               <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>

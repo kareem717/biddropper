@@ -2,6 +2,7 @@
 
 import { ComponentPropsWithoutRef } from "react"
 import Link from "next/link"
+import landing from "@/config/landing"
 
 export interface LandingFooterProps extends ComponentPropsWithoutRef<'div'> {}
 

@@ -21,9 +21,10 @@ import { Skeleton } from "../ui/skeleton";
 
 export interface CompanyIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {
   companyId: string;
+  href?: string;
 }
 
-export const CompanyIndexCard = ({ companyId, className, ...props }: CompanyIndexCardProps) => {
+export const CompanyIndexCard = ({ companyId, href, className, ...props }: CompanyIndexCardProps) => {
   const { data: company, isLoading, isError, error, isRefetching, refetch, errorUpdateCount } = trpc.company.getCompanyFull.useQuery({ id: companyId }, {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -54,7 +55,7 @@ export const CompanyIndexCard = ({ companyId, className, ...props }: CompanyInde
             <AddressDisplay address={company.address as ShowAddress} />
           </CardContent>
           <CardFooter className="bg-primary px-6 py-4">
-            <Link href={`/companies/${companyId}`} className="text-background font-semibold">View Details</Link>
+            <Link href={href || `/companies/${companyId}`} className="text-background font-semibold">View Details</Link>
           </CardFooter>
         </Card>
       )}

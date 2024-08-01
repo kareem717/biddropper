@@ -1,3 +1,4 @@
+"use client";
 import { cn } from "@/lib/utils";
 import { ComponentPropsWithoutRef } from "react";
 import { Button } from "../ui/button"
@@ -12,6 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Icons } from "@/components/Icons"
+import { usePathname } from "next/navigation";
 
 export interface MobileSidebarProps extends ComponentPropsWithoutRef<typeof Sheet> {
   contentProps?: ComponentPropsWithoutRef<typeof SheetContent>;
@@ -20,7 +22,8 @@ export interface MobileSidebarProps extends ComponentPropsWithoutRef<typeof Shee
 
 export const MobileSidebar = ({ contentProps, triggerProps, ...props }: MobileSidebarProps) => {
   const { className, ...otherContentProps } = contentProps || {};
-
+  const pathname = usePathname();
+  console.log(pathname);
   return (
     <Sheet {...props}>
       <SheetTrigger asChild {...triggerProps}>
@@ -36,10 +39,7 @@ export const MobileSidebar = ({ contentProps, triggerProps, ...props }: MobileSi
           </SheetDescription>
         </SheetHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-          </div>
+       
         </div>
         <SheetFooter>
           <SheetClose asChild>
