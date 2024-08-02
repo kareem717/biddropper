@@ -7,10 +7,10 @@ import { ComponentPropsWithoutRef, FC, useState } from "react"
 import { MessageShowCard } from "@/components/messages/MessageShowCard"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { QuickSearch } from "@/components/app/QuickSearch"
 import { Icons } from "@/components/Icons"
 import { CreateMessageForm } from "@/components/messages/CreateMessageForm"
@@ -230,17 +230,19 @@ export const MessageInbox: FC<MessageInboxProps> = ({
     <div className={cn("flex flex-col gap-6 h-full w-full", className)} {...props}>
       <div className="flex flex-row items-center gap-2 w-full">
         <QuickSearch className="w-full" onSearch={handleSearch} />
-        <Drawer >
-          <DrawerTrigger asChild  >
+        <Dialog>
+          <DialogTrigger asChild  >
             <Button className="flex items-center gap-2">
               <Icons.mailPlus className="w-4 h-4" />
               New <span className="hidden md:inline">Message</span>
             </Button>
-          </DrawerTrigger>
-          <DrawerContent className="h-[90vh]">
-            <CreateMessageForm />
-          </DrawerContent>
-        </Drawer>
+          </DialogTrigger>
+          <DialogContent>
+            <ScrollArea className="h-full max-h-[95vh]">
+              <CreateMessageForm className="mx-2"/>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </div>
       {isError ? (
         <ErrorDiv

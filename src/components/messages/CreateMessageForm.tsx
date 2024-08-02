@@ -97,7 +97,7 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
 
   return (
     <Form {...form}>
-      <form {...props} onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8 max-h-[50vh] overflow-y-auto", className)}>
+      <form {...props} onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8", className)}>
         <FormField
           control={form.control}
           name="title"
@@ -118,7 +118,7 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormDescription>
-                Enter a detailed description of the job.
+                Enter the content of the message.
               </FormDescription>
               <FormControl>
                 <Textarea {...field} />
@@ -173,12 +173,12 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
               <FormItem>
                 <FormLabel>Send on behalf of</FormLabel>
                 <FormDescription>
-                  Select if you want to send this message on behalf of a company you own.
+                  Select if you want to send this message on behalf of a company you own or your account.
                 </FormDescription>
                 <FormControl>
                   <Select
                     onValueChange={(value) => {
-                      if (value === "") {
+                      if (value === "account" || value === "") {
                         form.setValue("senderAccountId", account.id);
                         form.setValue("senderCompanyId", undefined);
                       } else {
@@ -192,6 +192,11 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
                       <SelectValue placeholder="Select Company Name" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="account">
+                          Your Account
+                        </SelectItem>
+                      </SelectGroup>
                       <SelectGroup>
                         <SelectLabel className="text-muted-foreground">
                           Companies
@@ -249,7 +254,7 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
         )}
       </form>
       <Button className="w-full mt-8" onClick={form.handleSubmit(onSubmit)} disabled={isLoading}>
-        {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}
+        {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Send Message"}
       </Button>
     </Form >
   );
