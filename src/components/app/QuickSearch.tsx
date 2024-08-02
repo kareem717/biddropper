@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ComponentPropsWithoutRef, FC, useEffect, useState } from "react";
+import { ComponentPropsWithoutRef, FC, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
@@ -26,6 +26,16 @@ export const QuickSearch: FC<QuickSearchProps> = ({
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
 
+
+  const handleSearch = useCallback((query: string) => {
+    if (query.trim() !== "") {
+      onSearch(query);
+      setSearchDialogOpen(false);
+    } else {
+      toast.error("Please enter something to search");
+    }
+  }, [onSearch]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey && event.key === "k") {
@@ -33,12 +43,7 @@ export const QuickSearch: FC<QuickSearchProps> = ({
         setSearchDialogOpen(true);
       } else if (event.key === "Enter" && isSearchDialogOpen) {
         event.preventDefault();
-        if (query.trim() !== "") {
-          onSearch(query);
-          setSearchDialogOpen(false);
-        } else {
-          toast.error("Please enter something to search");
-        }
+        handleSearch(query);
       }
     };
 
@@ -47,7 +52,7 @@ export const QuickSearch: FC<QuickSearchProps> = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isSearchDialogOpen, query, onSearch]);
+  }, [isSearchDialogOpen, handleSearch, query]);
 
   return (
     <Dialog open={isSearchDialogOpen} onOpenChange={setSearchDialogOpen}>
@@ -70,8 +75,8 @@ export const QuickSearch: FC<QuickSearchProps> = ({
         <DialogHeader>
           <DialogTitle>Quick search</DialogTitle>
         </DialogHeader>
-        <Input value={query} onChange={(e) => setQuery(e.target.value)} />
-        <Button className="w-full" onClick={() => onSearch(query)}>Search</Button>
+        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search..." />
+        <Button className="w-full" onClick={() => handleSearch(query)}>Search</Button>
       </DialogContent>
     </Dialog>
   );

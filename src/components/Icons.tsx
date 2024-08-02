@@ -96,6 +96,7 @@ import {
   Radio,
   Telescope,
   Heart,
+  Reply,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
@@ -110,6 +111,7 @@ export const Icons = {
   radio: Radio,
   info: Info,
   minus: Minus,
+  reply: Reply,
   heart: Heart,
   rocket: Rocket,
   mailPlus: MailPlus,

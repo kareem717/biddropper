@@ -16,6 +16,8 @@ import {
 import { CreateMessageForm } from "./CreateMessageForm"
 import { Skeleton } from "../ui/skeleton"
 import { ErrorDiv } from "../app/ErrorDiv"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 export interface MessageShowCardProps extends ComponentPropsWithoutRef<typeof Card> {
   message: ShowMessage
@@ -28,6 +30,7 @@ export interface MessageShowCardProps extends ComponentPropsWithoutRef<typeof Ca
   onMarkAsRead?: () => void
   onMarkAsUnread?: () => void
   onReplyClick?: () => void
+  onClose?: () => void
 }
 
 export const MessageShowCard: FC<MessageShowCardProps> = ({
@@ -38,6 +41,7 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({
   onMarkAsRead,
   onMarkAsUnread,
   onReplyClick,
+  onClose,
   ...props
 }) => {
   const { mutate: readMessage } = trpc.message.readMessage.useMutation({
@@ -73,7 +77,8 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({
   const { data: reply, isLoading, error, isError, refetch, isRefetching, errorUpdateCount } = trpc.message.getBasicById.useQuery({ messageId: message.replyTo?.replyTo }, {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: false
+    retry: false,
+    enabled: !!message.replyTo?.replyTo
   })
 
   const handleReadMessage = () => {
@@ -88,59 +93,113 @@ export const MessageShowCard: FC<MessageShowCardProps> = ({
     deleteMessage({ messageId: message.id, recipient })
     onDelete?.()
   }
-
   return (
     <>
       {isError ? (
         <ErrorDiv message={error.message} retry={refetch} isRetrying={isRefetching} retriable={errorUpdateCount < 3} />
-      ) : isLoading || isRefetching ? (
+      ) : !!message.replyTo?.replyTo && (isLoading || isRefetching) ? (
         <Skeleton className="w-full h-full" />
       ) : (
         <Card className={cn("", className)} {...props}>
-          <CardHeader className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h3 className="text-lg font-medium">New message from {message.sender.name}</h3>
+          <CardHeader className="relative flex items-center justify-between pt-14 border-b">
+            <div className="absolute top-0 left-0 flex justify-between items-center w-full h-12 bg-secondary rounded-t-lg px-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" onClick={onClose} aria-label="Close message">
+                    <Icons.chevronsRight className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Close message</p>
+                </TooltipContent>
+              </Tooltip>
+              <div className="flex justify-center items-center gap-2">
+                <Dialog>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DialogTrigger asChild onClick={onReplyClick} aria-label="Reply to message">
+                        <Button variant="ghost">
+                          <Icons.reply className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Reply to message</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <CreateMessageForm replyTo={[{
+                      messageId: message.id, recipient: {
+                        id: message.sender.id,
+                        type: message.sender.type
+                      }
+                    }]} />
+                  </DialogContent>
+                </Dialog>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" onClick={handleDeleteMessage} aria-label="Delete message">
+                      <Icons.trash className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Delete message</p>
+                  </TooltipContent>
+                </Tooltip>
+                {message.reciepient?.readAt ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" onClick={handleUnreadMessage} aria-label="Mark as unread">
+                        <Icons.close className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Mark as unread</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" onClick={handleReadMessage} aria-label="Mark as read">
+                        <Icons.check className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Mark as read</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{timeSince(new Date(message.createdAt))}</span>
+            <div className="flex justify-between items-start w-full">
+              <div className="flex justify-center items-start gap-1">
+                <Avatar>
+                  <AvatarFallback className="capitalize">
+                    {message.sender.name.split(" ").map(name => name[0]).slice(0, 2).join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col gap-[2px]">
+                  <h3 className="text-lg font-medium">
+                    {message.sender.name}
+                  </h3>
+                  <p className="text-sm">
+                    {message.title}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <span className="text-xs text-muted-foreground">{timeSince(new Date(message.createdAt))}</span>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <p>{message.description}</p>
-            {reply && (
+          {reply && (
+            <div className="flex flex-col gap-1 border-b px-6 text-sm text-muted-foreground py-2">
               <p>Reply to: {reply.title}</p>
-            )}
+            </div>
+          )}
+          <CardContent className="pt-4">
+            <p>{message.description}</p>
           </CardContent>
-          <CardFooter>
-            <Button className="flex justify-center items-center gap-2" onClick={handleDeleteMessage}>
-              <Icons.trash className="w-4 h-4" />
-              Trash
-            </Button>
-            <Dialog>
-              <DialogTrigger asChild onClick={onReplyClick}>
-                <Button variant="outline">Reply</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <CreateMessageForm replyTo={[{
-                  messageId: message.id, recipient: {
-                    id: message.sender.id,
-                    type: message.sender.type
-                  }
-                }]} />
-              </DialogContent>
-            </Dialog>
-            {message.reciepient?.readAt ? (
-              <Button className="flex justify-center items-center gap-2" onClick={handleUnreadMessage}>
-                <Icons.close className="w-4 h-4" />
-                Mark as unread
-              </Button>
-            ) : (
-              <Button className="flex justify-center items-center gap-2" onClick={handleReadMessage}>
-                <Icons.check className="w-4 h-4" />
-                Mark as read
-              </Button>
-            )}
-          </CardFooter>
         </Card>)
       }
     </>

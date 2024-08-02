@@ -113,7 +113,6 @@ export const MessageInbox: FC<MessageInboxProps> = ({
 
   const {
     mutateAsync: markAsRead,
-    isLoading: isMarkingAsRead,
   } = trpc.message.readMessage.useMutation({
     onSuccess: () => {
       setSelectedMessage(null)
@@ -136,7 +135,6 @@ export const MessageInbox: FC<MessageInboxProps> = ({
 
   const {
     mutateAsync: markAsUnread,
-    isLoading: isMarkingAsUnread,
   } = trpc.message.unreadMessage.useMutation({
     onSuccess: () => {
       setSelectedMessage(null)
@@ -159,7 +157,6 @@ export const MessageInbox: FC<MessageInboxProps> = ({
 
   const {
     mutateAsync: deleteMessage,
-    isLoading: isDeletingMessage,
   } = trpc.message.deleteMessage.useMutation({
     onSuccess: () => {
       setSelectedMessage(null)
@@ -230,7 +227,7 @@ export const MessageInbox: FC<MessageInboxProps> = ({
 
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 h-full w-full", className)} {...props}>
       <div className="flex flex-row items-center gap-2 w-full">
         <QuickSearch className="w-full" onSearch={handleSearch} />
         <Drawer >
@@ -253,53 +250,46 @@ export const MessageInbox: FC<MessageInboxProps> = ({
           message={error?.message}
           className="my-24"
         />
-      ) : (
-        <>
-          {isLoading || isRefetching ? <MessageInboxLoading /> : (
-            <>
-              {messages && messages.length > 0 ? (
-                <ScrollArea className="h-[calc(100vh-10rem)]">
-                  <div className="grid gap-2">
-                    {messages.map((message) => (
-                      <MessageIndexCard
-                        key={message.id}
-                        message={message}
-                        tabIndex={0}
-                        onClick={() => handleMessageClick(message)}
-                      />
-                    ))}
-                  </div>
-                  {hasNextPage && <Button onClick={handleLoadMore}>Load More</Button>}
-                </ScrollArea>
-              ) : (
-                <div>No messages</div>
-              )}
-            </>
-          )}
-          {selectedMessage && (
-            <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-              <DrawerContent className="h-[90vh]">
-                <MessageShowCard
-                  message={selectedMessage}
-                  recipient={recipient}
-                  onMarkAsRead={() => markAsRead({
-                    recipient: recipient,
-                    messageId: selectedMessage.id,
-                  })}
-                  onMarkAsUnread={() => markAsUnread({
-                    recipient: recipient,
-                    messageId: selectedMessage.id,
-                  })}
-                  onDelete={() => deleteMessage({
-                    recipient: recipient,
-                    messageId: selectedMessage.id,
-                  })}
-                  className="border-none shadow-none"
+      ) : isLoading || isRefetching ? <MessageInboxLoading /> : messages && messages.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full w-full">
+          <ScrollArea className={cn({
+            "hidden md:block col-span-1": selectedMessage,
+            "block col-span-2": !selectedMessage,
+          })}>
+            <div className="grid gap-2 mb-2">
+              {messages.map((message) => (
+                <MessageIndexCard
+                  key={message.id}
+                  message={message}
+                  tabIndex={0}
+                  onClick={() => handleMessageClick(message)}
                 />
-              </DrawerContent>
-            </Drawer>
+              ))}
+            </div>
+            {hasNextPage && <Button onClick={handleLoadMore} className="w-full">Load More</Button>}
+          </ScrollArea>
+          {selectedMessage && (
+            <MessageShowCard
+              message={selectedMessage}
+              recipient={recipient}
+              onMarkAsRead={() => markAsRead({
+                recipient: recipient,
+                messageId: selectedMessage.id,
+              })}
+              onMarkAsUnread={() => markAsUnread({
+                recipient: recipient,
+                messageId: selectedMessage.id,
+              })}
+              onDelete={() => deleteMessage({
+                recipient: recipient,
+                messageId: selectedMessage.id,
+              })}
+              onClose={() => setSelectedMessage(null)}
+            />
           )}
-        </>
+        </div>
+      ) : (
+        <div>No messages</div>
       )}
     </div>
   )
