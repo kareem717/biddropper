@@ -1,8 +1,6 @@
 import { z } from "zod";
-import { accountProcedure, publicProcedure, router } from "../trpc";
+import {publicProcedure, router } from "../trpc";
 import { env } from "@/lib/env.mjs";
-import { randomInt } from "crypto";
-import { SupportRequestEmailHTML } from "@/components/emails/SupportRequest";
 import { ContactUsEmailHTML } from "@/components/emails/ContactUs";
 import {
 	DemoRequestCallbackEmailHTML,
@@ -13,84 +11,6 @@ import ses from "@/lib/aws/ses";
 import { TRPCError } from "@trpc/server";
 
 export const emailRouter = router({
-	submitFeedback: accountProcedure
-		.input(
-			z.object({
-				email: z.string().email(),
-				message: z.string(),
-			})
-		)
-		.mutation(async ({ ctx, input }) => {
-			const params = {
-				Source: `Feedback <${env.NEXT_PUBLIC_SUPPORT_EMAIL}>`,
-				Destination: {
-					ToAddresses: [input.email, env.NEXT_PUBLIC_SUPPORT_EMAIL],
-				},
-				Message: {
-					Body: {
-						Html: {
-							Charset: "UTF-8",
-							Data: ContactUsEmailHTML(input),
-						},
-					},
-					Subject: {
-						Charset: "UTF-8",
-						Data: "Feedback",
-					},
-				},
-			};
-
-			await ses.sendEmail(params, (err, data) => {
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to send feedback email",
-					cause: err,
-				});
-			});
-		}),
-	submitSupportRequest: accountProcedure
-		.input(
-			z.object({
-				email: z.string().email(),
-				message: z.string(),
-			})
-		)
-		.mutation(async ({ ctx, input }) => {
-			const { email, message } = input;
-
-			const requestId = randomInt(0, 9999999).toString();
-
-			const params = {
-				Source: `Support <${env.NEXT_PUBLIC_SUPPORT_EMAIL}>`,
-				Destination: {
-					ToAddresses: [email, env.NEXT_PUBLIC_SUPPORT_EMAIL],
-				},
-				Message: {
-					Body: {
-						Html: {
-							Charset: "UTF-8",
-							Data: SupportRequestEmailHTML({
-								name: ctx.account.username,
-								requestText: message,
-								requestId,
-							}),
-						},
-					},
-					Subject: {
-						Charset: "UTF-8",
-						Data: "Support Request",
-					},
-				},
-			};
-
-			await ses.sendEmail(params, (err, data) => {
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to send support request email",
-					cause: err,
-				});
-			});
-		}),
 	submitContactUs: publicProcedure
 		.input(
 			z.object({

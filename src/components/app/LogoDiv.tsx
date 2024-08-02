@@ -1,4 +1,5 @@
 import { ComponentPropsWithoutRef, FC } from "react";
+
 interface LogoDivProps extends ComponentPropsWithoutRef<"div"> { }
 
 export const LogoDiv: FC<LogoDivProps> = ({ ...props }) => {
