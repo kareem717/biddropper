@@ -289,7 +289,10 @@ export const MessageInbox: FC<MessageInboxProps> = ({
           )}
         </div>
       ) : (
-        <div>No messages</div>
+        <div className="flex flex-col gap-2 items-center justify-center h-full w-full text-muted-foreground my-20">
+          <Icons.mail className="w-16 h-16" />
+          <div className="text-2xl font-bold">No messages</div>
+        </div>
       )}
     </div>
   )
