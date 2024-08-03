@@ -231,9 +231,9 @@ export const bidRouter = router({
 									ownerAccountId: companies.ownerId,
 								},
 							})
-							.from(bids)
-							.innerJoin(jobBids, eq(bids.id, jobBids.bidId))
-							.innerJoin(companies, eq(bids.senderCompanyId, companies.id))
+							.from(jobBids)
+							.innerJoin(bids, eq(bids.id, jobBids.bidId))
+							.innerJoin(companies, eq(companies.id, bids.senderCompanyId))
 							.where(
 								and(eq(jobBids.jobId, bid.job.id), not(eq(bids.id, bidId)))
 							);
@@ -264,6 +264,14 @@ export const bidRouter = router({
 						await tx.insert(messages).values(
 							otherBidsOnSameJob.map((b) => ({
 								accountId: b.senderCompany.ownerAccountId,
+								senderAccountId:
+									"accountId" in bid.job.owner
+										? bid.job.owner.accountId
+										: undefined,
+								senderCompanyId:
+									"companyId" in bid.job.owner
+										? bid.job.owner.companyId
+										: undefined,
 								title: "Bid rejected",
 								description: `Your bid for ${bid.job.title} has been rejected`,
 							}))

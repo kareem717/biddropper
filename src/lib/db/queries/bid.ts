@@ -281,6 +281,7 @@ class BidsQueryClient extends QueryClient {
 					senderCompanyIdFilter
 						? eq(bids.senderCompanyId, senderCompanyIdFilter)
 						: undefined,
+					eq(jobs.id, jobId),
 					includeDeleted ? undefined : isNull(bids.deletedAt),
 					minPriceUsd ? gte(bids.priceUsd, minPriceUsd.toString()) : undefined,
 					maxPriceUsd ? lte(bids.priceUsd, maxPriceUsd.toString()) : undefined
@@ -363,7 +364,7 @@ class BidsQueryClient extends QueryClient {
 			.innerJoin(stdDevJobs, eq(jobBids.jobId, stdDevJobs.jobId))
 			.where(eq(bids.priceUsd, sql`${sq}`))
 			.limit(10);
-			
+
 		if (bidIds.length === 0) {
 			return [];
 		}
