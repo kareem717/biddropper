@@ -1,7 +1,13 @@
 "use client"
 
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationEllipsis, PaginationNext } from "@/components/ui/pagination"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext
+} from "@/components/ui/pagination"
 import { trpc } from "@/lib/trpc/client";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -27,57 +33,45 @@ export default function FavouriteJobsPage() {
   })
 
   return (
-    <section className="w-full py-12 md:py-24">
-      <div className="container">
-        {isError ?
-          (<ErrorDiv message={error?.message} isRetrying={isRefetching} retry={refetch} retriable={errorUpdateCount < 3} />) :
-          isLoading ? (
-            <div className="mx-auto max-w-2xl flex flex-col justify-center items-center">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">My Favorite Jobs</h1>
-              <div className="mt-8 flex flex-col gap-4 w-full">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-36 w-full" />
-                ))}
-              </div>
+    <div className="w-full p-4 md:p-8 flex flex-col gap-4">
+      <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">My Favorite Jobs</h1>
+      {isError ?
+        (<ErrorDiv message={error?.message} isRetrying={isRefetching} retry={refetch} retriable={errorUpdateCount < 3} />) :
+        isLoading ? (
+          <div className="mt-8 flex flex-col gap-4 w-full">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-36 w-full" />
+            ))}
+          </div>
+        ) : data && data.data.length > 0 ? (
+          <div className="mt-8 flex flex-col gap-6">
+            {data.data.map((job) => (
+              <FavouriteJobCard key={job.id} job={job} accountId={account.id} onUnfavourite={() => refetch()} />
+            ))}
+            <div className="mt-8 flex justify-center">
+              {data.hasNext || data.hasPrevious ? (
+                <Pagination>
+                  <PaginationContent>
+                    {data.hasPrevious ? (
+                      <PaginationItem>
+                        <PaginationPrevious href={`/favourites/jobs?page=${data.previousPage}`} />
+                      </PaginationItem>
+                    ) : null}
+                    {data.hasNext ? (
+                      <PaginationItem>
+                        <PaginationNext href={`/favourites/jobs?page=${data.nextPage}`} />
+                      </PaginationItem>
+                    ) : null}
+                  </PaginationContent>
+                </Pagination>
+              ) : null}
             </div>
-          ) : data ? (
-            <div className="mx-auto max-w-2xl flex flex-col justify-center items-center">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">My Favorite Jobs</h1>
-              <div className="mt-8 flex flex-col gap-6">
-                {data.data.map((company) => (
-                  <FavouriteJobCard key={company.id} job={company} accountId={account.id} onUnfavourite={() => refetch()} />
-                ))}
-              </div>
-              <div className="mt-8 flex justify-center">
-                {data.hasNext || data.hasPrevious ? (
-                  <Pagination>
-                    <PaginationContent>
-                      {data.hasPrevious ? (
-                        <PaginationItem>
-                          <PaginationPrevious href={`/favourites/companies?page=${data.previousPage}`} />
-                        </PaginationItem>
-                      ) : null}
-                      {data.hasNext ? (
-                        <PaginationItem>
-                          <PaginationNext href={`/favourites/companies?page=${data.nextPage}`} />
-                        </PaginationItem>
-                      ) : null}
-                    </PaginationContent>
-                  </Pagination>
-                ) : null}
-              </div>
-            </div>
-          ) :
-            (
-              <div className="mx-auto max-w-2xl flex flex-col justify-center items-center">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">My Favorite Construction Companies</h1>
-                <div className="mt-8 flex flex-col gap-6">
-                  <div>No favourite companies found</div>
-                </div>
-              </div>
-            )
-        }
-      </div>
-    </section>
+          </div>
+        ) :
+          (
+            <div>No favourite jobs found</div>
+          )
+      }
+    </div >
   )
 }
