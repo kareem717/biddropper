@@ -101,9 +101,6 @@ export const EditAccountForm: FC<EditAccountFormProps> = ({ onSubmitProp, ...pro
               <FormControl>
                 <Textarea placeholder="I'm a contractor" {...field} value={field.value || ''} />
               </FormControl>
-              <FormDescription>
-                This is your public display name.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -120,7 +117,6 @@ export const EditAccountForm: FC<EditAccountFormProps> = ({ onSubmitProp, ...pro
               This action cannot be undone. This will permanently update your account.
             </DialogDescription>
           </DialogHeader>
-          {JSON.stringify(form.getValues())}
           <Button type="button" className="w-full" onClick={form.handleSubmit(onSubmit)} disabled={isEditingAccount}>
             {isEditingAccount ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Update account"}
           </Button>
