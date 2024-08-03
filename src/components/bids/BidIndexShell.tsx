@@ -25,7 +25,7 @@ export interface BidIndexShellProps extends ComponentPropsWithoutRef<"div"> {
 
 //TODO: ngl this makes me wanna yack
 export const BidIndexShell: FC<BidIndexShellProps> = ({ entity, direction = "incoming", page = 1, pageSize = 10, className, scrollAreaProps, ...props }) => {
-  const forEntity = 'accountId' in entity ? 'account' : 'companyId' in entity ? 'company' : 'job' 
+  const forEntity = 'accountId' in entity ? 'account' : 'companyId' in entity ? 'company' : 'job'
   const id = 'accountId' in entity ? entity.accountId : 'companyId' in entity ? entity.companyId : entity.jobId
   const incoming = direction === "incoming"
   const scrollAreaClassName = scrollAreaProps?.className
@@ -185,7 +185,14 @@ export const BidIndexShell: FC<BidIndexShellProps> = ({ entity, direction = "inc
             <div className="grid gap-4 p-4">
               {bids.length ?
                 bids.map((bid, i) => (
-                  incoming ? <ReceivedBidIndexCard key={i} bid={bid} /> : <SentBidIndexCard key={i} bid={bid} />
+                  incoming ? <ReceivedBidIndexCard
+                    key={i}
+                    bid={bid}
+                  />
+                    : <SentBidIndexCard
+                      key={i}
+                      bid={bid}
+                    />
                 ))
                 : (
                   <div className="text-sm text-muted-foreground py-24 text-center">No bids</div>

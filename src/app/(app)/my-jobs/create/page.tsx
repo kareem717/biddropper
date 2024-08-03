@@ -9,16 +9,16 @@ import {
 
 export default async function JobCreatePage() {
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <Card>
+    <div className="w-full flex items-center justify-center">
+      <Card className="mx-2 mt-10">
         <CardHeader>
-          <CardTitle>Create a new company</CardTitle>
+          <CardTitle>Create a new job</CardTitle>
           <CardDescription>
-            Fill out the form below to create a new company.
+            Fill out the form below to create a new job.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <CreateJobForm />
+        <CardContent className="max-w-2xl">
+          <CreateJobForm className="max-h-[70vh] overflow-y-auto"/>
         </CardContent>
       </Card>
     </div>

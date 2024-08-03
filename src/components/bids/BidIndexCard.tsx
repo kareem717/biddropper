@@ -16,17 +16,46 @@ import {
 import { Button } from "@/components/ui/button"
 import { ShowBid } from "@/lib/db/queries/validation"
 import { titleCase } from "title-case"
+import { trpc } from "@/lib/trpc/client"
+import { toast } from "sonner"
+import { Icons } from "../Icons"
 
 export interface ReceivedBidIndexCardProps extends ComponentPropsWithoutRef<typeof Dialog> {
   bid: ShowBid
+  onAccept?: () => void
+  onReject?: () => void
 }
 
-export const ReceivedBidIndexCard = ({ bid, ...props }: ReceivedBidIndexCardProps) => {
+export const ReceivedBidIndexCard = ({ bid, onAccept, onReject, ...props }: ReceivedBidIndexCardProps) => {
   const jobTitle = titleCase(bid.job.title)
   const amountFormatted = bid.bids.priceUsd
   const note = bid.bids.note
   const submissionDate = new Date(bid.bids.createdAt)
   const status = titleCase(bid.bids.status)
+
+  const { mutateAsync: acceptBid, isLoading: acceptBidLoading } = trpc.bid.acceptBid.useMutation({
+    onError: (error) => {
+      toast.error("Uh oh!", {
+        description: error.message
+      })
+    },
+    onSuccess: () => {
+      toast.success("Bid accepted!")
+      onAccept?.()
+    }
+  })
+
+  const { mutateAsync: rejectBid, isLoading: rejectBidLoading } = trpc.bid.rejectBid.useMutation({
+    onError: (error) => {
+      toast.error("Uh oh!", {
+        description: error.message
+      })
+    },
+    onSuccess: () => {
+      toast.success("Bid rejected!")
+      onReject?.()
+    }
+  })
 
   return (
     <Dialog {...props}>
@@ -80,8 +109,21 @@ export const ReceivedBidIndexCard = ({ bid, ...props }: ReceivedBidIndexCardProp
           </div>
         </div>
         <DialogFooter className="flex flex-col md:flex-row gap-2 items-center justify-center">
-          <Button variant="outline" className="w-full">Reject</Button>
-          <Button className="w-full">Accept</Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => rejectBid({ bidId: bid.bids.id })}
+            disabled={rejectBidLoading || acceptBidLoading}
+          >
+            {rejectBidLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Reject"}
+          </Button>
+          <Button
+            className="w-full"
+            onClick={() => acceptBid({ bidId: bid.bids.id })}
+            disabled={acceptBidLoading || rejectBidLoading}
+          >
+            {acceptBidLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Accept"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -91,14 +133,27 @@ export const ReceivedBidIndexCard = ({ bid, ...props }: ReceivedBidIndexCardProp
 
 export interface SentBidIndexCardProps extends ComponentPropsWithoutRef<typeof Dialog> {
   bid: ShowBid
+  onWithdraw?: () => void
 }
 
-export const SentBidIndexCard = ({ bid, ...props }: SentBidIndexCardProps) => {
+export const SentBidIndexCard = ({ bid, onWithdraw, ...props }: SentBidIndexCardProps) => {
   const jobTitle = titleCase(bid.job.title)
   const amountFormatted = bid.bids.priceUsd
   const note = bid.bids.note
   const submissionDate = new Date(bid.bids.createdAt)
   const status = titleCase(bid.bids.status)
+
+  const { mutateAsync: withdrawBid, isLoading: withdrawBidLoading } = trpc.bid.withdrawBid.useMutation({
+    onError: (error) => {
+      toast.error("Uh oh!", {
+        description: error.message
+      })
+    },
+    onSuccess: () => {
+      toast.success("Bid withdrawn!")
+      onWithdraw?.()
+    }
+  })
 
   return (
     <Dialog {...props}>
@@ -152,7 +207,14 @@ export const SentBidIndexCard = ({ bid, ...props }: SentBidIndexCardProps) => {
           </div>
         </div>
         <DialogFooter className="flex flex-col md:flex-row gap-2 items-center justify-center">
-          <Button variant="outline" className="w-full">Withdraw</Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => withdrawBid({ bidId: bid.bids.id })}
+            disabled={withdrawBidLoading}
+          >
+            {withdrawBidLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Withdraw"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -35,7 +35,7 @@ export default function JobExplorePage() {
       {isError ? (
         <ErrorDiv message={error?.message} retry={refetch} isRetrying={isRefetching} retriable={errorUpdateCount < 3} />
       ) : isLoading || isRefetching ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 max-h-[90%]">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {Array(10).map((_, idx) => (
               <Skeleton key={idx} className="h-20 w-full" />

@@ -4,8 +4,8 @@ export default function CompanyReceivedBidsPage({ params, searchParams }: { para
   const page = searchParams.page
 
   return (
-    <div className="flex flex-col gap-4 h-full w-full">
-      <h1>Recieved</h1>
+    <div className="flex flex-col gap-4 h-full w-full px-2 md:px-8 pt-4 md:pt-10">
+      <h1 className="text-3xl font-bold">Recieved Bids</h1>
       <BidIndexShell
         entity={{ companyId: params.id }}
         direction="incoming"

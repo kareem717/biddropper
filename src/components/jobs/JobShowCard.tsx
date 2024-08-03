@@ -23,6 +23,7 @@ import { CreateMessageForm } from "../messages/CreateMessageForm";
 import { JobAnalyticLine } from "./JobAnalyticLine";
 import { ErrorDiv } from "../app/ErrorDiv";
 import { Skeleton } from "../ui/skeleton";
+import { ScrollArea } from "../ui/scroll-area";
 
 export interface JobShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
@@ -75,15 +76,15 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
           <Skeleton className="w-full h-[70vh] max-h-[1000px] col-span-2" />
         ) : (
           <div  {...props} className={cn("grid grid-cols-1 md:grid-cols-2 gap-4", className)}>
-            <div className="w-full">
-              <div className="grid gap-4 h-full">
+            <div className="flex flex-col items-center justify-start h-full w-full">
+              <div>
                 <div className="flex items-center justify-between">
                   <h1 className="text-2xl font-bold">{titleCase(data.job.title)}</h1>
                   <div className="text-sm text-muted-foreground">
                     Posted on {new Date(data.job.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 gap-4 mt-2">
                   <div>
                     <div className="text-sm font-medium text-muted-foreground">Owner</div>
                     <Link href={sender.href} className="font-medium">{sender.displayName}</Link>
@@ -103,13 +104,11 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
                     ))}
                   </div>
                 </div>
-                <JobAnalyticLine jobId={jobId} className="border-b border-border pb-4" />
-                <div className="prose">
-                  <p>
-                    {data.job.description}
-                  </p>
-                </div>
               </div>
+              <JobAnalyticLine jobId={jobId} className="border-b border-border pb-4 w-full pt-2" />
+              <ScrollArea className="w-full flex items-start justify-start h-full max-h-[500px] whitespace-pre-wrap p-2">
+                {data.job.description}
+              </ScrollArea>
             </div>
             {companies && companies.length > 0 && (
               <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
@@ -125,13 +124,13 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
                         and remove your data from our servers.
                       </DialogDescription>
 
-                      <CreateMessageForm />
+                      <CreateMessageForm recipients={{ accountIds: data.ownerAccount?.id ? [data.ownerAccount.id] : [], companyIds: data.ownerCompany?.id ? [data.ownerCompany.id] : [] }} />
                     </DialogHeader>
                   </DialogContent>
                 </Dialog>
               </div>
             )}
-          </div>
+          </div >
         )}
     </>
   )

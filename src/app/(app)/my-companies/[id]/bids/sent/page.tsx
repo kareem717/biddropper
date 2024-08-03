@@ -4,11 +4,11 @@ export default function CompanySentBidsPage({ params, searchParams }: { params: 
   const page = searchParams.page
 
   return (
-    <div className="flex flex-col gap-4 h-full w-full">
-      <h1>Sent</h1>
+    <div className="flex flex-col gap-4 h-full w-full px-2 md:px-8 pt-4 md:pt-10">
+      <h1 className="text-3xl font-bold">Sent Bids</h1>
       <BidIndexShell
         entity={{ companyId: params.id }}
-        direction="outgoing"
+        direction="incoming"
         page={page ? parseInt(page) : undefined}
         pageSize={10}
       />

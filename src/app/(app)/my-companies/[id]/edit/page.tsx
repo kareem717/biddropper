@@ -4,20 +4,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function EditCompanyPage({ params }: { params: { id: string } }) {
   return (
-    <Card className="w-[50vw] max-w-4xl">
-      <CardHeader>
-        <CardTitle>
-          Edit Company
-        </CardTitle>
-        <CardDescription>
-          Edit the company details
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[70vh]">
-          <EditCompanyForm companyId={params.id} />
-        </ScrollArea>
-      </CardContent>
-    </Card>
+    <div className="w-full flex items-center justify-center px-2 mt-10">
+      <Card className="max-w-2xl w-full">
+        <CardHeader>
+          <CardTitle>
+            Edit Company
+          </CardTitle>
+          <CardDescription>
+            Edit the company details
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[70vh]">
+            <EditCompanyForm companyId={params.id} />
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

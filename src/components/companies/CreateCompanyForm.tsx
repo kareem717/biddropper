@@ -273,11 +273,9 @@ export const CreateCompanyForm: FC<CreateCompanyFormProps> = ({ onSubmitProp, cl
           <DialogHeader>
             <DialogTitle>Are you absolutely sure?</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. This will permanently delete your account
-              and remove your data from our servers.
+              Please double check the information below before creating the company, and ensure that it is correct.
             </DialogDescription>
           </DialogHeader>
-          {JSON.stringify(form.getValues())}
           <Button type="button" className="w-full" onClick={form.handleSubmit(onSubmit)} disabled={isLoading}>
             {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}
           </Button>

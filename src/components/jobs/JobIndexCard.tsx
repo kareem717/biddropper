@@ -13,9 +13,10 @@ import { ErrorDiv } from "../app/ErrorDiv"
 
 export interface JobIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {
   jobId: string
+  href?: string
 }
 
-export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) => {
+export const JobIndexCard = ({ jobId, href, className, ...props }: JobIndexCardProps) => {
   const { data, isLoading, isError, error, isRefetching, refetch, errorUpdateCount } = trpc.job.getJobFull.useQuery({ id: jobId }, {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -45,7 +46,7 @@ export const JobIndexCard = ({ jobId, className, ...props }: JobIndexCardProps) 
             <p className="text-muted-foreground text-sm">Posted {timeSince(new Date(data.job.createdAt))}</p>
           </CardContent>
           <CardFooter className="bg-primary px-6 py-4">
-            <Link href={`/explore/jobs/${jobId}`} className="text-background font-semibold">View Details</Link>
+            <Link href={href || `/explore/jobs/${jobId}`} className="text-background font-semibold">View Details</Link>
           </CardFooter>
         </Card>
       )}

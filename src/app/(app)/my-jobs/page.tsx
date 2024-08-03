@@ -41,10 +41,10 @@ export default function JobExplorePage() {
   const jobs = data || []
 
   return (
-    <div className="bg-background min-h-screen py-4 md:py-12">
-      <div className="container mx-auto px-4">
+    <div className="bg-background min-h-screen py-4 md:py-8">
+      <div className="container mx-auto px-0">
         <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-2">
-          <h1 className="text-3xl font-bold text-primary">My Jobs</h1>
+          <h1 className="text-3xl font-bold">My Jobs</h1>
           <Link href="/my-jobs/create" className={cn(buttonVariants(), "flex items-center gap-2")}>
             <Icons.add className="w-5 h-5" />
             Create
@@ -64,7 +64,7 @@ export default function JobExplorePage() {
           jobs.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {jobs.map((job) => (
-                <JobIndexCard key={job.id} jobId={job.id} />
+                <JobIndexCard key={job.id} jobId={job.id} href={`/my-jobs/${job.id}`} />
               ))}
             </div>
           ) : (

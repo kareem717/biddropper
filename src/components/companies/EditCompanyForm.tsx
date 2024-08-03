@@ -72,6 +72,7 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ companyId, className
     refetchOnMount: false,
     retry: false
   });
+
   const { mutateAsync: editCompany, isLoading, isError } = trpc.company.editCompany.useMutation({
     onError: (error) => {
       toast.error("Something went wrong!", {
@@ -79,8 +80,6 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ companyId, className
       });
     },
   })
-
-
 
   // @ts-ignore
   const form = useForm<z.infer<typeof formSchema>>({
@@ -118,7 +117,7 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ companyId, className
         description: "We've created your company and added it to your dashboard."
       });
 
-      router.push(`/company/${id}`);
+      router.push(`/my-companies/${id}`);
     }
   }
 
@@ -284,20 +283,18 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ companyId, className
             </FormItem>
           </form>
           <Button className="w-full mt-8" onClick={handleConfirmDialog} disabled={isLoading}>
-            {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}
+            {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Save Company"}
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Are you absolutely sure?</DialogTitle>
                 <DialogDescription>
-                  This action cannot be undone. This will permanently delete your account
-                  and remove your data from our servers.
+                  Please double check the information below before creating the company, and ensure that it is correct.
                 </DialogDescription>
               </DialogHeader>
-              {JSON.stringify(form.getValues())}
               <Button type="button" className="w-full" onClick={form.handleSubmit(onSubmit)} disabled={isLoading}>
-                {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}
+                {isLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Edit Company"}
               </Button>
             </DialogContent>
           </Dialog>

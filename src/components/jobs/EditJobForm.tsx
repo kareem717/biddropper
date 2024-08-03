@@ -76,6 +76,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
     refetchOnMount: false,
     retry: false
   });
+
   const {
     mutateAsync: editJob,
     isLoading: isEditJobLoading,
@@ -93,10 +94,11 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      ...job,
+      ...job?.job,
       address: getAddress()
     },
   })
+
 
   useEffect(() => {
     if (job) {
@@ -123,7 +125,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
         description: "We've updated your job."
       });
 
-      router.push(`/company/${id}`);
+      router.push(`/my-jobs/${id}`);
     } else {
       toast.error("Something went wrong!", {
         description: editJobError?.message
@@ -147,7 +149,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
         <Skeleton className="w-full h-[80vh]" />
       ) : (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8", className)} {...props}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8 px-2", className)} {...props}>
             <FormField
               control={form.control}
               name="title"
@@ -256,7 +258,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
                 }} />
               </FormControl>
               <FormDescription>
-                Select all industries that your company operates in.
+                Select all industries that are relevant to this job.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -434,7 +436,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
               )}
             />
             <Button className="w-full mt-8" onClick={handleConfirmDialog} disabled={isEditJobLoading}>
-              {isEditJobLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}
+              {isEditJobLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Save Job"}
             </Button>
           </form>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -442,13 +444,11 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
               <DialogHeader>
                 <DialogTitle>Are you absolutely sure?</DialogTitle>
                 <DialogDescription>
-                  This action cannot be undone. This will permanently delete your account
-                  and remove your data from our servers.
+                  Please double check the information below before creating the job, and ensure that it is correct.
                 </DialogDescription>
               </DialogHeader>
-              {JSON.stringify(form.getValues())}
               <Button type="button" className="w-full" onClick={form.handleSubmit(onSubmit)} disabled={isEditJobLoading}>
-                {isEditJobLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Create Company"}
+                {isEditJobLoading ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Save Job"}
               </Button>
             </DialogContent>
           </Dialog>

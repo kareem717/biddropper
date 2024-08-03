@@ -25,6 +25,7 @@ import { toast } from "sonner"
 import { Icons } from "../Icons"
 import { ErrorDiv } from "../app/ErrorDiv"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export interface JobOwnerShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
@@ -75,6 +76,8 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
     await mutateAsync({ id: jobId })
   }
 
+
+
   return (
     <div  {...props} className={cn("grid grid-cols-1 md:grid-cols-2 gap-4", className)}>
       {isError ? (
@@ -82,15 +85,15 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
       ) : isLoading || isRefetching ? (
         <Skeleton className="w-[300px] h-[70vh] max-h-[1000px]" />
       ) : (
-        <div className="w-full">
-          <div className="grid gap-4 h-full">
+        <div className="flex flex-col items-center justify-start h-full w-full">
+          <div>
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold">{titleCase(data.job.title)}</h1>
               <div className="text-sm text-muted-foreground">
                 Posted on {new Date(data.job.createdAt).toLocaleDateString()}
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4 mt-2">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Owner</div>
                 <Link href={sender.href} className="font-medium">{sender.displayName}</Link>
@@ -110,41 +113,39 @@ export const JobOwnerShowCard: FC<JobOwnerShowCardProps> = ({ jobId, className, 
                 ))}
               </div>
             </div>
-            <div className="prose">
-              <p>
-                {data.job.description}
-              </p>
-            </div>
-            <div className="flex gap-2 w-full">
-              <Link href={`/my-jobs/${jobId}/edit`} className={cn(buttonVariants(), "w-full")}>
-                Edit
-              </Link>
-              <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <AlertDialogTrigger className={cn(buttonVariants({ variant: "outline" }), "w-full")} disabled={isDeleting}>
-                  {isDeleting ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Delete"}
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  </AlertDialogHeader>
-                  <AlertDialogDescription>
-                    This action is destructive. This will permanently delete the job, and all the data associated it.
-                    The only way to recover it is by contacting support.
-                  </AlertDialogDescription>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setDialogOpen(false)} >Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleJobDelete}>
-                      {isDeleting ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Delete"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+          </div>
+          <ScrollArea className="w-full flex items-start justify-start h-full max-h-[500px] whitespace-pre-wrap p-2">
+              {data.job.description}
+          </ScrollArea>
+          <div className="flex gap-2 w-full">
+            <Link href={`/my-jobs/${jobId}/edit`} className={cn(buttonVariants(), "w-full")}>
+              Edit
+            </Link>
+            <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <AlertDialogTrigger className={cn(buttonVariants({ variant: "outline" }), "w-full")} disabled={isDeleting}>
+                {isDeleting ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Delete"}
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                </AlertDialogHeader>
+                <AlertDialogDescription>
+                  This action is destructive. This will permanently delete the job, and all the data associated it.
+                  The only way to recover it is by contacting support.
+                </AlertDialogDescription>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDialogOpen(false)} >Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleJobDelete}>
+                    {isDeleting ? <Icons.spinner className="w-4 h-4 animate-spin" /> : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}
       <div className="w-full border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
-        <BidIndexShell entity={{ jobId }} scrollAreaProps={{ className: "max-h-[800px] h-[70vh] min-h-[250px]" }} />
+        <BidIndexShell entity={{ jobId }} scrollAreaProps={{ className: "max-h-[800px] h-[60vh] min-h-[250px]" }} />
       </div>
     </div>
   )

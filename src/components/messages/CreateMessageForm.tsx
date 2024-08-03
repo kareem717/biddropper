@@ -43,9 +43,13 @@ export interface CreateMessageFormProps extends ComponentPropsWithoutRef<"form">
       type: "account" | "company";
     };
   }[];
+  recipients?: {
+    accountIds: string[];
+    companyIds: string[];
+  };
 }
 
-export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSubmitProp, replyTo, ...props }) => {
+export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSubmitProp, replyTo, recipients, ...props }) => {
   const { account, user } = useAuth()
   if (!account || !user) {
     throw new Error("Account or user not found")
@@ -68,7 +72,7 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
     defaultValues: {
       senderAccountId: account.id,
       replyTo: isReply ? replyTo.map((r) => r.messageId) : undefined,
-      recipients: isReply ? replyTo.reduce((acc, r) => {
+      recipients: recipients ? recipients : isReply ? replyTo.reduce((acc, r) => {
         acc.accountIds.push(...replyTo.filter((rec) => rec.recipient.type === "account").map((rec) => rec.recipient.id));
         acc.companyIds.push(...replyTo.filter((rec) => rec.recipient.type === "company").map((rec) => rec.recipient.id));
         return acc;
@@ -218,7 +222,7 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
             )}
           />
         ) : undefined}
-        {!isReply && (
+        {(!isReply && !recipients) && (
           <FormField
             control={form.control}
             name="recipients"
