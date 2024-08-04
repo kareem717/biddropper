@@ -3,6 +3,7 @@
 import { CreateAccountForm } from "@/components/auth/CreateAccountForm";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
+import redirects from "@/config/redirects";
 
 export default function CreateAccountPage() {
 	const router = useRouter();
@@ -10,10 +11,10 @@ export default function CreateAccountPage() {
 
 	if (user) {
 		if (account) {
-			router.push("/dashboard");
+			router.push(redirects.overview);
 		} 
 	} else {
-		router.push("/login");
+		router.push(redirects.auth.login);
 	}
 
 	return (

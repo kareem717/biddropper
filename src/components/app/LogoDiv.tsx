@@ -11,9 +11,6 @@ export const LogoDiv: FC<LogoDivProps> = ({ ...props }) => {
             bid
             <span className="text-primary">dropper</span>
           </span>
-          {/* <sup className="absolute left-[calc(100%+.1rem)] top-0 text-xs font-bold">
-            [BETA]
-          </sup> */}
         </h1>
       </a>
     </div>

@@ -1,5 +1,4 @@
 "use client";
-//! WARNING: This component is not SSR compatible
 
 import { ComponentPropsWithoutRef, useMemo, FC, useEffect } from "react";
 import { env } from "@/lib/env.mjs";

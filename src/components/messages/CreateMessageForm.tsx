@@ -55,7 +55,7 @@ export const CreateMessageForm: FC<CreateMessageFormProps> = ({ className, onSub
     throw new Error("Account or user not found")
   }
 
-  const { data: ownedCompanies, isLoading: isLoadingOwnedCompanies } = trpc.company.getOwnedCompanies.useQuery({})
+  const { data: ownedCompanies} = trpc.company.getOwnedCompanies.useQuery({})
   const { mutateAsync: createMessage, isLoading, isError } = trpc.message.createMessage.useMutation({
     onError: () => {
       toast.error("Something went wrong!", {

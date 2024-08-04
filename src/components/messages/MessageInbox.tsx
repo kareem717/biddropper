@@ -239,7 +239,7 @@ export const MessageInbox: FC<MessageInboxProps> = ({
           </DialogTrigger>
           <DialogContent>
             <ScrollArea className="h-full max-h-[95vh]">
-              <CreateMessageForm className="mx-2"/>
+              <CreateMessageForm className="mx-2" />
             </ScrollArea>
           </DialogContent>
         </Dialog>

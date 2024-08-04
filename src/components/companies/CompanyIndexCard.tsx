@@ -18,6 +18,7 @@ import { titleCase } from "title-case";
 import { ShowAddress } from "@/lib/db/queries/validation";
 import { ErrorDiv } from "../app/ErrorDiv";
 import { Skeleton } from "../ui/skeleton";
+import redirects from "@/config/redirects";
 
 export interface CompanyIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {
   companyId: string;
@@ -30,8 +31,6 @@ export const CompanyIndexCard = ({ companyId, href, className, ...props }: Compa
     refetchOnMount: false,
     retry: false,
   })
-
-
 
   return (
     <>
@@ -55,7 +54,7 @@ export const CompanyIndexCard = ({ companyId, href, className, ...props }: Compa
             <AddressDisplay address={company.address as ShowAddress} />
           </CardContent>
           <CardFooter className="bg-primary px-6 py-4">
-            <Link href={href || `/companies/${companyId}`} className="text-background font-semibold">View Details</Link>
+            <Link href={href || `${redirects.explore.companies}/${companyId}`} className="text-background font-semibold">View Details</Link>
           </CardFooter>
         </Card>
       )}

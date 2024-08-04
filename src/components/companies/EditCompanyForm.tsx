@@ -42,6 +42,7 @@ import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
 import dynamic from "next/dynamic";
 import { ErrorDiv } from "@/components/app/ErrorDiv";
 import { Skeleton } from "@/components/ui/skeleton";
+import redirects from "@/config/redirects";
 
 const formSchema = EditCompanySchema
 
@@ -117,7 +118,7 @@ export const EditCompanyForm: FC<EditCompanyFormProps> = ({ companyId, className
         description: "We've created your company and added it to your dashboard."
       });
 
-      router.push(`/my-companies/${id}`);
+      router.push(`${redirects.myCompanies}/${id}`);
     }
   }
 

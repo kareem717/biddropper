@@ -1,4 +1,3 @@
-import { Icons } from "@/components/Icons";
 import { LogoDiv } from "@/components/app/LogoDiv";
 import AuthConfig from "@/config/auth";
 

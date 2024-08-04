@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { ScrollArea, ScrollBar } from "../ui/scroll-area"
 import { Skeleton } from "../ui/skeleton"
 import { ErrorDiv } from "../app/ErrorDiv"
+import redirects from "@/config/redirects";
 
 export interface JobIndexCardProps extends ComponentPropsWithoutRef<typeof Card> {
   jobId: string
@@ -46,7 +47,7 @@ export const JobIndexCard = ({ jobId, href, className, ...props }: JobIndexCardP
             <p className="text-muted-foreground text-sm">Posted {timeSince(new Date(data.job.createdAt))}</p>
           </CardContent>
           <CardFooter className="bg-primary px-6 py-4">
-            <Link href={href || `/explore/jobs/${jobId}`} className="text-background font-semibold">View Details</Link>
+            <Link href={href || `${redirects.explore.jobs}/${jobId}`} className="text-background font-semibold">View Details</Link>
           </CardFooter>
         </Card>
       )}

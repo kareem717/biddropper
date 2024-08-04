@@ -54,6 +54,7 @@ import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
 import { Textarea } from "@/components/ui/textarea";
 import { FC, ComponentPropsWithoutRef } from "react";
 import dynamic from 'next/dynamic';
+import redirects from "@/config/redirects";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const formSchema = NewJobSchema
@@ -109,7 +110,7 @@ export const CreateJobForm: FC<CreateJobFormProps> = ({ onSubmitProp, className,
         description: "We've created your job and added it to your dashboard."
       });
 
-      router.push(`/company/${id}`);
+      router.push(`${redirects.myJobs}/${id}`);
     }
 
   }

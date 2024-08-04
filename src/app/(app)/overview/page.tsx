@@ -1,6 +1,5 @@
 import { HottestBidsCard } from "@/components/bids/HottestBidsCard";
 import { api } from "@/lib/trpc/api";
-import { Card } from "@/components/ui/card";
 import Link from "next/link";
 
 export default async function OverviewPage() {

@@ -13,6 +13,7 @@ import {
 import { useSearchParams } from "next/navigation";
 import { ErrorDiv } from "@/components/app/ErrorDiv";
 import { Skeleton } from "@/components/ui/skeleton";
+import redirects from "@/config/redirects";
 
 export default function CompanyExplorePage() {
   const page = useSearchParams().get("page");
@@ -49,12 +50,12 @@ export default function CompanyExplorePage() {
               <PaginationContent>
                 <PaginationItem>
                   {data.hasPrevious && (
-                    <PaginationPrevious href={`/explore/jobs?page=${data.previousPage}`} />
+                    <PaginationPrevious href={`${redirects.explore.companies}?page=${data.previousPage}`} />
                   )}
                 </PaginationItem>
                 <PaginationItem>
                   {data.hasNext && (
-                    <PaginationNext href={`/explore/jobs?page=${data.nextPage}`} />
+                    <PaginationNext href={`${redirects.explore.companies}?page=${data.nextPage}`} />
                   )}
                 </PaginationItem>
               </PaginationContent>

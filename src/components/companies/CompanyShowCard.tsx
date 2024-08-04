@@ -64,7 +64,6 @@ export const CompanyShowCard: FC<CompanyShowCardProps> = ({ companyId, className
                 </div>
                 <div className="grid gap-1">
                   <div className="text-sm font-medium text-muted-foreground">Founded</div>
-                  {/* Only select month and year */}
                   <div>{new Date(company.dateFounded).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</div>
                 </div>
               </div>

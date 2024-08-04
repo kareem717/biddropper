@@ -47,6 +47,7 @@ import { useAutoFillMap } from "@/lib/hooks/useAutoFillMap";
 import dynamic from 'next/dynamic';
 import { ErrorDiv } from "@/components/app/ErrorDiv";
 import { Skeleton } from "@/components/ui/skeleton";
+import redirects from "@/config/redirects";
 
 const formSchema = EditJobSchema
 
@@ -125,7 +126,7 @@ export const EditJobForm: FC<EditJobFormProps> = ({ jobId, onSubmitProp, classNa
         description: "We've updated your job."
       });
 
-      router.push(`/my-jobs/${id}`);
+      router.push(`${redirects.myJobs}/${id}`);
     } else {
       toast.error("Something went wrong!", {
         description: editJobError?.message

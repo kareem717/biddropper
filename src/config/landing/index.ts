@@ -12,7 +12,7 @@ const landing = {
 		},
 		cta: {
 			label: "Get started",
-			href: redirects.dashboard,
+			href: redirects.overview,
 		},
 		secondaryCta: {
 			label: "Contact us",
@@ -117,7 +117,7 @@ const landing = {
 	],
 	cta: {
 		label: "Get started",
-		href: redirects.dashboard,
+		href: redirects.overview,
 	},
 	secondaryCta: {
 		label: "Contact us",

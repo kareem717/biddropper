@@ -24,6 +24,7 @@ import { JobAnalyticLine } from "./JobAnalyticLine";
 import { ErrorDiv } from "../app/ErrorDiv";
 import { Skeleton } from "../ui/skeleton";
 import { ScrollArea } from "../ui/scroll-area";
+import redirects from "@/config/redirects";
 
 export interface JobShowCardProps extends ComponentPropsWithoutRef<"div"> {
   jobId: string
@@ -56,14 +57,14 @@ export const JobShowCard: FC<JobShowCardProps> = ({ jobId, className, ...props }
   if (data?.ownerAccount) {
     sender = {
       displayName: data.ownerAccount.username,
-      href: `/accounts/${data.ownerAccount.id}`
+      href: `#`
     }
   }
 
   if (data?.ownerCompany) {
     sender = {
       displayName: data.ownerCompany.name,
-      href: `/companies/${data.ownerCompany.id}`
+      href: `${redirects.explore.companies}/${data.ownerCompany.id}`
     }
   }
 

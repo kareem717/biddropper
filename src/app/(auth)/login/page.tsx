@@ -13,7 +13,7 @@ export default function LoginPage() {
 		if (account) {
 			router.push(redirects.auth.afterLogin);
 		} else {
-			router.push("/create-account");
+			router.push(redirects.auth.createAccount);
 		}
 	}
 

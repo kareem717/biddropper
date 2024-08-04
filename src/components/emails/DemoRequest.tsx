@@ -42,7 +42,7 @@ export const DemoRequestEmail: FC<Readonly<DemoRequestEmailProps>> = ({
         <div className="flex flex-col tracking-wide text-muted-foreground">
           <Link className="font-bold text-lg text-primary" href="https://biddropper.com">biddropper.com</Link>
           <span>Ontario, Canada</span>
-          <Link href="mailto:support@biddropper.com">support@biddropper.com</Link>
+          <Link href={`mailto:${env.NEXT_PUBLIC_SUPPORT_EMAIL}`}>{env.NEXT_PUBLIC_SUPPORT_EMAIL}</Link>
           <span>Copyright © 2024 Yakubu LLC</span>
         </div>
       </div>
@@ -94,7 +94,7 @@ export const DemoRequestCallbackEmail: React.FC<Readonly<DemoRequestEmailProps>>
           <Link className="font-bold text-lg text-primary" href="https://biddropper.com">biddropper.com</Link>
           <span>+1 (647) 746-9659</span>
           <span>Ontario, Canada</span>
-          <span>support@biddropper.com</span>
+          <Link href={`mailto:${env.NEXT_PUBLIC_SUPPORT_EMAIL}`}>{env.NEXT_PUBLIC_SUPPORT_EMAIL}</Link>
           <span>Copyright © 2024 Yakubu LLC</span>
         </div>
       </div>

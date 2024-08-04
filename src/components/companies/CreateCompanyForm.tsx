@@ -41,6 +41,7 @@ import {
 import { useState, FC, ComponentPropsWithoutRef } from "react";
 import { Icons } from "../Icons";
 import { useIndustrySelect } from "@/lib/hooks/useIndustrySelect";
+import redirects from "@/config/redirects";
 
 const RadiusAddressMap = dynamic(() => import("@/components/maps/RadiusAddressMap"), { ssr: false });
 
@@ -100,7 +101,7 @@ export const CreateCompanyForm: FC<CreateCompanyFormProps> = ({ onSubmitProp, cl
         description: "We've created your company and added it to your dashboard."
       });
 
-      router.push(`/company/${company.id}`);
+      router.push(`${redirects.myCompanies}/${company.id}`);
     }
   }
 

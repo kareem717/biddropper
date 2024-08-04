@@ -27,6 +27,7 @@ import {
 import { NewBidSchema, ShowCompany } from "@/lib/db/queries/validation";
 import { Textarea } from "../ui/textarea";
 import { cn } from "@/lib/utils";
+import redirects from "@/config/redirects";
 
 const formSchema = NewBidSchema
 
@@ -76,7 +77,7 @@ export const DropBidForm = ({ jobId, onSubmitProp, companies, className, ...prop
         description: "We've created your bid and added it to your dashboard."
       });
 
-      router.push(`/bids/${id}`);
+      router.push(`${redirects.bids}/${id}`);
     }
   }
 

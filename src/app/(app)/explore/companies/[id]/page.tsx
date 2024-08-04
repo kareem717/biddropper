@@ -1,6 +1,6 @@
 "use client"
+
 import { CompanyShowCard } from "@/components/companies/CompanyShowCard"
-import { useParams } from "next/navigation"
 
 export default function CompanyShowPage({ params }: { params: { id: string } }) {
   return (
