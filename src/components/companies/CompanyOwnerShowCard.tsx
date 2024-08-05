@@ -10,6 +10,7 @@ import { Card } from "../ui/card"
 import { ErrorDiv } from "../app/ErrorDiv"
 import { Skeleton } from "../ui/skeleton"
 import { buttonVariants } from "../ui/button"
+import redirects from "@/config/redirects"
 
 interface CompanyOwnerShowCardProps extends ComponentPropsWithoutRef<typeof Card> {
   companyId: string
@@ -72,20 +73,20 @@ export const CompanyOwnerShowCard: FC<CompanyOwnerShowCardProps> = ({ companyId,
                 <span>Joined in {new Date(company.createdAt).getFullYear()}</span>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Link href={`/my-companies/${companyId}/overview`} className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
+            <div className="flex flex-col sm:flex-row gap-2 mt-10">
+              <Link href={`/${redirects.myCompanies}/${companyId}/overview`} className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
                 <Icons.chart className="w-5 h-5" />
                 Overview
               </Link>
-              <Link href={`/my-companies/${companyId}/edit`} className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
+              <Link href={`/${redirects.myCompanies}/${companyId}/edit`} className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
                 <Icons.edit className="w-5 h-5" />
                 Edit
               </Link>
-              <Link href={`/my-companies/${companyId}/bids`} className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
+              <Link href={`/${redirects.myCompanies}/${companyId}/bids`} className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
                 <Icons.gavel className="w-5 h-5" />
                 Bids
               </Link>
-              <Link href={`/my-companies/${companyId}/inbox`} className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
+              <Link href={`/${redirects.myCompanies}/${companyId}/inbox`} className={cn(buttonVariants(), "flex items-center gap-2 w-full")}>
                 <Icons.message className="w-5 h-5" />
                 Inbox
               </Link>

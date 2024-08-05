@@ -2,17 +2,19 @@ import { Metadata } from "next";
 import FeatureConfig from "@/config/landing/features";
 import { FeatureHero } from "@/components/landing/features/FeatureHero";
 import { FeatureCard } from "@/components/landing/features/FeatureCard";
+import { notFound } from 'next/navigation';
 
 export const metadata: Metadata = {
 	title: "Features",
 	description: "Features",
 };
 
-export default function SellFeaturesPage() {
-	const feature = FeatureConfig.features.find((feature) => feature.path === "/sell");
+export default function FeaturesPage({ params }: { params: { feat: string } }) {
+	const feature = FeatureConfig.features.find((feature) => feature.path.split("/").pop() === params.feat);
 
+	console.log(FeatureConfig.features.map((feature) => feature.path.split("/").pop()));
 	if (!feature) {
-		throw new Error("Feature not found");
+		notFound();
 	}
 
 	return (

@@ -3,7 +3,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageIndexCard } from "@/components/messages/MessageIndexCard"
 import { ShowMessage } from "@/lib/db/queries/validation"
-import { ComponentPropsWithoutRef, FC, useState } from "react"
+import { ComponentPropsWithoutRef, FC, useState, useEffect } from "react"
 import { MessageShowCard } from "@/components/messages/MessageShowCard"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -75,7 +75,7 @@ export const MessageInbox: FC<MessageInboxProps> = ({
     keywordQuery,
     includeRead,
     includeDeleted,
-    pageSize: 2,
+    pageSize: 10,
   }, {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     getPreviousPageParam: (lastPage) => lastPage.previousPage,
@@ -100,7 +100,7 @@ export const MessageInbox: FC<MessageInboxProps> = ({
     keywordQuery,
     includeRead,
     includeDeleted,
-    pageSize: 2,
+    pageSize: 10,
 
   }, {
     getNextPageParam: (lastPage) => lastPage.nextPage,
@@ -224,6 +224,7 @@ export const MessageInbox: FC<MessageInboxProps> = ({
       refetchCompany()
     }
   }
+
 
 
   return (

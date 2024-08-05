@@ -18,10 +18,14 @@ export const PricingCard = ({ className, isAnnual, plan, ...props }: PricingCard
     <div className={cn("rounded-lg border shadow-sm flex flex-col justify-between items-center gap-12 py-6 w-72", plan.highlight && "bg-muted-foreground/5 scale-110 mx-3", className)} {...props}>
       <div className="px-6 flex flex-col gap-2 items-start justify-start w-full">
         <h2 className="text-lg font-medium leading-6 text-primary">{plan.name}</h2>
-        <p className="mt-8">
-          <span className="text-4xl font-bold tracking-tight">${isAnnual ? plan.price.annual : plan.price.monthly}</span>
-          <span className="text-base font-medium text-muted-foreground">/month</span>
-        </p>
+        {!!plan.price ? (
+          <p className="mt-8">
+            <span className="text-4xl font-bold tracking-tight">${isAnnual ? plan.price.annual : plan.price.monthly}</span>
+            <span className="text-base font-medium text-muted-foreground">/month</span>
+          </p>
+        ) : (
+          <div className="w-2/3 h-16 bg-muted-foreground rounded-lg blur-lg" />
+        )}
         <p className="mt-4 text-sm  text-muted-foreground">{plan.description}</p>
       </div>
       <div className="px-6 flex flex-col gap-2 items-start justify-start w-full">

@@ -110,12 +110,13 @@ export const LandingNavBar = ({ className, items, cta, secondaryCta, ...props }:
                           <Icons.chevronDown className="w-4 h-4" />
                         </CollapsibleTrigger>
                       </div>
-                      <CollapsibleContent className="ml-3 text-sm text-muted-foreground hover:text-foreground transition-all duration-200 flex flex-col items-start justify-center gap-2">
+                      <CollapsibleContent className="ml-3 text-sm text-muted-foreground hover:text-foreground transition-all duration-200 flex flex-col items-start justify-center gap-2 w-full">
                         {item.submenu.map((subitem, index) => (
                           <Link
                             href={subitem.href}
                             key={index}
                             onClick={() => setIsOpen(false)}
+                            className="w-full"
                           >
                             {subitem.label}
                           </Link>

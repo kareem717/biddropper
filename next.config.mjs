@@ -6,6 +6,10 @@ const nextConfig = {
 				protocol: "https",
 				hostname: "www.featurebase.app",
 			},
+			{
+				protocol: "https",
+				hostname: "raikihpfxrmufirtxhvf.supabase.co",
+			},
 		],
 	},
 };

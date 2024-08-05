@@ -1,7 +1,7 @@
 import { MessageInbox } from "@/components/messages/MessageInbox"
 import { api } from "@/lib/trpc/api"
 
-export default async function AccountInboxPage() {
+export default async function AccountInboxPage({ params }: { params: { id: string | undefined } }) {
   const { id: accountId } = await api.account.getLoggedInAccount.query()
 
   return (

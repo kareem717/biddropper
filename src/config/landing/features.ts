@@ -1,5 +1,7 @@
 import { Icons } from "@/components/Icons";
 import { CTA, Image } from "../types";
+import redirects from "../redirects";
+import images from "./images";
 
 export type FeatureDetail = {
 	name: string;
@@ -34,113 +36,72 @@ export type FeatureGroup = {
 
 const features: FeatureGroup[] = [
 	{
-		group: "Real-Time",
-		path: "/sell",
+		group: "Explore Listings",
+		path: redirects.features.exploreListings,
 		hero: {
-			title: "Lorem ipsum dolor sit amet",
-			description: "Get real-time data from your customers.",
+			title: "View curated jobs and companies that will help you grow",
+			description:
+				"Explore our vast list of oppurtunities and companies to find the right fit for you.",
 			image: {
-				src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-				alt: "The Featurebase feedback portal showing already received user feedback.",
+				src: images.landingImages.exploreCompanies,
+				alt: "Explore companies.",
 				width: 3321,
 				height: 2103,
 			},
 			cta: {
 				label: "Sign up for free",
-				href: "https://auth.featurebase.app/register",
+				href: redirects.auth.login,
 			},
 			secondaryCta: {
 				label: "See it in action",
-				href: "/demo",
+				href: redirects.demo,
 			},
 		},
 		cards: [
 			{
-				header: "Real-Time",
-				description: "Get real-time data from your customers.",
+				header: "Distance",
+				description:
+					"Filter through companies and jobs to make sure they're within your area.",
 				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
+					src: images.landingImages.distance,
+					alt: "Filter companies and jobs by distance.",
 					width: 3321,
 					height: 2103,
 				},
 				details: [
 					{
-						name: "Communicate progress.",
+						name: "Display.",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Each company and job has a attached address, companies also include a service area to ensure that they can work at your next project.",
+						icon: "map",
 					},
 					{
-						name: "Communicate progress.",
+						name: "Filter.",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Filter through companies and jobs to make sure they're within your area.",
+						icon: "filter",
 					},
 				],
 			},
 			{
-				header: "Real-Time",
-				description: "Get real-time data from your customers.",
+				header: "Industry",
+				description: "Search through industry specific projects and companies.",
 				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
+					src: images.landingImages.industry,
+					alt: "Filter companies and jobs by industry.",
 					width: 3321,
 					height: 2103,
 				},
 				details: [
 					{
-						name: "Communicate progress.",
+						name: "Search",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Search through industry specific projects and companies.",
+						icon: "search",
 					},
 					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-				],
-			},
-			{
-				header: "Real-Time",
-				description: "Get real-time data from your customers.",
-				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
-					width: 3321,
-					height: 2103,
-				},
-				details: [
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
+						name: "20+ Industries",
+						description: "biddropper gives users access to over 20 industries.",
 						icon: "radio",
 					},
 				],
@@ -148,113 +109,108 @@ const features: FeatureGroup[] = [
 		],
 	},
 	{
-		group: "Real-Time 3",
-		path: "/real-time3",
+		group: "Bids",
+		path: redirects.features.bid,
 		hero: {
-			title: "Lorem ipsum dolor sit amet",
-			description: "Get real-time data from your customers.",
+			title: "Send & Receive Bids",
+			description: "Send bids on projects and receive bids from companies.",
 			image: {
-				src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-				alt: "The Featurebase feedback portal showing already received user feedback.",
+				src: images.landingImages.bidView,
+				alt: "View a bid on a project.",
 				width: 3321,
 				height: 2103,
 			},
 			cta: {
 				label: "Sign up for free",
-				href: "https://auth.featurebase.app/register",
+				href: redirects.auth.login,
 			},
 			secondaryCta: {
 				label: "See it in action",
-				href: "/demo",
+				href: redirects.demo,
 			},
 		},
 		cards: [
 			{
-				header: "Real-Time",
-				description: "Get real-time data from your customers.",
+				header: "Compare",
+				description: "Getting multiple bids on a project is important.",
 				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
+					src: images.landingImages.multiBids,
+					alt: "Get multiple bids on a project.",
 					width: 3321,
 					height: 2103,
 				},
 				details: [
 					{
-						name: "Communicate progress.",
+						name: "Communicate value.",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Companies can provide additional information alognside sending their offer to not only show their value but also to help you make a decision.",
+						icon: "chart",
 					},
 					{
-						name: "Communicate progress.",
+						name: "Options.",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
+							"Get multiple bids on a project to ensure you're getting the best price and the right person.",
 						icon: "radio",
 					},
 				],
 			},
 			{
-				header: "Real-Time",
-				description: "Get real-time data from your customers.",
+				header: "Request Information",
+				description:
+					"Use our in-app messaging to request more information from companies or your potential client before sending a bid.",
 				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
+					src: images.landingImages.requestInfo,
+					alt: "Request information from a company.",
 					width: 3321,
 					height: 2103,
 				},
 				details: [
 					{
-						name: "Communicate progress.",
+						name: "In-App Messaging",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Easily communicate with companies or clients directly within the app.",
+						icon: "message",
 					},
 					{
-						name: "Communicate progress.",
+						name: "Request Details",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Ask for more information about a project or company before making a decision.",
+						icon: "info",
 					},
 					{
-						name: "Communicate progress.",
+						name: "Track Conversations",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Keep a record of all your communications for future reference.",
+						icon: "history",
 					},
 				],
 			},
 			{
-				header: "Real-Time",
+				header: "Be Confident",
 				description: "Get real-time data from your customers.",
 				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
+					src: images.landingImages.bidDecide,
+					alt: "Decide on a bid.",
 					width: 3321,
 					height: 2103,
 				},
 				details: [
 					{
-						name: "Communicate progress.",
+						name: "Statistics.",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
+							"See how many bids have been sent and received on a project.",
 						icon: "radio",
 					},
 					{
-						name: "Communicate progress.",
+						name: "Market Value.",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
+							"See the market value of a project and how it compares to other bids.",
 						icon: "radio",
 					},
 					{
-						name: "Communicate progress.",
+						name: "Bid History.",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
+							"See the history of bids on a project and how they've changed over time.",
 						icon: "radio",
 					},
 				],
@@ -262,14 +218,14 @@ const features: FeatureGroup[] = [
 		],
 	},
 	{
-		group: "Real-Time 2",
-		path: "/real-time2",
+		group: "Messages",
+		path: redirects.features.message,
 		hero: {
-			title: "Lorem ipsum dolor sit amet",
-			description: "Get real-time data from your customers.",
+			title: "Stay Connected with Real-Time Messaging",
+			description: "Communicate instantly with your customers and team.",
 			image: {
-				src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-				alt: "The Featurebase feedback portal showing already received user feedback.",
+				src: images.landingImages.inbox,
+				alt: "Inbox.",
 				width: 3321,
 				height: 2103,
 			},
@@ -284,92 +240,129 @@ const features: FeatureGroup[] = [
 		},
 		cards: [
 			{
-				header: "Real-Time",
-				description: "Get real-time data from your customers.",
+				header: "Instant Notifications",
+				description: "Receive notifications for new messages in real-time.",
 				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
+					src: images.landingImages.notifications,
+					alt: "Notifications.",
 					width: 3321,
 					height: 2103,
 				},
 				details: [
 					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+						name: "Email Alerts",
+						description: "Receive email alerts for important messages.",
+						icon: "message",
 					},
 				],
 			},
 			{
-				header: "Real-Time",
-				description: "Get real-time data from your customers.",
+				header: "Message History",
+				description: "Keep a record of all your communications.",
 				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
+					src: images.landingImages.reply,
+					alt: "Reply to a message.",
 					width: 3321,
 					height: 2103,
 				},
 				details: [
 					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+						name: "Searchable History",
+						description: "Easily search through your message history.",
+						icon: "search",
 					},
 					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
-					},
-					{
-						name: "Communicate progress.",
-						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+						name: "Archived Messages",
+						description: "Archive old messages for future reference.",
+						icon: "trash",
 					},
 				],
 			},
 			{
-				header: "Real-Time",
-				description: "Get real-time data from your customers.",
+				header: "Secure Messaging",
+				description: "Ensure your communications are private and secure.",
 				image: {
-					src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-					alt: "The Featurebase feedback portal showing already received user feedback.",
+					src: images.landingImages.message,
+					alt: "Message.",
 					width: 3321,
 					height: 2103,
 				},
 				details: [
 					{
-						name: "Communicate progress.",
+						name: "Data Privacy",
+						description: "Your data is stored securely and privately.",
+						icon: "lock",
+					},
+				],
+			},
+		],
+	},
+	{
+		group: "Insights",
+		path: redirects.features.insights,
+		hero: {
+			title: "Get the full picture of how your company and jobs are performing",
+			description: "See how your company and jobs are performing in real-time.",
+			image: {
+				src: images.landingImages.dashChart,
+				alt: "Dashboard chart.",
+				width: 3321,
+				height: 2103,
+			},
+			cta: {
+				label: "Sign up for free",
+				href: "https://auth.featurebase.app/register",
+			},
+			secondaryCta: {
+				label: "See it in action",
+				href: "/demo",
+			},
+		},
+		cards: [
+			{
+				header: "Real-Time Insights",
+				description: "Get real-time data from your customers.",
+				image: {
+					src: images.landingImages.metrics,
+					alt: "Metrics.",
+					width: 3321,
+					height: 2103,
+				},
+				details: [
+					{
+						name: "User Feedback",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Collect and analyze feedback to improve your services.",
+						icon: "user",
 					},
 					{
-						name: "Communicate progress.",
+						name: "Performance Metrics",
+						description: "Track key performance indicators to measure success.",
+						icon: "chart",
+					},
+				],
+			},
+			{
+				header: "Customer Engagement",
+				description: "Enhance customer engagement with real-time interactions.",
+				image: {
+					src: images.landingImages.engagement,
+					alt: "Engagement.",
+					width: 3321,
+					height: 2103,
+				},
+				details: [
+					{
+						name: "Instant Notifications",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Send instant notifications to keep customers informed.",
+						icon: "mailPlus",
 					},
 					{
-						name: "Communicate progress.",
+						name: "Feedback Loop",
 						description:
-							"Give your users a sense of control by communicating progress on features.",
-						icon: "radio",
+							"Create a continuous feedback loop to improve customer satisfaction.",
+						icon: "repeat",
 					},
 				],
 			},
@@ -379,15 +372,17 @@ const features: FeatureGroup[] = [
 
 const featurePage = {
 	footer: {
-		title: "Create your feedback community and give your users a voice",
-		description: "Get real-time data from your customers.",
+		title:
+			"Get the full picture of what your project entails and become a informed buyer",
+		description:
+			"Weather you're a contractor or want to take on a project, biddropper allows you to work on the right thing with the right people",
 		cta: {
 			label: "Sign up for free",
-			href: "https://auth.featurebase.app/register",
+			href: redirects.auth.login,
 		},
 		secondaryCta: {
 			label: "See it in action",
-			href: "/demo",
+			href: redirects.demo,
 		},
 	},
 	features,

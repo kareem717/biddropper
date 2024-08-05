@@ -30,6 +30,7 @@ import { titleCase } from "title-case"
 import { toast } from "sonner"
 import { ErrorDiv } from "../app/ErrorDiv"
 import { Skeleton } from "../ui/skeleton"
+import redirects from "@/config/redirects"
 
 export interface FeedbackFormProps extends ComponentPropsWithoutRef<"form"> {
   onSubmit?: () => void
@@ -247,7 +248,8 @@ export const Inbox: FC<InboxProps> = ({ accountId, className, ...props }) => {
             <Link
               className="flex items-start gap-3 rounded-lg border border-border py-2 px-4 w-full"
               key={message.id}
-              href={`/inbox/${message.id}`}
+              href={redirects.inbox}
+              // href={`/inbox/${message.id}`} //TODO: implement 
               onFocus={() => handleNotificationFocus(message)}
             >
               <div className="space-y-1">

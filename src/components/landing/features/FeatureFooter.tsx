@@ -21,11 +21,11 @@ export const FeatureFooter: FC<FeatureFooterProps> = ({ className, cta, secondar
         <div className="relative px-0 sm:px-6 lg:px-8">
           <div className="relative py-20 lg:mx-auto lg:max-w-7xl">
             <div className="relative flex flex-col items-center justify-center space-y-6">
-              <div className="text-center space-y-4">
-                <h3 className="max-w-2xl text-center text-2xl sm:text-4xl">
+              <div className="space-y-4 max-w-xl flex flex-col items-center justify-center text-center">
+                <h3 className="text-2xl sm:text-4xl  whitespace-pre-wrap">
                   {FeatureConfig.footer.title}
                 </h3>
-                <p className="text-center font-normal text-muted-foreground">
+                <p className="max-w-xl font-normal text-muted-foreground whitespace-pre-wrap">
                   {FeatureConfig.footer.description}
                 </p>
               </div>

@@ -1,22 +1,22 @@
 const demo = {
-	title: "Create your feedback community and give your users a voice",
-	description: "Get real-time data from your customers.",
+	title: "Let us show you around",
+	description: "Fill out the form below to request a demo of biddropper",
 	cta: "Get Started",
 	requestForm: {
 		title: "Request a Demo",
-		description: "Fill out the form below to request a demo of Feedback.io",
+		description: "Fill out the form below to request a demo of biddropper",
 		interestedInOptions: [
 			{
-				label: "Product",
-				value: "product",
+				label: "Contracting",
+				value: "contracting",
 			},
 			{
-				label: "Feedback",
-				value: "feedback",
+				label: "Company Showcase",
+				value: "company-showcase",
 			},
 			{
-				label: "Survey",
-				value: "survey",
+				label: "Insights",
+				value: "insights",
 			},
 		],
 	},

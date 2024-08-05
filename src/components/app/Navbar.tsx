@@ -72,7 +72,7 @@ export const Navbar: FC<NavbarProps> = ({ accountId, ...props }) => {
                               href={`/${nav.urlPath}${subItem.href}`}
                               key={subItem.href}
                               onClick={() => setOpen(false)}
-                              className={cn(path.includes(subItem.urlPath) && path.includes(nav.urlPath) && "text-primary")}>
+                              className={cn(path.includes(`/${nav.urlPath}${subItem.href}`) && "text-primary")}>
                               {subItem.title}
                             </Link>
                           ))}

@@ -1,18 +1,21 @@
 import redirects from "../redirects";
+import featurePage from "./features";
+import images from "./images";
 
 const landing = {
 	hero: {
-		title: "Featurebase",
-		description: "A modern feedback tool for product teams.",
+		title: "Connect With The Right Professional & Make Informed Decisions",
+		description:
+			"No more guesswork. No more back and forth. Why waste your time and money on people who aren't the right fit for your project?",
 		image: {
-			src: "https://www.featurebase.app/images/redesign/public_roadmap.jpg",
-			alt: "The Featurebase feedback portal showing already received user feedback.",
+			src: images.landingImages.dashChart,
+			alt: "Dashboard.",
 			width: 1080,
 			height: 1920,
 		},
 		cta: {
 			label: "Get started",
-			href: redirects.overview,
+			href: redirects.auth.login,
 		},
 		secondaryCta: {
 			label: "Contact us",
@@ -21,103 +24,110 @@ const landing = {
 	},
 	features: [
 		{
-			title: "Sell",
+			title: "Explore Listings",
 			description:
-				"Get a clear understanding of user needs and plan what to build next.",
+				"Search through our curated lists of companies and job listings to find the perfect team for your project or work for your crew.",
 			image: {
-				src: "https://www.featurebase.app/images/redesign/2024-dashboard.png",
-				alt: "The Featurebase feedback portal showing already received user feedback.",
+				src: images.landingImages.exploreListings,
+				alt: "Explore job listings.",
 				width: 1080,
 				height: 1920,
 			},
-			learnMoreLink: "/features/sell",
+			learnMoreLink: redirects.features.exploreListings,
 		},
 		{
-			title: "Announce new releases",
+			title: "Bid",
 			description:
-				"Boost new feature awareness with constant updates and changelogs.",
+				"Submit or recieve bids on projects and get the best price and value for the work you need done.",
 			image: {
-				src: "https://www.featurebase.app/images/redesign/2024-dashboard.png",
-				alt: "The Featurebase feedback portal showing already received user feedback.",
+				src: images.landingImages.dropBid,
+				alt: "Drop a bid on a project.",
 				width: 1080,
 				height: 1920,
 			},
-			learnMoreLink: "/features/announce-updates",
+			learnMoreLink: redirects.features.bid,
 		},
 		{
-			title: "Feedback widget",
+			title: "Discuss & Accept",
 			description:
-				"Collect feedback from your users in a beautiful widget and get insights into what they like and dislike.",
+				"Talk with the person on the other side of the bid to truly get to know them before proceeding.",
 			image: {
-				src: "https://www.featurebase.app/images/redesign/feedback-widget-demo-lighter.jpg",
-				alt: "The Featurebase feedback portal showing already received user feedback.",
+				src: images.landingImages.bidView,
+				alt: "View a bid on a project.",
 				width: 1080,
 				height: 1920,
 			},
-			learnMoreLink: "https://www.featurebase.app/feedback-widget",
+			learnMoreLink: redirects.features.message,
 		},
 	],
 	customers: [
 		{
-			name: "TikTok",
+			name: "Envy Irrigation",
 			image: {
-				src: "https://www.featurebase.app/images/nature.svg",
+				src: images.customerLogos.envyIrrgiation,
+				alt: "The Featurebase feedback portal showing already received user feedback.",
+				width: 1080,
+				height: 1920,
+			},
+			href: "https://www.envyirrigation.ca/",
+		},
+		{
+			name: "M.I.K.E Carpentry",
+			image: {
+				src: images.customerLogos.mikeCarpentry,
 				alt: "The Featurebase feedback portal showing already received user feedback.",
 				width: 1080,
 				height: 1920,
 			},
 		},
 		{
-			name: "TikTok",
+			name: "Window Force",
 			image: {
-				src: "https://www.featurebase.app/images/nature.svg",
+				src: images.customerLogos.windowForce,
 				alt: "The Featurebase feedback portal showing already received user feedback.",
 				width: 1080,
 				height: 1920,
 			},
-			href: "https://www.featurebase.app/",
+			href: "https://windowforce.ca/",
 		},
 		{
-			name: "TikTok",
+			name: "Bona Vista Pools",
 			image: {
-				src: "https://www.featurebase.app/images/nature.svg",
+				src: images.customerLogos.bonaVista,
 				alt: "The Featurebase feedback portal showing already received user feedback.",
 				width: 1080,
 				height: 1920,
 			},
-			href: "https://www.featurebase.app/",
 		},
 	],
 	navbar: [
 		{
 			label: "Features",
-			submenu: [
-				{
-					label: "Sell",
-					href: "/features/sell",
-				},
-			],
+			submenu: featurePage.features.map((feat) => ({
+				label: feat.group,
+				href: `${feat.path}`,
+			})),
 		},
 		{
 			label: "Pricing",
-			href: "/pricing",
+			href: redirects.pricing,
 		},
 		{
 			label: "Demo",
-			href: "/demo",
+			href: redirects.demo,
 		},
 		{
 			label: "Contact",
-			href: "/contact",
+			href: redirects.contact,
 		},
 		{
 			label: "About",
-			href: "/about",
+			href: redirects.about,
 		},
 	],
 	cta: {
 		label: "Get started",
-		href: redirects.overview,
+		href: redirects.auth.login,
 	},
 	secondaryCta: {
 		label: "Contact us",
