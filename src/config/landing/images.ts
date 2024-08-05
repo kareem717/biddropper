@@ -41,7 +41,7 @@ const imageConfig = {
 		engagement:
 			"https://raikihpfxrmufirtxhvf.supabase.co/storage/v1/object/public/assets/landing/engage.png",
 		team:
-			"https://raikihpfxrmufirtxhvf.supabase.co/storage/v1/object/public/assets/landing/team.png",
+			"https://raikihpfxrmufirtxhvf.supabase.co/storage/v1/object/public/assets/landing/team.jpg",
 	},
 };
 

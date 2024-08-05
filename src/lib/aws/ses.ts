@@ -3,9 +3,9 @@ import { env } from "../env.mjs";
 import { registerService } from "../utils";
 
 AWS.config.update({
-	accessKeyId: env.AWS_ACCESS_KEY,
+	accessKeyId: env.AWS_ACCESS_KEY_ID,
 	secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-	region: env.AWS_SES_REGION,
+	region: env.AWS_REGION,
 });
 
 AWS.config.getCredentials(function (error) {
